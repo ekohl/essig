@@ -61,6 +61,15 @@ typedef enum {
     VM_INFO_PIN
 } VMInfoType;
 
+/*! Item in the interrupt queue */
+typedef struct VMInterruptItem {
+    VMInterruptType interrupt_type;
+    /*! This attribute can be set to anything and semantics depends on
+        the interrupt_type */
+    void *extra_arg;
+    struct VMInterruptItem *next;
+} VMInterruptItem;
+
 /*! The state of the VM */
 typedef struct VMState {
     void *instructions;
@@ -68,6 +77,12 @@ typedef struct VMState {
     void *ram;
     void *registers;
     VMInterruptPolicy interrupt_policy;
+    VMInterruptItem *interrupt_queue;
+#ifdef VM_WITH_THREADS
+    /*! Make sure this mutex is recursive */
+    pthread_mutex_t interrupt_queue_lock;
+#endif
+    bool break_async;
 } VMState;
 
 /*! Single difference in the VMState */
@@ -95,6 +110,13 @@ VMState *vm_newstate(void *instructions, VMInterruptPolicy interrupt_policy);
     vm_step() */
 VMStateDiff *vm_newdiff(void);
 
+#ifdef VM_WITH_THREADS
+/*! Lock the interrupt queue */
+void vm_acquire_interrupt_queue(VMState *);
+/*! Release the interrupt queue */
+void vm_release_interrupt_queue(VMState *);
+#endif
+
 /*! \defgroup VMDEBUGGER  Debugger Functions */
 /* @{ */
 /*! Set a breakpoint
@@ -115,7 +137,11 @@ void vm_rcont(VMState *state, VMStateDiff *diffs);
 */
 void vm_step(VMState *state, int nsteps, VMStateDiff *diffs);
 void vm_rstep(VMState *state, int nsteps, VMStateDiff *diffs);
+
+/*! Set a breakpoint asynchronously when the interpreter is running */
+void vm_break_async(VMState *state);
 /* @} */
+
 
 
 /*! \defgroup VMINTERRUPT Interrupts */
