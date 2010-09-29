@@ -1,15 +1,27 @@
 atmel {
-	/* -- Status Register (SREG) -- */
-	register SREG; /* Status register */
-	register C; /* Carry flag */
-	register Z; /* Zero flag */
-	register N; /* Negative flag */
-	register V; /* Two's complement overflow indicator */
-	register S; /* N^V, For signed tests */
-	register H; /* Half Carry Flag */
-	register T; /* Transfer bit used by BLD and BST instructions */
+	parameters {
+		gprs 32;
+		ram 1024;
+	}
 
-	register PC; /* Program counter */
+	registers {
+		/* -- Status Register (SREG) -- */
+		SREG; /* Status register */
+		C; /* Carry flag */
+		Z; /* Zero flag */
+		N; /* Negative flag */
+		V; /* Two's complement overflow indicator */
+		S; /* N^V, For signed tests */
+		H; /* Half Carry Flag */
+		T; /* Transfer bit used by BLD and BST instructions */
+
+		/* -- Rest -- */
+		PC; /* Program counter */
+	}
+
+	mov Rd, Rr {
+		Rd = Rr;
+	}
 
 	and Rd, Rr {
 		/* 0 <= d <= 31, 0 <= r 31 */

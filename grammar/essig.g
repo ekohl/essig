@@ -5,11 +5,11 @@ options {
 }
 
 tokens {
-	MICROCONTROLLER =	'uc';
 	LBRACK		=	'{';
 	RBRACK		=	'}';
 	ASSIGN		=	'=';
-	REGISTER	=	'register';
+	REGISTERS	=	'registers';
+	PARAMETERS	=	'parameters';
 	LINE_SEPERATOR	=	';';
 	ARG_SEPERATOR	=	',';
 	
@@ -24,10 +24,13 @@ tokens {
 /*
  * Parser
  */
-microcontroller:	IDENTIFIER LBRACK! registers? instructions? RBRACK! EOF!;
+microcontroller:	IDENTIFIER LBRACK! parameters registers? instructions? RBRACK! EOF!;
 
-registers:		(register LINE_SEPERATOR!)+;
-register:		REGISTER IDENTIFIER ;
+parameters:		PARAMETERS LBRACK! (parameter LINE_SEPERATOR!)+ RBRACK!;
+parameter:		IDENTIFIER NUMBER;
+
+registers:		REGISTERS LBRACK! (register LINE_SEPERATOR!)+ RBRACK!;
+register:		IDENTIFIER;
 
 instructions:		instruction+;
 instruction:		IDENTIFIER (IDENTIFIER (ARG_SEPERATOR! IDENTIFIER)+)? LBRACK! expr+ RBRACK!;
