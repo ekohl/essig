@@ -144,9 +144,6 @@ void vm_break_async(VMState *state);
 
 
 
-/*! \defgroup VMINTERRUPT Interrupts */
-/* @{ */
-void vm_enable_interrupts(bool enable);
 /*! 
 Interrupt the microcontroller
 \param[in] type The type of interrupt
