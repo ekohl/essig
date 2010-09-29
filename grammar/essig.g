@@ -11,11 +11,14 @@ tokens {
 	ASSIGN		=	'=';
 	REGISTER	=	'register';
 	LINE_SEPERATOR	=	';';
+	ARG_SEPERATOR	=	',';
 	
 	// Logical operators
 	NOT		=	'!';
 	AND		=	'&';
 	OR		=	'|';
+	XOR		=	'^';
+	ADD		=	'+';
 }
 
 /*
@@ -27,21 +30,23 @@ registers:		(register LINE_SEPERATOR!)+;
 register:		REGISTER IDENTIFIER ;
 
 instructions:		instruction+;
-instruction:		IDENTIFIER LBRACK! expr+ RBRACK!;
+instruction:		IDENTIFIER (IDENTIFIER (ARG_SEPERATOR! IDENTIFIER)+)? LBRACK! expr+ RBRACK!;
 
 expr:			assignExpr LINE_SEPERATOR!;
-assignExpr:		IDENTIFIER ASSIGN NOT? IDENTIFIER (operator NOT? IDENTIFIER)*;
+assignExpr:		IDENTIFIER ASSIGN (NOT? IDENTIFIER | NUMBER) (operator (NOT? IDENTIFIER | NUMBER ))*;
 
-operator:		AND | OR;
+operator:		AND | OR | XOR | ADD;
 
 /*
  * Lexer
  */
 IDENTIFIER		:	LETTER (LETTER | DIGIT)*;
 
+NUMBER			:	DIGIT+;
+
 WHITESPACE		:	( '\t' | ' ' | '\r' | '\n'| '\u000C' )+ 	{ $channel = HIDDEN; } ;
 
-ML_COMMENT		:	 '/*' ( options {greedy=false;} : . )* '*/';
+ML_COMMENT		:	 '/*' ( options {greedy=false;} : . )* '*/' { skip(); };
 
 fragment DIGIT		:	'0'..'9';
 

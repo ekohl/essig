@@ -1,0 +1,23 @@
+atmel {
+	/* -- Status Register (SREG) -- */
+	register SREG; /* Status register */
+	register C; /* Carry flag */
+	register Z; /* Zero flag */
+	register N; /* Negative flag */
+	register V; /* Two's complement overflow indicator */
+	register S; /* N^V, For signed tests */
+	register H; /* Half Carry Flag */
+	register T; /* Transfer bit used by BLD and BST instructions */
+
+	register PC; /* Program counter */
+
+	and Rd, Rr {
+		/* 0 <= d <= 31, 0 <= r 31 */
+		Rd = Rd & Rr;
+		PC = PC + 1;
+		S = N ^ V;
+		V = 0;
+		N = R7;
+		Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
+	}
+}
