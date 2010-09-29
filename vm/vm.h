@@ -18,8 +18,7 @@ Functions related to execution control (debugger functions like vm_cont(),
 vm_step(), etc) can create Diffs of the VMState to allow efficient updating
 of user interfaces and reverse execution (vm_rcont(), vm_rstep()).
 
-Then there are interrupt-related functions (vm_interrupt(), 
-vm_enable_interrupts()), and error reporting functions that help interpret
+Then there are interrupt-related functions (vm_interrupt()), and error reporting functions that help interpret
 errnos set by the Simulator (e.g. when a breakpoint is out of range).
 The errnos are private, but their value can be retrieved by calling vm_errno(),
 and the error message can be retrieved by calling vm_strerror().
