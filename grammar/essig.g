@@ -12,7 +12,11 @@ tokens {
 	PARAMETERS	=	'parameters';
 	LINE_SEPERATOR	=	';';
 	ARG_SEPERATOR	=	',';
-	
+
+	// Parameters
+	RAM		=	'ram';
+	GPRS		=	'gprs';
+
 	// Logical operators
 	NOT		=	'!';
 	AND		=	'&';
@@ -27,7 +31,9 @@ tokens {
 microcontroller:	IDENTIFIER LBRACK! parameters registers? instructions? RBRACK! EOF!;
 
 parameters:		PARAMETERS LBRACK! (parameter LINE_SEPERATOR!)+ RBRACK!;
-parameter:		IDENTIFIER NUMBER;
+parameter:		RAM NUMBER
+	|		GPRS NUMBER
+	;
 
 registers:		REGISTERS LBRACK! (register LINE_SEPERATOR!)+ RBRACK!;
 register:		IDENTIFIER;
