@@ -9,3 +9,15 @@ operator:
 "|" OK
 "^" OK
 "+" OK
+
+parameters:
+"parameter { }" FAIL			// Invalid token (missing s)
+"parameters }" FAIL			// Missing {
+"parameters {" FAIL			// Missing }
+"parameters { }" FAIL			// Missing parameters
+"parameters { bla 12; }" FAIL		// Invalid parameter
+"parameters { ram 102e }" FAIL		// Non-numeric ram, missing colon
+"parameters { ram 1024 }" FAIL		// Missing colon
+"parameters { ram 1024; }" OK
+"parameters { ram 1024; gprs 32 }" FAIL	// Missing colon
+"parameters { ram 1024; gprs 32; }" OK
