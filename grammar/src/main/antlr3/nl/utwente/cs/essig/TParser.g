@@ -39,16 +39,16 @@ options {
 //
 microcontroller:	IDENTIFIER LBRACK! parameters registers? instructions? RBRACK! EOF!;
 
-parameters:		PARAMETERS LBRACK! (parameter LINE_SEPERATOR!)+ RBRACK!;
+parameters:		PARAMETERS^ LBRACK! (parameter LINE_SEPERATOR!)+ RBRACK!;
 parameter:		RAM NUMBER
 	|		GPRS NUMBER
 	;
 
-registers:		REGISTERS LBRACK! (register LINE_SEPERATOR!)+ RBRACK!;
+registers:		REGISTERS^ LBRACK! (register LINE_SEPERATOR!)+ RBRACK!;
 register:		IDENTIFIER;
 
 instructions:		instruction+;
-instruction:		IDENTIFIER arguments? LBRACK! expr+ RBRACK!;
+instruction:		IDENTIFIER^ arguments? LBRACK! expr+ RBRACK!;
 arguments:		IDENTIFIER (ARG_SEPERATOR! IDENTIFIER)*;
 
 expr:			assignExpr LINE_SEPERATOR!;

@@ -12,7 +12,7 @@ options {
 
     // Use ANTLR built-in CommonToken for tree nodes
     //
-    ASTLabelType = CommonToken;
+    ASTLabelType = CommonTree;
 }
 
 // What package should the generated source exist in?
@@ -23,28 +23,30 @@ options {
 }
 
 microcontroller:
-	IDENTIFIER { System.out.println("Bla"); }
+	name=IDENTIFIER { System.out.println("Name: "+$name.text); }
 	parameters
 	registers?
 	instructions?
 	EOF;
 
-parameters:
-	PARAMETERS parameter+;
+parameters:	^(PARAMETERS parameter+);
 
-parameter:	RAM NUMBER
-	|	GPRS NUMBER
+parameter:	RAM n=NUMBER { System.out.println("Ram: "+$n.text); }
+	|	GPRS n=NUMBER { System.out.println("Registers: "+$n.text); }
 	;
 
-registers:	REGISTERS register+;
+registers:	^(REGISTERS register+);
 
-register:	IDENTIFIER;
+register:	r=IDENTIFIER { System.out.println("Register: "+$r.text); };
 
 instructions:	instruction+;
 
-instruction:	IDENTIFIER arguments? expr+;
-
-arguments:	IDENTIFIER+;
+instruction:	^(
+			f=IDENTIFIER { System.out.print($f.text+"("); }
+			(a=IDENTIFIER { System.out.print($a.text+", "); } )*
+			{ System.out.println(")"); }
+			expr+
+		);
 
 expr:		assignExpr;
 
