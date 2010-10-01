@@ -39,7 +39,8 @@ registers:		REGISTERS LBRACK! (register LINE_SEPERATOR!)+ RBRACK!;
 register:		IDENTIFIER;
 
 instructions:		instruction+;
-instruction:		IDENTIFIER (IDENTIFIER (ARG_SEPERATOR! IDENTIFIER)+)? LBRACK! expr+ RBRACK!;
+instruction:		IDENTIFIER arguments? LBRACK! expr+ RBRACK!;
+arguments:		IDENTIFIER (ARG_SEPERATOR! IDENTIFIER)*;
 
 expr:			assignExpr LINE_SEPERATOR!;
 assignExpr:		IDENTIFIER ASSIGN (NOT? IDENTIFIER | NUMBER) (operator (NOT? IDENTIFIER | NUMBER ))*;
