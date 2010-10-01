@@ -1,0 +1,11 @@
+gunit test walks T;
+
+@header {
+    package nl.utwente.cs.essig;
+}
+
+operator:
+"&" OK
+"|" OK
+"^" OK
+"+" OK
