@@ -23,8 +23,11 @@ extern int npins;
 /*! Size of RAM available in the microcontroller */
 extern size_t ramsize;         
 
-/*! Table that maps instructions to functions ("instruction handlers") */
+/*! Function that executes a single instruction */
 extern void instruction_handler(VMState *state, VMStateDiff *diff);
+
+/*! Function that handles an interrupt */
+extern void interrupt_handler(VMState *state, VMStateDiff *diff);
 
 /* @} */
 #endif /* simulator.h */
