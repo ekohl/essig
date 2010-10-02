@@ -17,8 +17,10 @@ VMState *vm_newstate(void *instructions, VMInterruptPolicy interrupt_policy){
 	VMState *newstate = (VMState *) malloc(sizeof(VMState));
 	newstate->instructions = instructions;
 	newstate->current_instruction = instructions;
+	// ramsize is in bytes
 	newstate->ram = (void *) malloc(ramsize);
-	newstate->registers = (void *) malloc(nregisters);
+	// We make all registers ints
+	newstate->registers = (void *) malloc(nregisters*sizeof(int));
 	newstate->interrupt_policy = interrupt_policy;
 	newstate->interrupt_queue = NULL;
 	#ifdef VM_WITH_THREADS
@@ -62,9 +64,9 @@ int vm_info(VMState *state, VMInfoType type, size_t vmaddr){
 	int result = 0;
 	switch(type){
 		case VM_INFO_REGISTER:
-			result = *((int *)(state->registers+vmaddr));
+			result = *(((int *)(state->registers))+vmaddr);
 		case VM_INFO_RAM:
-			result =  *((int *)(state->ram+vmaddr));
+			result =  *(((unsigned char *)(state->ram))+vmaddr);
 		case VM_INFO_PIN:
 			// FIXME: No way to access pin values in VMState
 			result = 0;
