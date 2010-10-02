@@ -1,5 +1,5 @@
 essig:
-	antlr3 -o essig essig.g
+	mvn
 
 clean:
 	git clean -d -X -f
