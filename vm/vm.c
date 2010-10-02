@@ -57,3 +57,17 @@ void vm_step(VMState *state, int nsteps, VMStateDiff *diffs){
 		nsteps--;
 	}
 }
+
+int vm_info(VMState *state, VMInfoType type, size_t vmaddr){
+	int result = 0;
+	switch(type){
+		case VM_INFO_REGISTER:
+			result = *((int *)(state->registers+vmaddr));
+		case VM_INFO_RAM:
+			result =  *((int *)(state->ram+vmaddr));
+		case VM_INFO_PIN:
+			// FIXME: No way to access pin values in VMState
+			result = 0;
+	}
+	return result;
+}
