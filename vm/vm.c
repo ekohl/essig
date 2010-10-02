@@ -13,3 +13,17 @@ static char *vm_error_messages[] = {
     #undef __vm_errno__
 };
 
+VMState *vm_newstate(void *instructions, VMInterruptPolicy interrupt_policy){
+	VMState *newstate = (VMState *) malloc(sizeof(VMState));
+	newstate->instructions = instructions;
+	newstate->current_instruction = instructions;
+	newstate->ram = (void *) malloc(ramsize);
+	newstate->registers = (void *) malloc(nregisters);
+	newstate->interrupt_policy = interrupt_policy;
+	newstate->interrupt_queue = NULL;
+	#ifdef VM_WITH_THREADS
+	// TODO: initialize queue lock here
+	#endif
+	newstate->break_async = false;
+	return newstate;
+}
