@@ -34,3 +34,26 @@ VMStateDiff *vm_newdiff(void){
 	newdiff->next = NULL;
 	return newdiff;
 }
+
+void vm_step(VMState *state, int nsteps, VMStateDiff *diffs){
+	while(nsteps > 0){
+		// Check for interrupt
+		if(state->interrupt_queue != NULL){
+			switch(state->interrupt_policy){
+				case VM_POLICY_INTERRUPT_NEVER:
+					// clean list
+					break;
+				case VM_POLICY_INTERRUPT_ALWAYS:
+					interrupt_handler(state, diffs);
+					break;
+				default:
+					//For now clean list
+					break;
+			}
+		}else{
+			// Execute instruction
+			instruction_handler(state,diffs);
+		}
+		nsteps--;
+	}
+}
