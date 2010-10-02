@@ -27,3 +27,10 @@ VMState *vm_newstate(void *instructions, VMInterruptPolicy interrupt_policy){
 	newstate->break_async = false;
 	return newstate;
 }
+
+VMStateDiff *vm_newdiff(void){
+	VMStateDiff *newdiff = (VMStateDiff *) malloc(sizeof(VMStateDiff));
+	newdiff->singlediff = NULL;
+	newdiff->next = NULL;
+	return newdiff;
+}
