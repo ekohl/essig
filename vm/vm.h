@@ -1,7 +1,9 @@
 #ifndef VM_H
 #define VM_H
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 /*! \mainpage
 \section VMMainPage Microcontroller simulator API
