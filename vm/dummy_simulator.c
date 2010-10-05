@@ -4,6 +4,8 @@
 
 #define NUM_INSTR 4
 #define INSTR_REG_ADDR_TEMPLATE "r%u, %x\n"
+#define INSTR_ADDR_REG_TEMPLATE "%x, r%u\n"
+#define INSTR_REG_REG_TEMPLATE "r%u, r%u\n"
 #define MAX_INSTR_LENGTH 10
 #define NUM_BITS 8
 #define NUM_REGS 3
@@ -36,14 +38,50 @@ void ld(VMState * state, VMStateDiff *diff, char *args){
 	state->current_instruction = strchr(state->current_instruction, '\n') + 1;
 }
 void str(VMState * state, VMStateDiff *diff, char *args){
-
+	unsigned int rdi; // destination
+	unsigned int s; // source address
+	sscanf(args, INSTR_ADDR_REG_TEMPLATE,&s,&rdi);
+	// Do logic
+	int *rd = (((int *)state->registers) + rdi - 1);
+	unsigned char *sa = (((unsigned char *)state->ram)+s);
+	//Do something with diff before actual change
+	if (diff != NULL) {
+		
+	}
+	*sa = *rd;
+	//Update instruction pointer
+	state->current_instruction = strchr(state->current_instruction, '\n') + 1;
 }
 void add(VMState * state, VMStateDiff *diff, char *args){
-
+	unsigned int rdi; // destination
+	unsigned int rsi; // source address
+	sscanf(args, INSTR_REG_REG_TEMPLATE,&rdi,&rsi);
+	// Do logic
+	int *rs = (((int *)state->registers) + rsi - 1);
+	int *rd = (((int *)state->registers) + rdi - 1);
+	//Do something with diff before actual change
+	if (diff != NULL) {
+		
+	}
+	*rd = *rd + *rs;
+	//Update instruction pointer
+	state->current_instruction = strchr(state->current_instruction, '\n') + 1;
 }
 // SUB
 void sub(VMState * state, VMStateDiff *diff, char *args){
-	
+	unsigned int rdi; // destination
+	unsigned int rsi; // source address
+	sscanf(args, INSTR_REG_REG_TEMPLATE,&rdi,&rsi);
+	// Do logic
+	int *rs = (((int *)state->registers) + rsi - 1);
+	int *rd = (((int *)state->registers) + rdi - 1);
+	//Do something with diff before actual change
+	if (diff != NULL) {
+		
+	}
+	*rd = *rd - *rs;
+	//Update instruction pointer
+	state->current_instruction = strchr(state->current_instruction, '\n') + 1;
 }
 
 instruction_func instruction_funcs[NUM_INSTR] = {
