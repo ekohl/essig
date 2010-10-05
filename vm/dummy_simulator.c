@@ -46,7 +46,7 @@ void instruction_handler(VMState *state, VMStateDiff *diff){
 	// with instruction This works but is slow
 	int i = 0;
 	while(i<NUM_INSTR){
-		if(strcmp(instruction, instruction_name[i]) == 0){
+		if(strncmp(instruction, instruction_name[i], strlen(instruction_name[i])) == 0){
 			instruction_funcs[i](state,diff,args);
 			i=NUM_INSTR;
 		}
