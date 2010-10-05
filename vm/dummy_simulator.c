@@ -1,10 +1,11 @@
 #include "simulator.h"
 #include "string.h"
+#include "stdio.h"
 
 #define NUM_INSTR 4
 
 int nbits_cpu=8;
-char *register_name[3] = {"F","r1","r2"};
+char *register_name[3] = {"r1","r2","F"};
 int nregisters=3;
 char *pin_names[0] = {};
 int npins = 0;
@@ -14,15 +15,25 @@ char *instruction_name[NUM_INSTR] = {"ld","str","add","sub"};
 typedef void (*instruction_func)(VMState *state, VMStateDiff *diff, char* args);
 // LD
 void ld(VMState * state, VMStateDiff *diff, char *args){
+	unsigned int rdi; // destination
+	unsigned int s; // source address
+	sscanf(args, "r%u, %x\n",&rdi,&s);
+	// Do logic
+	int *rd = (((int *)state->registers) + rdi - 1);
+	unsigned char *sa = (((unsigned char *)state->ram)+s);
+	//Do something with diff before actual change
+	if (diff != NULL) {
 		
+	}
+	*rd = *sa;
+	//Update instruction pointer
+	state->current_instruction = strchr(state->current_instruction, '\n') + 1;
 }
-// STR
 void str(VMState * state, VMStateDiff *diff, char *args){
-	
+
 }
-// ADD
 void add(VMState * state, VMStateDiff *diff, char *args){
-	
+
 }
 // SUB
 void sub(VMState * state, VMStateDiff *diff, char *args){
