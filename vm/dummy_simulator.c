@@ -50,9 +50,10 @@ instruction_func instruction_funcs[NUM_INSTR] = {
 void instruction_handler(VMState *state, VMStateDiff *diff){
 	// FIXME: Are wide chars better?
 	char instruction[10];
-	// FIXME: This may be difficult to generate?
-	char args[50];
-	sscanf(state->current_instruction,"%10s %50s", instruction, args);
+	// FIXME: This is unfortunate but since spaces may occur in args
+	// I can't use %s in sscanf
+	char *args = strchr(state->current_instruction, ' ') + 1;
+	sscanf(state->current_instruction,"%10s", instruction);
 	// TODO: We need to find a piece of code to fit 
 	// with instruction This works but is slow
 	int i = 0;
