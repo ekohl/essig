@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
+#include <errno.h>
 
 /*! \mainpage
 \section VMMainPage Microcontroller simulator API
@@ -111,12 +113,12 @@ VMState *vm_newstate(void *instructions, VMInterruptPolicy interrupt_policy);
     vm_step() */
 VMStateDiff *vm_newdiff(void);
 
-#ifdef VM_WITH_THREADS
+// #ifdef VM_WITH_THREADS
 /*! Lock the interrupt queue */
 void vm_acquire_interrupt_queue(VMState *);
 /*! Release the interrupt queue */
 void vm_release_interrupt_queue(VMState *);
-#endif
+// #endif
 
 /*! \defgroup VMDEBUGGER  Debugger Functions */
 /* @{ */
@@ -163,7 +165,7 @@ int vm_info(VMState *state, VMInfoType type, size_t vmaddr);
 int vm_errno(void);
 
 /*! Turns a VM errno into an error message. */
-char *vm_strerror(int vm_errno);
+char *vm_strerror(int err);
 
 /* @} */
 

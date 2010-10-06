@@ -2,7 +2,7 @@
 
 #define STRINGIFY(X) #X
 #define LOCATION __FILE__ ":" STRINGIFY(__LINE__)
-#define err(result, msg) _err((bool) (result), (msg))
+#define err(result, msg) if (!(bool) (result)) { return NULL; }
 
 enum _vmerrno {
     #define __vm_errno__(a,b) a,
@@ -11,19 +11,16 @@ enum _vmerrno {
     VM_ERROR_NUM
 };
 
-static char *vm_error_messages[] = { 
+static char *_vm_error_messages[] = { 
     #define __vm_errno__(a,b) b,
     #include "vmerrno.h"
     #undef __vm_errno__
 };
 
-static void
-_err(bool result, char *msg)
-{
-	if (!result) {
-		perror(msg);
-		exit(EXIT_FAILURE);
-	}
+static __thread int _vm_errno = 0;
+
+void interrupt_handler(VMState *state, VMStateDiff *diffs) {
+    
 }
 
 VMState *vm_newstate(void *instructions, VMInterruptPolicy interrupt_policy){
@@ -97,4 +94,20 @@ int vm_info(VMState *state, VMInfoType type, size_t vmaddr){
 			break;
 	}
 	return result;
+}
+
+int vm_errno(void) {
+    int tmp = _vm_errno;
+    _vm_errno = VM_NO_ERROR;
+    return tmp;
+}
+
+char *vm_strerror(int err) {
+    if (err == VM_OSERROR) {
+        return strerror(errno);
+    } else {
+        if (err == -1)
+            err = _vm_errno;
+        return _vm_error_messages[err];
+    }
 }
