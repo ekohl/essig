@@ -121,20 +121,23 @@ void vm_release_interrupt_queue(VMState *);
 /*! \defgroup VMDEBUGGER  Debugger Functions */
 /* @{ */
 /*! Set a breakpoint
-    \param code_offset[in] offset in the instructions table */
+    \param state state The state of the VM
+    \param[in] code_offset offset in the instructions table */
 int vm_break(VMState *state, size_t code_offset);
 /*! Resume execution until a breakpoint is met
-    \param diffs[out] If not NULL, keep track of differences in the VMState
+    \param state The state of the VM
+    \param[out] diffs If not NULL, keep track of differences in the VMState
 */
 void vm_cont(VMState *state, VMStateDiff *diffs);
 /*! Resume execution in reverse order (could also do snapshots if we want)
-    \param diffs[in] Each step applies one diff until we reach the beginning 
+    \param state The state of the VM
+    \param[in] diffs Each step applies one diff until we reach the beginning
     or until we hit a breakpoint */
 void vm_rcont(VMState *state, VMStateDiff *diffs);
 /*! Step n steps
-    \param nsteps[in] Number of steps to take
-    \param diffs[out] If not NULL, populate with the difference for each 
-                      step 
+    \param state The state of the VM
+    \param[in] nsteps Number of steps to take
+    \param[out] diffs If not NULL, populate with the difference for each step
 */
 void vm_step(VMState *state, int nsteps, VMStateDiff *diffs);
 void vm_rstep(VMState *state, int nsteps, VMStateDiff *diffs);
@@ -147,6 +150,7 @@ void vm_break_async(VMState *state);
 
 /*! 
 Interrupt the microcontroller
+\param state The state of the VM
 \param[in] type The type of interrupt
 \param[in] ... Extra arguments depending on the type of interrupt
 */
