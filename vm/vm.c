@@ -2,13 +2,19 @@
 
 #define STRINGIFY(X) #X
 #define LOCATION __FILE__ ":" STRINGIFY(__LINE__)
-#define err(result, msg) if (!(bool) (result)) { return NULL; }
+#ifdef VM_DEBUG
+#	define print_err(x) perror(x)
+#else
+#	define print_err(x)
+#endif
+
+#define err(result, msg) if (!(bool) (result)) { print_err(msg); return NULL; }
 
 enum _vmerrno {
 #	define __vm_errno__(a,b) a,
 #	include "vmerrno.h"
 #	undef __vm_errno__
-    VM_ERROR_NUM
+	VM_ERROR_NUM
 };
 
 static char *_vm_error_messages[] = { 
