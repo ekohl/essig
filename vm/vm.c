@@ -5,22 +5,22 @@
 #define err(result, msg) if (!(bool) (result)) { return NULL; }
 
 enum _vmerrno {
-    #define __vm_errno__(a,b) a,
-    #include "vmerrno.h"
-    #undef __vm_errno__
+#	define __vm_errno__(a,b) a,
+#	include "vmerrno.h"
+#	undef __vm_errno__
     VM_ERROR_NUM
 };
 
 static char *_vm_error_messages[] = { 
-    #define __vm_errno__(a,b) b,
-    #include "vmerrno.h"
-    #undef __vm_errno__
+#	define __vm_errno__(a,b) b,
+#	include "vmerrno.h"
+#	undef __vm_errno__
 };
 
 static __thread int _vm_errno = 0;
 
 void interrupt_handler(VMState *state, VMStateDiff *diffs) {
-    
+
 }
 
 VMState *vm_newstate(void *instructions, VMInterruptPolicy interrupt_policy){
@@ -38,11 +38,11 @@ VMState *vm_newstate(void *instructions, VMInterruptPolicy interrupt_policy){
 	newstate->interrupt_policy = interrupt_policy;
 	newstate->interrupt_queue = NULL;
 	
-	#ifdef VM_WITH_THREADS
+#	ifdef VM_WITH_THREADS
 	// TODO: on windows link with http://sourceware.org/pthreads-win32/
 	err(pthread_mutex_init(&newstate->interrupt_queue_lock) != 0, 
 		"pthread_mutex_init " LOCATION);
-	#endif
+#	endif
 	
 	newstate->break_async = false;
 	return newstate;
@@ -97,17 +97,17 @@ int vm_info(VMState *state, VMInfoType type, size_t vmaddr){
 }
 
 int vm_errno(void) {
-    int tmp = _vm_errno;
-    _vm_errno = VM_NO_ERROR;
-    return tmp;
+	int tmp = _vm_errno;
+	_vm_errno = VM_NO_ERROR;
+	return tmp;
 }
 
 char *vm_strerror(int err) {
-    if (err == VM_OSERROR) {
-        return strerror(errno);
-    } else {
-        if (err == -1)
-            err = _vm_errno;
-        return _vm_error_messages[err];
-    }
+	if (err == VM_OSERROR) {
+		return strerror(errno);
+	} else {
+		if (err == -1)
+			err = _vm_errno;
+		return _vm_error_messages[err];
+	}
 }
