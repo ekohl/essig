@@ -13,16 +13,15 @@ libdir = os.path.dirname(os.path.abspath(__file__))
 def main():
     if havecython:
         source = 'cli.pyx'
-        depends = ['cli.pxd', 'vm.h']
     else:
         source = 'cli.c'
-        depends = ['vm.h']
     
+    extra_objects = ['vm.o', 'dummy_simulator.o']
     climodule = Extension(
         'cli', 
         [source], 
-        depends=depends,
-        extra_objects=['vm.o', 'dummy_simulator.o'],
+        depends=extra_objects + ['cli.pxd'],
+        extra_objects=extra_objects,
     )
     
     setup(

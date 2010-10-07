@@ -7,6 +7,10 @@
 #include <string.h>
 #include <errno.h>
 
+#ifdef VM_WITH_THREADS
+#   include <pthread.h>
+#endif
+
 /*! \mainpage
 \section VMMainPage Microcontroller simulator API
 \subsection VMMainPublicAPI The public API that will be exposed by the Simulator
@@ -64,54 +68,78 @@ typedef enum {
     VM_INFO_PIN
 } VMInfoType;
 
-/*! Item in the interrupt queue */
-typedef struct VMInterruptItem {
-    VMInterruptType interrupt_type;
-    /*! This attribute can be set to anything and semantics depends on
-        the interrupt_type */
-    void *extra_arg;
-    struct VMInterruptItem *next;
-} VMInterruptItem;
+struct VMInterruptItem;
+struct VMBreakpoint;
 
 /*! The state of the VM */
 typedef struct VMState {
     void *instructions;
+    size_t instructions_size;
     void *current_instruction;
     void *ram;
     void *registers;
     VMInterruptPolicy interrupt_policy;
-    VMInterruptItem *interrupt_queue;
+    struct VMInterruptItem *interrupt_queue;
 #ifdef VM_WITH_THREADS
     /*! Make sure this mutex is recursive */
     pthread_mutex_t interrupt_queue_lock;
 #endif
     bool break_async;
+    struct VMBreakpoint *breakpoints;
 } VMState;
+
+/*! Use this macro as the first attribute of a struct to make it an iterable */
+#define VMIterable_Head struct VMIterable *next
+/*! A generic iterable type */
+typedef struct VMIterable {
+    VMIterable_Head;
+} VMIterable;
 
 /*! Single difference in the VMState */
 typedef struct VMSingleStateDiff {
+    VMIterable_Head;
     size_t oldval;
     size_t newval;
     VMInfoType type;
     size_t location;
-    struct VMSingleStateDiff *next;
 } VMSingleStateDiff;
+
+/*! Item in the interrupt queue */
+typedef struct VMInterruptItem {
+    VMIterable_Head;
+    VMInterruptType interrupt_type;
+    /*! This attribute can be set to anything and semantics depends on
+        the interrupt_type */
+    void *extra_arg;
+} VMInterruptItem;
 
 /*! Represents a difference in state between two consecutive steps.
     This means it has a list of "single differences" in the state
     (or is there only ever one difference with our ISA?) */
 typedef struct VMStateDiff {
+    VMIterable_Head;
     VMSingleStateDiff *singlediff;
-    struct VMStateDiff *next;
 } VMStateDiff;
+
+typedef struct VMBreakpoint {
+    VMIterable_Head;
+    size_t offset;
+} VMBreakpoint;
 
 /* @} */
 
 /*! Create a new VMState */
-VMState *vm_newstate(void *instructions, VMInterruptPolicy interrupt_policy);
+VMState *vm_newstate(void *instructions, 
+                     size_t instructions_size, 
+                     VMInterruptPolicy interrupt_policy);
 /*! Create a new diff that can be passed to functions like vm_cont() and 
     vm_step() */
 VMStateDiff *vm_newdiff(void);
+
+/*! Deallocate a VMState */
+void vm_closestate(VMState *);
+/*! Deallocate a VMStateDiff */
+void vm_closediff(VMStateDiff *);
 
 // #ifdef VM_WITH_THREADS
 /*! Lock the interrupt queue */
@@ -123,7 +151,8 @@ void vm_release_interrupt_queue(VMState *);
 /*! \defgroup VMDEBUGGER  Debugger Functions */
 /* @{ */
 /*! Set a breakpoint
-    \param code_offset[in] offset in the instructions table */
+    \param code_offset[in] offset in the instructions table 
+	\return zero if successfull, nonzero otherwise, with a VM errno set */
 int vm_break(VMState *state, size_t code_offset);
 /*! Resume execution until a breakpoint is met
     \param diffs[out] If not NULL, keep track of differences in the VMState

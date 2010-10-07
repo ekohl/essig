@@ -1,14 +1,22 @@
 #include "vm.h"
 
-#define STRINGIFY(X) #X
-#define LOCATION __FILE__ ":" STRINGIFY(__LINE__)
+#define STRINGIFY(msg) #msg
+#define TOSTRING(msg) STRINGIFY(msg)
+#define LOCATION __FILE__ ":" TOSTRING(__LINE__)
 #ifdef VM_DEBUG
 #	define print_err(x) perror(x)
 #else
 #	define print_err(x)
 #endif
 
-#define err(result, msg) if (!(bool) (result)) { print_err(msg); return NULL; }
+#define err(result, msg, errno) \
+    if (!(bool) (result)) { \
+        print_err(LOCATION " " msg); \
+        _vm_errno = errno; \
+        return NULL; \
+    }
+
+#define err_malloc(result) err(result, "malloc", VM_NO_MEMORY)
 
 enum _vmerrno {
 #	define __vm_errno__(a,b) a,
@@ -23,43 +31,56 @@ static char *_vm_error_messages[] = {
 #	undef __vm_errno__
 };
 
-static __thread int _vm_errno = 0;
+__thread int _vm_errno = 0;
 
 void interrupt_handler(VMState *state, VMStateDiff *diffs) {
 
 }
 
-VMState *vm_newstate(void *instructions, VMInterruptPolicy interrupt_policy){
+VMState *
+vm_newstate(void *instructions, 
+            size_t instructions_size, 
+            VMInterruptPolicy interrupt_policy)
+{
 	VMState *newstate;
-	err(newstate = malloc(sizeof(VMState)), "malloc " LOCATION);
+	err_malloc(newstate = malloc(sizeof(VMState)));
 	newstate->instructions = instructions;
 	newstate->current_instruction = instructions;
 	
 	// ramsize is in bytes
-	err(newstate->ram = malloc(ramsize), "malloc " LOCATION);
+	err_malloc(newstate->ram = malloc(ramsize));
 	
 	// We make all registers ints
-	err(newstate->registers = malloc(nregisters * sizeof(int)), 
-		"malloc " LOCATION);
+	err_malloc(newstate->registers = malloc(nregisters * sizeof(int)));
 	newstate->interrupt_policy = interrupt_policy;
 	newstate->interrupt_queue = NULL;
 	
 #	ifdef VM_WITH_THREADS
 	// TODO: on windows link with http://sourceware.org/pthreads-win32/
-	err(pthread_mutex_init(&newstate->interrupt_queue_lock) != 0, 
-		"pthread_mutex_init " LOCATION);
+	err(pthread_mutex_init(&newstate->interrupt_queue_lock, NULL) == 0, 
+		"pthread_mutex_init",
+        VM_OSERROR);
 #	endif
 	
 	newstate->break_async = false;
+    newstate->breakpoints = NULL;
 	return newstate;
 }
 
 VMStateDiff *vm_newdiff(void){
 	VMStateDiff *newdiff;
-	err(newdiff = malloc(sizeof(VMStateDiff)), "malloc " LOCATION);
+	err_malloc(newdiff = malloc(sizeof(VMStateDiff)));
 	newdiff->singlediff = NULL;
 	newdiff->next = NULL;
 	return newdiff;
+}
+
+void vm_closestate(VMState *state) {
+    
+}
+
+void vm_closediff(VMStateDiff *diff) {
+    
 }
 
 void vm_step(VMState *state, int nsteps, VMStateDiff *diffs){
@@ -83,6 +104,11 @@ void vm_step(VMState *state, int nsteps, VMStateDiff *diffs){
 		}
 		nsteps--;
 	}
+}
+
+int vm_break(VMState *state, size_t code_offset) {
+	
+	return 0;
 }
 
 int vm_info(VMState *state, VMInfoType type, size_t vmaddr){

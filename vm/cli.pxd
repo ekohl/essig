@@ -16,25 +16,38 @@ cdef extern from "vm.h":
         VM_INFO_RAM
         VM_INFO_PIN
     
+    ctypedef struct VMIterable:
+        VMIterable *next
+    
     ctypedef struct VMInterruptItem:
+        VMIterable *next
         VMInterruptType interrupt_type
         void *extra_arg
-        VMInterruptItem *next
-
-    ctypedef struct VMState
+    
     ctypedef struct VMSingleStateDiff:
+        VMIterable *next
         size_t oldval
         size_t newval
         VMInfoType type
         size_t location
-        VMSingleStateDiff *next
 
     ctypedef struct VMStateDiff:
+        VMIterable *next
         VMSingleStateDiff *singlediff
-        VMStateDiff *next
-            
-    VMState *vm_newstate(void *instructions, VMInterruptPolicy interrupt_policy)
+        
+    ctypedef struct VMBreakpoint:
+        VMIterable *next
+        size_t offset
+    
+    ctypedef struct VMState:
+        VMBreakpoint *breakpoints
+    
+    VMState *vm_newstate(void *instructions, 
+                         size_t instructions_size, 
+                         VMInterruptPolicy interrupt_policy)
     VMStateDiff *vm_newdiff()
+    void vm_closestate(VMState *)
+    void vm_closediff(VMStateDiff *)
     void vm_acquire_interrupt_queue(VMState *)
     void vm_release_interrupt_queue(VMState *)
     int vm_break(VMState *state, size_t code_offset)
