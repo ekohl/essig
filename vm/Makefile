@@ -9,8 +9,7 @@ cli: $(OBJECTS)
 	python setup.py build_ext --inplace
 
 doc:
-	doxygen doxyconfig >/dev/null
+	doxygen doxyconfig
 
 clean:
 	git clean -d -X -f
-	rm *.o *.so cli.c

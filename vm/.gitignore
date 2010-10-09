@@ -2,3 +2,5 @@
 /latex
 *.o
 .*.swp
+*.so
+/cli.c
