@@ -23,11 +23,14 @@ options {
 }
 
 microcontroller:
-	name=IDENTIFIER { System.out.println("Name: "+$name.text); }
-	parameters
-	registers?
-	instructions?
-	EOF;
+	^(
+		name=IDENTIFIER { System.out.println("Name: "+$name.text); }
+		parameters
+		registers?
+		instructions?
+	)
+	EOF
+	;
 
 parameters:	^(PARAMETERS parameter+);
 

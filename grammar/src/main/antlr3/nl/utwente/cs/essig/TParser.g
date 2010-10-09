@@ -37,7 +37,7 @@ options {
 
 // Parser
 //
-microcontroller:	IDENTIFIER LBRACK! parameters registers? instructions? RBRACK! EOF!;
+microcontroller:	IDENTIFIER^ LBRACK! parameters registers? instructions? RBRACK! EOF!;
 
 parameters:		PARAMETERS^ LBRACK! (parameter LINE_SEPERATOR!)+ RBRACK!;
 parameter:		RAM NUMBER
