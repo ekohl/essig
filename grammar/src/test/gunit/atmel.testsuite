@@ -1,0 +1,9 @@
+gunit atmel walks T;
+
+@header {
+	package nl.utwente.cs.essig;
+}
+
+// Parse an entire microcontroller spec
+microcontroller:
+atmel OK
