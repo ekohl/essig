@@ -53,6 +53,6 @@ instruction:	^(
 
 expr:		assignExpr;
 
-assignExpr:	IDENTIFIER ASSIGN (NOT? IDENTIFIER | NUMBER) (operator (NOT? IDENTIFIER | NUMBER ))*;
+assignExpr:	^(IDENTIFIER ASSIGN (NOT? IDENTIFIER | NUMBER) (operator (NOT? IDENTIFIER | NUMBER ))*);
 
 operator:	AND | OR | XOR | ADD;
