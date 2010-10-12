@@ -1,11 +1,11 @@
 #include "stdio.h"
 
 int main(int argc, char* argv[]) {
-	int i = 10;
+	char i = 10;
 	int result = 1;
 
 	while(i>1) {
-		result = result * i;
+		result *= i;
 		i--;
 	}
 
