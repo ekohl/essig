@@ -22,6 +22,9 @@ options {
 //
 REGISTERS	:	'registers';
 PARAMETERS	:	'parameters';
+INSTRUCTIONS	:	'instructions';
+IF		:	'if';
+ELSE		:	'else';
 
 // Parameters
 RAM		:	'ram';
@@ -47,6 +50,7 @@ RBRACK		:	'}';
 ASSIGN		:	'=';
 LINE_SEPERATOR	:	';';
 ARG_SEPERATOR	:	',';
+EQUALS		:	'==';
 
 // Logical operators
 NOT		:	'!';

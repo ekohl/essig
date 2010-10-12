@@ -47,11 +47,17 @@ parameter:		RAM NUMBER
 registers:		REGISTERS^ LBRACK! (register LINE_SEPERATOR!)+ RBRACK!;
 register:		IDENTIFIER;
 
-instructions:		instruction+;
+instructions:		INSTRUCTIONS^ LBRACK! instruction+ RBRACK!;
 instruction:		IDENTIFIER^ arguments? LBRACK! expr+ RBRACK!;
 arguments:		IDENTIFIER (ARG_SEPERATOR! IDENTIFIER)*;
 
-expr:			assignExpr LINE_SEPERATOR!;
-assignExpr:		IDENTIFIER^ ASSIGN (NOT? IDENTIFIER | NUMBER) (operator (NOT? IDENTIFIER | NUMBER ))*;
+expr	:		assignExpr LINE_SEPERATOR!
+	|		ifExpr;
+
+assignExpr:		IDENTIFIER ASSIGN^ (NOT? IDENTIFIER | NUMBER) (operator (NOT? IDENTIFIER | NUMBER ))*;
+ifExpr:			IF^ condition LBRACK! expr+ RBRACK! (ELSE LBRACK! expr+ RBRACK!)?;
+
+condition:		word EQUALS word;
+word:			IDENTIFIER | NUMBER;
 
 operator:		AND | OR | XOR | ADD;

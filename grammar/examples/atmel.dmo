@@ -19,17 +19,33 @@ atmel {
 		PC; /* Program counter */
 	}
 
-	mov Rd, Rr {
-		Rd = Rr;
-	}
+	instructions {
 
-	and Rd, Rr {
-		/* 0 <= d <= 31, 0 <= r 31 */
-		Rd = Rd & Rr;
-		PC = PC + 1;
-		S = N ^ V;
-		V = 0;
-		N = R7;
-		Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
+		ldi Rd, K {
+			Rd = K;
+			PC = PC + 1;
+		}
+
+		breq k {
+			if Z == 1 {
+				PC = PC + k + 1;
+			} else {
+				PC = PC + 1;
+			}
+		}
+
+		mov Rd, Rr {
+			Rd = Rr;
+		}
+
+		and Rd, Rr {
+			/* 0 <= d <= 31, 0 <= r 31 */
+			Rd = Rd & Rr;
+			PC = PC + 1;
+			S = N ^ V;
+			V = 0;
+			N = R7;
+			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
+		}
 	}
 }

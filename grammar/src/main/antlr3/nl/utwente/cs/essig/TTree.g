@@ -42,7 +42,7 @@ registers:	^(REGISTERS register+);
 
 register:	r=IDENTIFIER { System.out.println("Register: "+$r.text); };
 
-instructions:	instruction+;
+instructions:	^(INSTRUCTIONS instruction+);
 
 instruction:	^(
 			f=IDENTIFIER { System.out.print($f.text+"("); }
@@ -51,8 +51,13 @@ instruction:	^(
 			expr+
 		);
 
-expr:		assignExpr;
 
-assignExpr:	^(IDENTIFIER ASSIGN (NOT? IDENTIFIER | NUMBER) (operator (NOT? IDENTIFIER | NUMBER ))*);
+expr	:	assignExpr | ifExpr;
+
+assignExpr:	^(ASSIGN IDENTIFIER (NOT? IDENTIFIER | NUMBER) (operator (NOT? IDENTIFIER | NUMBER ))*);
+ifExpr:		^(IF condition expr+ (ELSE expr+)?);
+
+condition:	word EQUALS word;
+word:		IDENTIFIER | NUMBER;
 
 operator:	AND | OR | XOR | ADD;
