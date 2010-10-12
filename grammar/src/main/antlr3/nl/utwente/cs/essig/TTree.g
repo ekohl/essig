@@ -10,9 +10,13 @@ options {
     //
     tokenVocab = TParser;
 
-    // Use ANTLR built-in CommonToken for tree nodes
+    // Use ANTLR built-in CommonTree for tree nodes
     //
     ASTLabelType = CommonTree;
+
+    // Output a template
+    //
+    output = template;
 }
 
 // What package should the generated source exist in?
@@ -24,40 +28,41 @@ options {
 
 microcontroller:
 	^(
-		name=IDENTIFIER { System.out.println("Name: "+$name.text); }
-		parameters
-		registers?
-		instructions?
+		n=IDENTIFIER
+		^(PARAMETERS (p+=parameter)+)
+		^(REGISTERS (r+=register)*)
+		^(INSTRUCTIONS (i+=instruction)*)
 	)
-	EOF
+	-> microcontroller(name={$n},parameters={$p},registers={$r},instructions={$i})
 	;
 
-parameters:	^(PARAMETERS parameter+);
-
-parameter:	RAM n=NUMBER { System.out.println("Ram: "+$n.text); }
-	|	GPRS n=NUMBER { System.out.println("Registers: "+$n.text); }
+parameter:	k=RAM n=NUMBER -> parameter(key={$k},value={$n})
+	|	k=GPRS n=NUMBER -> parameter(key={$k},value={$n})
 	;
 
-registers:	^(REGISTERS register+);
-
-register:	r=IDENTIFIER { System.out.println("Register: "+$r.text); };
-
-instructions:	^(INSTRUCTIONS instruction+);
+register:	name=IDENTIFIER -> register(name={$name});
 
 instruction:	^(
-			f=IDENTIFIER { System.out.print($f.text+"("); }
-			(a=IDENTIFIER { System.out.print($a.text+", "); } )*
-			{ System.out.println(")"); }
-			expr+
-		);
+			f=IDENTIFIER
+			(a+=IDENTIFIER)*
+			(e+=expr)+
+		)
+		-> instruction(name={$f},arguments={$a},expressions={$e})
+	;
 
 
-expr	:	assignExpr | ifExpr;
+expr	:	a=assignExpr -> {$a.st}
+	|	i=ifExpr -> {$i.st}
+	;
 
-assignExpr:	^(ASSIGN IDENTIFIER (NOT? IDENTIFIER | NUMBER) (operator (NOT? IDENTIFIER | NUMBER ))*);
-ifExpr:		^(IF condition expr+ (ELSE expr+)?);
-
-condition:	word EQUALS word;
-word:		IDENTIFIER | NUMBER;
+assignExpr:	^(ASSIGN var=IDENTIFIER value+=word (value+=operator value+=word)*)
+	->	assign(var={$var},value={$value})
+	;
 
 operator:	AND | OR | XOR | ADD;
+
+ifExpr:		^(IF condition expr+ (ELSE expr+)?);
+condition:	word EQUALS word;
+word	:	n=NOT? i=IDENTIFIER
+	|	NUMBER
+	;

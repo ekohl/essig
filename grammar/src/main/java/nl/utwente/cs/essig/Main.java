@@ -5,8 +5,6 @@ import org.antlr.runtime.tree.*;
 import org.antlr.stringtemplate.*;
 
 import java.io.*;
-import nl.utwente.cs.essig.TParser.microcontroller_return;
-
 
 /**
  * Test driver program for the ANTLR3 Maven Architype demo
@@ -150,7 +148,7 @@ class Main {
                 //
                 System.out.println("    Parser Start");
                 long pStart = System.currentTimeMillis();
-                microcontroller_return psrReturn = parser.microcontroller();
+                TParser.microcontroller_return psrReturn = parser.microcontroller();
                 long stop = System.currentTimeMillis();
                 System.out.println("      Parsed in " + (stop - pStart) + "ms.");
 
@@ -175,11 +173,19 @@ class Main {
                 {
                     if (parser.getNumberOfSyntaxErrors() == 0) {
                         TTree walker = new TTree(new CommonTreeNodeStream(t));
+			//walker.setTemplateLib(new StringTemplateGroup("c", "templates/c"));
                         System.out.println("    AST Walk Start\n");
                         pStart = System.currentTimeMillis();
-                        walker.microcontroller();
+                        TTree.microcontroller_return mr = walker.microcontroller();
                         stop = System.currentTimeMillis();
-                        System.out.println("\n      AST Walked in " + (stop - pStart) + "ms.");
+                        System.out.println("      AST Walked in " + (stop - pStart) + "ms.");
+
+                        // Create the output file and write the dot spec to it
+                        //
+                        source = source.substring(0, source.length()-3);
+                        FileWriter outputStream = new FileWriter(source + "c");
+                        outputStream.write(mr.toString());
+                        outputStream.close();
                      }
                 }
                 catch(Exception w)
@@ -204,7 +210,6 @@ class Main {
                     // the graphviz tools or zgrviewer (Java) to view the graphical
                     // version of the dot file.
                     //
-                    source = source.substring(0, source.length()-3);
                     String outputName = source + "dot";
 
                     System.out.println("    Producing AST dot (graphviz) file");

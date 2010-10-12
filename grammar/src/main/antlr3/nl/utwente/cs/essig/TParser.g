@@ -37,7 +37,7 @@ options {
 
 // Parser
 //
-microcontroller:	IDENTIFIER^ LBRACK! parameters registers? instructions? RBRACK! EOF!;
+microcontroller:	IDENTIFIER^ LBRACK! parameters registers instructions RBRACK! EOF!;
 
 parameters:		PARAMETERS^ LBRACK! (parameter LINE_SEPERATOR!)+ RBRACK!;
 parameter:		RAM NUMBER
@@ -54,10 +54,10 @@ arguments:		IDENTIFIER (ARG_SEPERATOR! IDENTIFIER)*;
 expr	:		assignExpr LINE_SEPERATOR!
 	|		ifExpr;
 
-assignExpr:		IDENTIFIER ASSIGN^ (NOT? IDENTIFIER | NUMBER) (operator (NOT? IDENTIFIER | NUMBER ))*;
+assignExpr:		IDENTIFIER ASSIGN^ word (operator word)*;
 ifExpr:			IF^ condition LBRACK! expr+ RBRACK! (ELSE LBRACK! expr+ RBRACK!)?;
 
 condition:		word EQUALS word;
-word:			IDENTIFIER | NUMBER;
+word:			NOT? IDENTIFIER | NUMBER;
 
 operator:		AND | OR | XOR | ADD;
