@@ -1,5 +1,9 @@
 
 cdef extern from "vm.h":
+    ctypedef enum bool:
+        true
+        false
+
     ctypedef enum VMInterruptPolicy:
         VM_POLICY_INTERRUPT_NEVER
         VM_POLICY_INTERRUPT_AVOID
@@ -41,6 +45,7 @@ cdef extern from "vm.h":
     
     ctypedef struct VMState:
         VMBreakpoint *breakpoints
+        size_t pc
     
     VMState *vm_newstate(void *instructions, 
                          size_t instructions_size, 
@@ -50,11 +55,11 @@ cdef extern from "vm.h":
     void vm_closediff(VMStateDiff *)
     void vm_acquire_interrupt_queue(VMState *)
     void vm_release_interrupt_queue(VMState *)
-    int vm_break(VMState *state, size_t code_offset)
-    void vm_cont(VMState *state, VMStateDiff *diffs)
-    void vm_rcont(VMState *state, VMStateDiff *diffs)
-    void vm_step(VMState *state, int nsteps, VMStateDiff *diffs)
-    void vm_rstep(VMState *state, int nsteps, VMStateDiff *diffs)
+    bool vm_break(VMState *state, size_t code_offset)
+    bool vm_cont(VMState *state, VMStateDiff *diffs, bool *hit_bp)
+    void vm_rcont(VMState *state, VMStateDiff *diffs, bool *hit_bp)
+    void vm_step(VMState *state, int nsteps, VMStateDiff *diffs, bool *hit_bp)
+    void vm_rstep(VMState *state, int nsteps, VMStateDiff *diffs, bool *hit_bp)
     void vm_break_async(VMState *state)
     void vm_interrupt(VMState *state, VMInterruptType type, ...)
     int vm_info(VMState *state, VMInfoType type, size_t vmaddr)

@@ -1,5 +1,8 @@
 #include "vm.h"
 
+#define OPCODE_SIZE (nbits_cpu / 8)
+#define OPCODE(state) (state->instructions + (state->pc / OPCODE_SIZE))
+
 #define STRINGIFY(msg) #msg
 #define TOSTRING(msg) STRINGIFY(msg)
 #define LOCATION __FILE__ ":" TOSTRING(__LINE__)
@@ -13,7 +16,7 @@
     if (!(bool) (result)) { \
         print_err(LOCATION " " msg); \
         _vm_errno = errno; \
-        return NULL; \
+        goto error; \
     }
 
 #define err_malloc(result) err(result, "malloc", VM_NO_MEMORY)
@@ -33,57 +36,126 @@ static char *_vm_error_messages[] = {
 
 __thread int _vm_errno = 0;
 
-void interrupt_handler(VMState *state, VMStateDiff *diffs) {
 
+/* iterable functions */
+
+static void
+_vm_close_iterable(VMIterable *it)
+{
+	VMIterable *tmp;
+    
+	while (it) {
+		tmp = it;
+		free(it);
+		it = tmp->next;
+	}
 }
 
+static VMIterable *
+_vm_append_item(VMIterable *it, VMIterable *item)
+{
+	VMIterable *begin = it;
+	if (!it) {
+		return item;
+	}
+    
+	while (it) {
+		it = it->next;
+	}
+	it->next = item;
+	return begin;
+}
+
+/* breakpoint checking */
+bool
+_hit_breakpoint(VMState *state)
+{
+	while (state->breakpoints)
+		if (state->breakpoints->offset == state->pc)
+			return true;
+		
+	return false;
+}
+
+/* allocation functions */
 VMState *
 vm_newstate(void *instructions, 
             size_t instructions_size, 
             VMInterruptPolicy interrupt_policy)
 {
-	VMState *newstate;
-	err_malloc(newstate = malloc(sizeof(VMState)));
+	VMState *newstate = NULL;
+	err_malloc(newstate = calloc(1, sizeof(VMState)));
 	newstate->instructions = instructions;
-	newstate->current_instruction = instructions;
+	newstate->pc = 0;
 	
 	// ramsize is in bytes
-	err_malloc(newstate->ram = malloc(ramsize));
+	err_malloc(newstate->ram = calloc(ramsize, 1));
 	
+#ifdef VM_WITH_THREADS
+	err(pthread_mutex_init(&newstate->interrupt_queue_lock, NULL) == 0,
+		"pthread_mutex_init",
+		VM_OSERROR);
+#endif
+    
 	// We make all registers ints
-	err_malloc(newstate->registers = malloc(nregisters * sizeof(int)));
+	err_malloc(newstate->registers = calloc(nregisters, sizeof(int)));
 	newstate->interrupt_policy = interrupt_policy;
 	newstate->interrupt_queue = NULL;
-	
-#	ifdef VM_WITH_THREADS
-	// TODO: on windows link with http://sourceware.org/pthreads-win32/
-	err(pthread_mutex_init(&newstate->interrupt_queue_lock, NULL) == 0, 
-		"pthread_mutex_init",
-        VM_OSERROR);
-#	endif
-	
 	newstate->break_async = false;
     newstate->breakpoints = NULL;
 	return newstate;
+error:
+	vm_closestate(newstate);
+	return NULL;
 }
 
-VMStateDiff *vm_newdiff(void){
-	VMStateDiff *newdiff;
-	err_malloc(newdiff = malloc(sizeof(VMStateDiff)));
-	newdiff->singlediff = NULL;
-	newdiff->next = NULL;
+VMStateDiff *
+vm_newdiff(void)
+{
+	VMStateDiff *newdiff = NULL;
+	err_malloc(newdiff = calloc(1, sizeof(VMStateDiff)));
 	return newdiff;
+error:
+	vm_closediff(newdiff);
+	return NULL;
 }
 
-void vm_closestate(VMState *state) {
-    
+/* deallocation functions */
+void 
+vm_closestate(VMState *state) 
+{
+	if (state) {
+		free(state->instructions);
+		free(state->ram);
+		free(state->registers);
+#ifdef VM_WITH_THREADS
+		/* reference counting? Oh well... */
+		(void) pthread_mutex_destroy(&state->interrupt_queue_lock);
+#endif
+		_vm_close_iterable((VMIterable *) state->interrupt_queue);
+		free(state);
+	}
 }
 
-void vm_closediff(VMStateDiff *diff) {
-    
+void 
+vm_closediff(VMStateDiff *diff) 
+{
+	if (diff) {
+		_vm_close_iterable((VMIterable *) diff);
+		free(diff);
+	}
 }
 
-void vm_step(VMState *state, int nsteps, VMStateDiff *diffs){
+
+/* control functions */
+
+bool 
+vm_step(VMState *state, int nsteps, VMStateDiff *diffs, bool *hit_bp)
+{
+	Opcode *opcode;
+	opcode_handler *handler;
+	
+	*hit_bp = false;
 	while (nsteps > 0) {
 		// Check for interrupt
 		if (state->interrupt_queue != NULL) {
@@ -98,17 +170,46 @@ void vm_step(VMState *state, int nsteps, VMStateDiff *diffs){
 					//For now clean list
 					break;
 			}
+		} else if (_hit_breakpoint(state)) {
+			*hit_bp = true;
+			break;
 		} else {
 			// Execute instruction
-			instruction_handler(state,diffs);
+			opcode = OPCODE(state);
+			handler = opcode_handlers[opcode->opcode_index].handler;
+			if (!handler(state, diffs, opcode->opcode))
+				return false;
 		}
 		nsteps--;
 	}
+    return true;
 }
 
-int vm_break(VMState *state, size_t code_offset) {
-	
-	return 0;
+bool
+vm_cont(VMState *state, VMStateDiff *diffs, bool *hit_bp)
+{
+    while (true) {
+        if(!vm_step(state, 1000, diffs, hit_bp))
+            return false;
+        if (hit_bp)
+            break;
+    }
+    return true;
+}
+
+bool 
+vm_break(VMState *state, size_t code_offset) 
+{
+	VMBreakpoint *bp = NULL;
+	err_malloc(bp = calloc(1, sizeof(VMBreakpoint)));
+	/* prepend breakpoint */
+	bp->next = state->breakpoints;
+	bp->offset = code_offset;
+	state->breakpoints = bp;
+	return true;
+error:
+	free(bp);
+	return false;
 }
 
 int vm_info(VMState *state, VMInfoType type, size_t vmaddr){
@@ -135,11 +236,12 @@ int vm_errno(void) {
 }
 
 char *vm_strerror(int err) {
-	if (err == VM_OSERROR) {
+	if (err == -1)
+		err = _vm_errno;
+	
+	if (err == VM_OSERROR)
 		return strerror(errno);
-	} else {
-		if (err == -1)
-			err = _vm_errno;
-		return _vm_error_messages[err];
-	}
+	
+	return _vm_error_messages[err];
 }
+

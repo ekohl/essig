@@ -24,10 +24,10 @@ extern int npins;
 extern size_t ramsize;         
 
 /*! Function that executes a single instruction */
-extern void instruction_handler(VMState *state, VMStateDiff *diff);
+extern OpcodeHandler opcode_handlers[];
 
 /*! Function that handles an interrupt */
-extern void interrupt_handler(VMState *state, VMStateDiff *diff);
+extern bool interrupt_handler(VMState *state, VMStateDiff *diff);
 
 /* @} */
 #endif /* simulator.h */

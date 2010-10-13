@@ -68,14 +68,31 @@ typedef enum {
     VM_INFO_PIN
 } VMInfoType;
 
+struct VMState;
+struct VMStateDiff;
 struct VMInterruptItem;
 struct VMBreakpoint;
 
+typedef bool opcode_handler(struct VMState *, 
+                            struct VMStateDiff *, 
+                            unsigned int);
+
+typedef struct {
+    char *opcode_name;
+    opcode_handler *handler;
+} OpcodeHandler;
+
+typedef struct {
+    int opcode_index;
+    unsigned int opcode;
+} Opcode;
+
+
 /*! The state of the VM */
 typedef struct VMState {
-    void *instructions;
+    Opcode *instructions;
     size_t instructions_size;
-    void *current_instruction;
+    size_t pc;
     void *ram;
     void *registers;
     VMInterruptPolicy interrupt_policy;
@@ -119,12 +136,13 @@ typedef struct VMInterruptItem {
 typedef struct VMStateDiff {
     VMIterable_Head;
     VMSingleStateDiff *singlediff;
-} VMStateDiff;
+} VMStateDiff;  
 
 typedef struct VMBreakpoint {
     VMIterable_Head;
     size_t offset;
 } VMBreakpoint;
+
 
 /* @} */
 
@@ -155,24 +173,24 @@ void vm_release_interrupt_queue(VMState *);
     \param[in] code_offset offset in the instructions table
     \return zero if successfull, nonzero otherwise, with a VM errno set
 */
-int vm_break(VMState *state, size_t code_offset);
+bool vm_break(VMState *state, size_t code_offset);
 /*! Resume execution until a breakpoint is met
     \param state The state of the VM
     \param[out] diffs If not NULL, keep track of differences in the VMState
 */
-void vm_cont(VMState *state, VMStateDiff *diffs);
+bool vm_cont(VMState *state, VMStateDiff *diffs, bool *hit_bp);
 /*! Resume execution in reverse order (could also do snapshots if we want)
     \param state The state of the VM
     \param[in] diffs Each step applies one diff until we reach the beginning
     or until we hit a breakpoint */
-void vm_rcont(VMState *state, VMStateDiff *diffs);
+void vm_rcont(VMState *state, VMStateDiff *diffs, bool *hit_bp);
 /*! Step n steps
     \param state The state of the VM
     \param[in] nsteps Number of steps to take
     \param[out] diffs If not NULL, populate with the difference for each step
 */
-void vm_step(VMState *state, int nsteps, VMStateDiff *diffs);
-void vm_rstep(VMState *state, int nsteps, VMStateDiff *diffs);
+bool vm_step(VMState *state, int nsteps, VMStateDiff *diffs, bool *hit_bp);
+bool vm_rstep(VMState *state, int nsteps, VMStateDiff *diffs, bool *hit_bp);
 
 /*! Set a breakpoint asynchronously when the interpreter is running */
 void vm_break_async(VMState *state);
