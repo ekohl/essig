@@ -245,3 +245,26 @@ char *vm_strerror(int err) {
 	return _vm_error_messages[err];
 }
 
+Opcode *disassemble(unsigned int *assembly, size_t assembly_length) {
+	Opcode *result = NULL;
+	size_t i, j;
+
+	err_malloc(result = malloc(sizeof(Opcode) * assembly_length));
+	// Walk though assembly
+	for (i = 0; i < assembly_length; ++i) {
+		// Walk through opcode handlers
+		for (j = 0; j < n_opcode_handlers; ++j) {
+			// If the opcode matches an opcode handlers opcode, we found our handler
+			if ((assembly[i] & opcode_handlers[j].mask) == opcode_handlers[j].opcode) {
+				result->opcode_index = j;
+				result->opcode = assembly[i];
+				break;
+			}
+		}
+	}
+
+	return result;
+error:
+	free(result);
+	return NULL;
+}

@@ -79,6 +79,8 @@ typedef bool opcode_handler(struct VMState *,
 
 typedef struct {
     char *opcode_name;
+    unsigned int opcode;
+    unsigned int mask;
     opcode_handler *handler;
 } OpcodeHandler;
 

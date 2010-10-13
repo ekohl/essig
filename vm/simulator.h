@@ -13,7 +13,7 @@ extern int nbits_cpu;
 extern char *register_names[];
 
 /*! Amount of registers in the microcontroller */
-extern int nregisters;
+extern int nregisters;	// FIXME n_registers
 
 /*! Array holding the names of the pins */
 extern char *pin_names[];
@@ -25,6 +25,9 @@ extern size_t ramsize;
 
 /*! Function that executes a single instruction */
 extern OpcodeHandler opcode_handlers[];
+
+/*! Amount of opcode handlers in the microcontroller */
+extern int n_opcode_handlers;
 
 /*! Function that handles an interrupt */
 extern bool interrupt_handler(VMState *state, VMStateDiff *diff);
