@@ -203,7 +203,7 @@ vm_break(VMState *state, size_t code_offset)
 	VMBreakpoint *bp = NULL;
 	err_malloc(bp = calloc(1, sizeof(VMBreakpoint)));
 	/* prepend breakpoint */
-	bp->next = state->breakpoints;
+	bp->next = (VMIterable *) state->breakpoints;
 	bp->offset = code_offset;
 	state->breakpoints = bp;
 	return true;
