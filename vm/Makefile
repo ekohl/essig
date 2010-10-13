@@ -1,5 +1,5 @@
 CFLAGS=-g -Wall -fPIC -DVM_DEBUG=1 -DVM_WITH_THREADS=1
-OBJECTS=vm.o dummy_simulator.o
+OBJECTS=vm.o
 
 all: doc cli
 

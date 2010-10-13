@@ -122,7 +122,7 @@ class SimulatorCLI(cmd.Cmd, object):
     def do_cont(self):
         "continue or run the program"
         cdef Simulator sim
-        cdef bool hit_bp
+        cdef int hit_bp
         
         sim = self.simulator
         
