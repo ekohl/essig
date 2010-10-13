@@ -118,6 +118,20 @@ class SimulatorCLI(cmd.Cmd, object):
        
         if vm_break((<Simulator> self.simulator).state, addr) != 0:
             self.print_err()
+        
+    def do_cont(self):
+        "continue or run the program"
+        cdef Simulator sim
+        cdef bool hit_bp
+        
+        sim = self.simulator
+        
+        if not vm_cont(sim.state, NULL, &hit_bp):
+            raise VMError()
+            
+        if hit_bp:
+            pc = (<Simulator> self.simulator).state.pc
+            print 'Hit breakpoint at %x' % pc
     
     def complete_break(self, text, line, beginidx, endidx):
         return self.complete_from_it(text, self.symtab)
