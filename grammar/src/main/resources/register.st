@@ -1,1 +1,1 @@
-int <name>;
+"<name>"

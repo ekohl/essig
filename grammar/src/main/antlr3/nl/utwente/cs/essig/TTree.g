@@ -36,8 +36,8 @@ microcontroller:
 	-> microcontroller(name={$n},parameters={$p},registers={$r},instructions={$i})
 	;
 
-parameter:	k=RAM n=NUMBER -> parameter(key={$k},value={$n})
-	|	k=GPRS n=NUMBER -> parameter(key={$k},value={$n})
+parameter:	RAM ram=NUMBER -> ram(ram={$ram})
+	|	GPRS n=NUMBER -> gprs(registers={$n})
 	;
 
 register:	name=IDENTIFIER -> register(name={$name});
