@@ -25,12 +25,13 @@ PARAMETERS	:	'parameters';
 INSTRUCTIONS	:	'instructions';
 IF		:	'if';
 ELSE		:	'else';
+OP_CODE		:	'opcode';
 
 // Parameters
 RAM		:	'ram';
 GPRS		:	'gprs';
 
-IDENTIFIER		:	LETTER (LETTER | DIGIT)*;
+IDENTIFIER		:	LETTER (LETTER | DIGIT)* ;
 
 NUMBER			:	DIGIT+;
 
@@ -42,11 +43,18 @@ COMMENT
 			;
 
 fragment DIGIT		:	'0'..'9';
+BINARY_NR		:	'0' | '1';
 
 fragment LETTER		:	('a'..'z'|'A'..'Z');
 
 LBRACK		:	'{';
 RBRACK		:	'}';
+LBRACE		:	'[';
+RBRACE		:	']';
+
+LPAREN		:	'(';
+RPAREN		:	')';
+
 ASSIGN		:	'=';
 LINE_SEPERATOR	:	';';
 ARG_SEPERATOR	:	',';

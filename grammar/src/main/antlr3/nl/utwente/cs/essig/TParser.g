@@ -48,7 +48,12 @@ registers:		REGISTERS^ LBRACK! (register LINE_SEPERATOR!)+ RBRACK!;
 register:		IDENTIFIER;
 
 instructions:		INSTRUCTIONS^ LBRACK! instruction+ RBRACK!;
-instruction:		IDENTIFIER^ arguments? LBRACK! expr+ RBRACK!;
+instruction:		IDENTIFIER^ (opcode ARG_SEPERATOR)? arguments? LBRACK! expr+ RBRACK!;
+
+opcode	:		OP_CODE ASSIGN (NUMBER | opcode_param)* ;
+
+
+opcode_param	:	IDENTIFIER (LBRACE! NUMBER RBRACE!)?;
 arguments:		IDENTIFIER (ARG_SEPERATOR! IDENTIFIER)*;
 
 expr	:		assignExpr LINE_SEPERATOR!
@@ -57,7 +62,7 @@ expr	:		assignExpr LINE_SEPERATOR!
 assignExpr:		IDENTIFIER ASSIGN^ word (operator word)*;
 ifExpr:			IF^ condition LBRACK! expr+ RBRACK! (ELSE LBRACK! expr+ RBRACK!)?;
 
-condition:		word EQUALS word;
-word:			NOT? IDENTIFIER | NUMBER;
+condition:		(word | (LPAREN! word operator word RPAREN!))  EQUALS word;
+word:			NOT? (IDENTIFIER (LPAREN! word RPAREN!)?| NUMBER);
 
 operator:		AND | OR | XOR | ADD;
