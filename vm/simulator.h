@@ -1,7 +1,13 @@
 #ifndef SIMULATOR_H
 #define SIMULATOR_H
 
+#include "generated_simulator.h"
 #include "vm.h"
+
+#ifndef OPCODE_TYPE
+# define OPCODE_TYPE unsigned int
+//# error The generator should #define OPCODE_TYPE
+#endif
 
 /*! \defgroup VMPrivateAPI Private API */
 /* @{ */

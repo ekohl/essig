@@ -46,8 +46,14 @@ _elf32_read(VMState *state, char *program, size_t program_size)
                     (unsigned int *) (program + phdr->p_offset),
                     phdr->p_filesz);
             }
+            
+            if (startaddr + phdr->p_memsz > state->ram + ramsize ||
+                startaddr + phdr->p_memsz < state->ram) {
+                _vm_errno = VM_ERROR_PROGRAM_TOO_BIG;
+                return false;
+            }
+            
             /* load segment into the RAM of the VM */
-            /* FIXME: out of bounds error checking */
             memcpy(startaddr, program + phdr->p_offset, phdr->p_filesz);
             
             /* NUL the rest */

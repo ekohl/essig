@@ -39,6 +39,26 @@ static char *_vm_error_messages[] = {
 
 __thread int _vm_errno = 0;
 
+/* error functions */
+int 
+vm_errno(void) 
+{
+	int tmp = _vm_errno;
+	_vm_errno = VM_NO_ERROR;
+	return tmp;
+}
+
+char *
+vm_strerror(int err) 
+{
+	if (err == -1)
+		err = _vm_errno;
+	
+	if (err == VM_OSERROR)
+		return strerror(errno);
+	
+	return _vm_error_messages[err];
+}
 
 /* iterable functions */
 
@@ -193,13 +213,13 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diffs, bool *hit_bp)
 bool
 vm_cont(VMState *state, VMStateDiff *diffs, bool *hit_bp)
 {
-    while (true) {
-        if(!vm_step(state, 1000, diffs, hit_bp))
-            return false;
-        if (*hit_bp)
-            break;
-    }
-    return true;
+	while (true) {
+		if (!vm_step(state, 1000, diffs, hit_bp))
+			return false;
+		if (*hit_bp)
+			break;
+	}
+	return true;
 }
 
 bool 
@@ -232,22 +252,6 @@ int vm_info(VMState *state, VMInfoType type, size_t vmaddr){
 			break;
 	}
 	return result;
-}
-
-int vm_errno(void) {
-	int tmp = _vm_errno;
-	_vm_errno = VM_NO_ERROR;
-	return tmp;
-}
-
-char *vm_strerror(int err) {
-	if (err == -1)
-		err = _vm_errno;
-	
-	if (err == VM_OSERROR)
-		return strerror(errno);
-	
-	return _vm_error_messages[err];
 }
 
 Opcode *
@@ -294,7 +298,7 @@ _read_elf(VMState *state, char *program, size_t program_size)
 {
 	Elf32_Ehdr *ehdr;
 	char elfclass;
-    
+
 	ehdr = (Elf32_Ehdr *) program;
 	if (ehdr->e_ident[EI_MAG0] == 0x7f &&
 		ehdr->e_ident[EI_MAG1] == 'E' &&
@@ -304,9 +308,9 @@ _read_elf(VMState *state, char *program, size_t program_size)
     {
 		/* valid ELF file */
 		if (elfclass == ELFCLASS32)
-            return _elf32_read(state, program, program_size);
-        else
-            return _elf64_read(state, program, program_size);
+			return _elf32_read(state, program, program_size);
+		else
+			return _elf64_read(state, program, program_size);
 	} else {
 		_vm_errno = VM_NOT_ELF;
 		return false;

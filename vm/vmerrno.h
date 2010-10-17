@@ -8,4 +8,6 @@ __vm_errno__(VM_NOT_ELF, "Not an ELF file.")
 __vm_errno__(VM_NO_SEGMENTS, "ELF file has no segments")
 __vm_errno__(VM_MULTIPLE_EXECUTABLE_SEGMENTS, "ELF file has multiple "
              "executable segments. That is clearly too much trouble hehehe.")
+__vm_errno__(VM_ERROR_PROGRAM_TOO_BIG, "The program is too big for the "
+             "microcontroller.")
           
