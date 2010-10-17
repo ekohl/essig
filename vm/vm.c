@@ -1,3 +1,4 @@
+#include <elf.h>
 #include "vm.h"
 
 #define OPCODE_SIZE (nbits_cpu / 8)
@@ -20,6 +21,8 @@
     }
 
 #define err_malloc(result) err(result, "malloc", VM_NO_MEMORY)
+
+bool _read_elf(VMState *state, char *program, size_t program_size);
 
 enum _vmerrno {
 #	define __vm_errno__(a,b) a,
@@ -79,14 +82,12 @@ _hit_breakpoint(VMState *state)
 
 /* allocation functions */
 VMState *
-vm_newstate(void *instructions, 
-            size_t instructions_size, 
+vm_newstate(void *program, 
+            size_t program_size,
             VMInterruptPolicy interrupt_policy)
 {
 	VMState *newstate = NULL;
 	err_malloc(newstate = calloc(1, sizeof(VMState)));
-	newstate->instructions = instructions;
-	newstate->pc = 0;
 	
 	// ramsize is in bytes
 	err_malloc(newstate->ram = calloc(ramsize, 1));
@@ -103,6 +104,10 @@ vm_newstate(void *instructions,
 	newstate->interrupt_queue = NULL;
 	newstate->break_async = false;
     newstate->breakpoints = NULL;
+
+	if (!_read_elf(newstate, program, program_size))
+        goto error;
+	
 	return newstate;
 error:
 	vm_closestate(newstate);
@@ -191,7 +196,7 @@ vm_cont(VMState *state, VMStateDiff *diffs, bool *hit_bp)
     while (true) {
         if(!vm_step(state, 1000, diffs, hit_bp))
             return false;
-        if (hit_bp)
+        if (*hit_bp)
             break;
     }
     return true;
@@ -245,7 +250,9 @@ char *vm_strerror(int err) {
 	return _vm_error_messages[err];
 }
 
-Opcode *disassemble(unsigned int *assembly, size_t assembly_length) {
+Opcode *
+disassemble(unsigned int *assembly, size_t assembly_length) 
+{
 	Opcode *result = NULL;
 	size_t i, j;
 
@@ -267,4 +274,41 @@ Opcode *disassemble(unsigned int *assembly, size_t assembly_length) {
 error:
 	free(result);
 	return NULL;
+}
+
+#include "readelf.c"
+
+#define _elf32_read _elf64_read
+#define Elf32_Ehdr Elf64_Ehdr
+#define Elf32_Phdr Elf64_Phdr
+#   include "readelf.c"
+#undef _elf32_read
+#undef Elf32_Ehdr
+#undef Elf32_Phdr
+
+/* Parse an ELF file.
+See http://www.skyfree.org/linux/references/ELF_Format.pdf for a description
+of the ELF format. */
+bool
+_read_elf(VMState *state, char *program, size_t program_size)
+{
+	Elf32_Ehdr *ehdr;
+	char elfclass;
+    
+	ehdr = (Elf32_Ehdr *) program;
+	if (ehdr->e_ident[EI_MAG0] == 0x7f &&
+		ehdr->e_ident[EI_MAG1] == 'E' &&
+		ehdr->e_ident[EI_MAG2] == 'L' &&
+		ehdr->e_ident[EI_MAG3] == 'F' &&
+		(elfclass = ehdr->e_ident[EI_CLASS]) != ELFCLASSNONE) 
+    {
+		/* valid ELF file */
+		if (elfclass == ELFCLASS32)
+            return _elf32_read(state, program, program_size);
+        else
+            return _elf64_read(state, program, program_size);
+	} else {
+		_vm_errno = VM_NOT_ELF;
+		return false;
+	}
 }

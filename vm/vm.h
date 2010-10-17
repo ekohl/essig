@@ -95,8 +95,8 @@ typedef struct VMState {
     Opcode *instructions;
     size_t instructions_size;
     size_t pc;
-    void *ram;
-    void *registers;
+    char *ram;
+    char *registers;
     VMInterruptPolicy interrupt_policy;
     struct VMInterruptItem *interrupt_queue;
 #ifdef VM_WITH_THREADS
@@ -148,9 +148,10 @@ typedef struct VMBreakpoint {
 
 /* @} */
 
-/*! Create a new VMState */
-VMState *vm_newstate(void *instructions, 
-                     size_t instructions_size, 
+/*! Create a new VMState
+    \param[in] program The entire ELF executable read into memory */
+VMState *vm_newstate(void *program,
+                     size_t program_size, 
                      VMInterruptPolicy interrupt_policy);
 /*! Create a new diff that can be passed to functions like vm_cont() and 
     vm_step() */
