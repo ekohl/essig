@@ -22,7 +22,7 @@
 
 #define err_malloc(result) err(result, "malloc", VM_NO_MEMORY)
 
-bool _read_elf(VMState *state, char *program, size_t program_size);
+static bool _read_elf(VMState *state, char *program, size_t program_size);
 
 enum _vmerrno {
 #	define __vm_errno__(a,b) a,
@@ -81,12 +81,28 @@ _vm_append_item(VMIterable *it, VMIterable *item)
 	if (!it) {
 		return item;
 	}
-    
+
 	while (it) {
 		it = it->next;
 	}
 	it->next = item;
 	return begin;
+}
+
+VMIterable *
+vm_reversed_it(VMIterable *it)
+{
+	VMIterable *previous = NULL;
+	VMIterable *next;
+	
+	while (it) {
+		next = it->next;
+		it->next = previous;
+		previous = it;
+		it = next;
+	}
+	
+	return it;
 }
 
 /* breakpoint checking */
@@ -113,7 +129,7 @@ vm_newstate(void *program,
 	err_malloc(newstate->ram = calloc(ramsize, 1));
 	
 #ifdef VM_WITH_THREADS
-	err(pthread_mutex_init(&newstate->interrupt_queue_lock, NULL) == 0,
+	err(pthread_mutex_init(&newstate->lock, NULL) == 0,
 		"pthread_mutex_init",
 		VM_OSERROR);
 #endif
@@ -121,7 +137,7 @@ vm_newstate(void *program,
 	// We make all registers ints
 	err_malloc(newstate->registers = calloc(nregisters, sizeof(int)));
 	newstate->interrupt_policy = interrupt_policy;
-	newstate->interrupt_queue = NULL;
+	newstate->interrupts = NULL;
 	newstate->break_async = false;
     newstate->breakpoints = NULL;
 
@@ -145,19 +161,44 @@ error:
 	return NULL;
 }
 
+VMInterruptItem *
+vm_new_interrupt_item(VMInterruptType interrupt_type, void *extra_arg, 
+                      size_t extra_arg_size)
+{
+	VMInterruptItem *result = NULL;
+	
+	err_malloc(result = calloc(1, sizeof(VMInterruptItem)));
+	result->interrupt_type = interrupt_type;
+	err_malloc(result->extra_arg = malloc(extra_arg_size));
+	memcpy(result->extra_arg, extra_arg, extra_arg_size);
+	return result;
+error:
+	if (result)
+		free(result->extra_arg);
+	free(result);
+	return NULL;
+}
+
 /* deallocation functions */
 void 
 vm_closestate(VMState *state) 
 {
+	VMIterable *it;
+	
 	if (state) {
 		free(state->instructions);
 		free(state->ram);
 		free(state->registers);
 #ifdef VM_WITH_THREADS
-		/* reference counting? Oh well... */
-		(void) pthread_mutex_destroy(&state->interrupt_queue_lock);
+		(void) pthread_mutex_destroy(&state->lock);
 #endif
-		_vm_close_iterable((VMIterable *) state->interrupt_queue);
+		_vm_close_iterable((VMIterable *) state->breakpoints);
+		it = (VMIterable *) state->interrupts;
+		while (it) {
+			free(((VMInterruptItem *) it)->extra_arg);
+			it = it->next;
+		}
+		_vm_close_iterable((VMIterable *) state->interrupts);
 		free(state);
 	}
 }
@@ -175,50 +216,108 @@ vm_closediff(VMStateDiff *diff)
 /* control functions */
 
 bool 
-vm_step(VMState *state, int nsteps, VMStateDiff *diffs, bool *hit_bp)
+vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
 {
 	Opcode *opcode;
 	opcode_handler *handler;
 	
 	*hit_bp = false;
 	while (nsteps > 0) {
-		// Check for interrupt
-		if (state->interrupt_queue != NULL) {
+		/* acquire and release for every step. This allows for some nice 
+		   contention! */
+		ACQUIRE_STATE(state);
+		if (state->break_async) {
+			*hit_bp = true;
+			break;
+		}
+		
+		if (state->interrupts != NULL) {
+			/* interrupt */
 			switch (state->interrupt_policy) {
 				case VM_POLICY_INTERRUPT_NEVER:
 					// clean list
 					break;
 				case VM_POLICY_INTERRUPT_ALWAYS:
-					interrupt_handler(state, diffs);
+					interrupt_handler(state, diff);
 					break;
 				default:
 					//For now clean list
 					break;
 			}
 		} else if (_hit_breakpoint(state)) {
+			/* breakpoint */
 			*hit_bp = true;
 			break;
 		} else {
-			// Execute instruction
+			/* Execute instruction */
 			opcode = OPCODE(state);
 			handler = opcode_handlers[opcode->opcode_index].handler;
-			if (!handler(state, diffs, opcode->opcode))
+			if (!handler(state, diff, opcode->opcode))
 				return false;
 		}
 		nsteps--;
+		RELEASE_STATE(state);
 	}
-    return true;
+	return true;
 }
 
 bool
-vm_cont(VMState *state, VMStateDiff *diffs, bool *hit_bp)
+vm_rstep(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
+{
+	VMSingleStateDiff *singlediff;
+	
+	
+	*hit_bp = false;
+	
+	while (nsteps--) {
+		singlediff = diff->singlediff;
+		while (singlediff) {
+			char *location;
+			switch (singlediff->type) {
+				case VM_INFO_REGISTER:
+					location = state->registers;
+					break;
+				case VM_INFO_RAM:
+					location = state->ram;
+					break;
+				case VM_INFO_PIN:
+					location = state->ram + pinoffset;
+					break;
+			}
+			location[singlediff->location] = singlediff->oldval;
+			singlediff = (VMSingleStateDiff *) singlediff->next;
+		}
+		
+		diff = (VMStateDiff *) diff->next;
+	}
+	return true;
+}
+
+bool
+vm_cont(VMState *state, VMStateDiff *diff, bool *hit_bp)
 {
 	while (true) {
-		if (!vm_step(state, 1000, diffs, hit_bp))
+		if (!vm_step(state, 1000, diff, hit_bp))
 			return false;
 		if (*hit_bp)
 			break;
 	}
+	return true;
+}
+
+bool
+vm_rcont(VMState *state, VMStateDiff *diff, bool *hit_bp)
+{
+	diff = (VMStateDiff *) vm_reversed_it((VMIterable *) diff);
+	
+	while (true) {
+		if (!vm_rstep(state, 1000, diff, hit_bp))
+			return false;
+		if (*hit_bp)
+			break;
+	}
+	
+	(void) vm_reversed_it((VMIterable *) diff);
 	return true;
 }
 
@@ -237,7 +336,50 @@ error:
 	return false;
 }
 
-int vm_info(VMState *state, VMInfoType type, size_t vmaddr){
+void
+vm_break_async_from_signal(VMState *state)
+{
+	state->break_async = true;
+}
+
+void
+vm_break_async_from_thread(VMState *state)
+{
+	ACQUIRE_STATE(state);
+	state->break_async = true;
+	RELEASE_STATE(state);
+}
+
+bool 
+vm_interrupt(VMState *state, VMInterruptType type, ...)
+{
+	va_list args;
+	VMInterruptItem *item;
+	unsigned int ncycles;
+	
+	va_start(args, type);
+	item = NULL;
+	
+	switch (type) {
+		case VM_INTERRUPT_TIMER:
+			ncycles = va_arg(args, unsigned int);
+			item = vm_new_interrupt_item(VM_INTERRUPT_TIMER,
+			                             (void *) &ncycles, 
+			                             sizeof(unsigned int));
+			break;
+	}
+	if(!item)
+		return false;
+	
+	item->next = (VMIterable *) state->interrupts;
+	state->interrupts = item;
+	va_end(args);
+	return true;
+}
+
+int 
+vm_info(VMState *state, VMInfoType type, size_t vmaddr)
+{
 	int result = 0;
 	switch (type) {
 		case VM_INFO_REGISTER:
@@ -254,7 +396,7 @@ int vm_info(VMState *state, VMInfoType type, size_t vmaddr){
 	return result;
 }
 
-Opcode *
+static Opcode *
 disassemble(unsigned int *assembly, size_t assembly_length) 
 {
 	Opcode *result = NULL;
@@ -293,7 +435,7 @@ error:
 /* Parse an ELF file.
 See http://www.skyfree.org/linux/references/ELF_Format.pdf for a description
 of the ELF format. */
-bool
+static bool
 _read_elf(VMState *state, char *program, size_t program_size)
 {
 	Elf32_Ehdr *ehdr;

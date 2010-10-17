@@ -26,6 +26,9 @@ extern char *pin_names[];
  /*! Amount of pins in the microcontroller */
 extern int npins;
 
+/*! Offset of the pins in the RAM */
+extern size_t pinoffset;
+
 /*! Size of RAM available in the microcontroller */
 extern size_t ramsize;         
 

@@ -6,9 +6,20 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <signal.h>
+#include <stdarg.h>
 
 #ifdef VM_WITH_THREADS
 #   include <pthread.h>
+#   define ACQUIRE_STATE(state) do { \
+		pthread_mutex_lock(&state->lock); \
+	} while (0)
+#   define RELEASE_STATE(state) do { \
+		pthread_mutex_unlock(&state->lock); \
+	} while (0)
+#else
+#   define ACQUIRE_STATE(state) do {} while (0)
+#   define RELEASE_STATE(state) do {} while (0)
 #endif
 
 /*! \mainpage
@@ -92,18 +103,28 @@ typedef struct {
 
 /*! The state of the VM */
 typedef struct VMState {
+    /*! Disassembled code from the executable segment.
+        FIXME: there may be multiple executable segments in an ELF file.
+        Arguments of instructions (and extra word) is represented by a
+        no-op Opcode to allow for constant time jumps */
     Opcode *instructions;
+    /*! Size of the instructions array */
     size_t instructions_size;
+    /*! Program counter */
     size_t pc;
+    /*! Number of executed cycles */
+    unsigned int cycles;
     char *ram;
     char *registers;
     VMInterruptPolicy interrupt_policy;
-    struct VMInterruptItem *interrupt_queue;
+    struct VMInterruptItem *interrupts;
 #ifdef VM_WITH_THREADS
     /*! Make sure this mutex is recursive */
-    pthread_mutex_t interrupt_queue_lock;
+    pthread_mutex_t lock;
 #endif
-    bool break_async;
+    /*! If true, have the interpreter halt execution as soon as possible */
+    volatile sig_atomic_t break_async;
+    /*! List of breakpoints */
     struct VMBreakpoint *breakpoints;
 } VMState;
 
@@ -138,7 +159,7 @@ typedef struct VMInterruptItem {
 typedef struct VMStateDiff {
     VMIterable_Head;
     VMSingleStateDiff *singlediff;
-} VMStateDiff;  
+} VMStateDiff;
 
 typedef struct VMBreakpoint {
     VMIterable_Head;
@@ -157,20 +178,19 @@ VMState *vm_newstate(void *program,
     vm_step() */
 VMStateDiff *vm_newdiff(void);
 
+/*! Create a new interrupt item */
+VMInterruptItem *vm_new_interrupt_item(VMInterruptType interrupt_type, 
+                                       void *extra_arg,
+                                       size_t extra_arg_size);
+
 /*! Deallocate a VMState */
 void vm_closestate(VMState *);
 /*! Deallocate a VMStateDiff */
 void vm_closediff(VMStateDiff *);
 
-// #ifdef VM_WITH_THREADS
-/*! Lock the interrupt queue */
-void vm_acquire_interrupt_queue(VMState *);
-/*! Release the interrupt queue */
-void vm_release_interrupt_queue(VMState *);
-// #endif
-
 /*! \defgroup VMDEBUGGER  Debugger Functions */
 /* @{ */
+
 /*! Set a breakpoint
     \param state state The state of the VM
     \param[in] code_offset offset in the instructions table
@@ -179,24 +199,32 @@ void vm_release_interrupt_queue(VMState *);
 bool vm_break(VMState *state, size_t code_offset);
 /*! Resume execution until a breakpoint is met
     \param state The state of the VM
-    \param[out] diffs If not NULL, keep track of differences in the VMState
+    \param[out] diff If not NULL, keep track of differences in the VMState
 */
-bool vm_cont(VMState *state, VMStateDiff *diffs, bool *hit_bp);
+
+bool vm_cont(VMState *state, VMStateDiff *diff, bool *hit_bp);
 /*! Resume execution in reverse order (could also do snapshots if we want)
     \param state The state of the VM
-    \param[in] diffs Each step applies one diff until we reach the beginning
-    or until we hit a breakpoint */
-void vm_rcont(VMState *state, VMStateDiff *diffs, bool *hit_bp);
+    \param[in] diff Each step applies one diff until we reach the beginning
+               or until we hit a breakpoint.
+     */
+bool vm_rcont(VMState *state, VMStateDiff *diff, bool *hit_bp);
+
 /*! Step n steps
     \param state The state of the VM
     \param[in] nsteps Number of steps to take
-    \param[out] diffs If not NULL, populate with the difference for each step
+    \param[out] diff If not NULL, populate with the difference for each step
 */
-bool vm_step(VMState *state, int nsteps, VMStateDiff *diffs, bool *hit_bp);
-bool vm_rstep(VMState *state, int nsteps, VMStateDiff *diffs, bool *hit_bp);
+bool vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp);
+/*! Reverse step. The list of diff must be in reverse order. */
+bool vm_rstep(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp);
 
-/*! Set a breakpoint asynchronously when the interpreter is running */
-void vm_break_async(VMState *state);
+/*! Set a breakpoint asynchronously when the interpreter is running. This
+    function is async-signal-safe. */
+void vm_break_async_from_signal(VMState *state);
+/*! Set a breakpoint asynchronously when the interpreter is running. This
+    function is thread-safe. */
+void vm_break_async_from_thread(VMState *state);
 /* @} */
 
 
@@ -207,7 +235,7 @@ Interrupt the microcontroller
 \param[in] type The type of interrupt
 \param[in] ... Extra arguments depending on the type of interrupt
 */
-void vm_interrupt(VMState *state, VMInterruptType type, ...);
+bool vm_interrupt(VMState *state, VMInterruptType type, ...);
 /* @} */
 
 /*! Query the VM for information */
@@ -223,6 +251,9 @@ int vm_errno(void);
 char *vm_strerror(int err);
 
 /* @} */
+
+/*! Return a reversed version of an iterable. Mutates inplace. */
+VMIterable *vm_reversed_it(VMIterable *it);
 
 /* include the private API specification */
 #include "simulator.h"

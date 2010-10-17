@@ -8,7 +8,7 @@
 
 /* Load the loadable segments of the program into the VMState. Disassemble
    The Executable Segment. */
-bool
+static bool
 _elf32_read(VMState *state, char *program, size_t program_size)
 {
     Elf32_Ehdr *ehdr;
