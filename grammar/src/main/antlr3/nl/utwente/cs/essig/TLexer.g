@@ -29,10 +29,7 @@ ELSE		:	'else';
 // Parameters
 RAM		:	'ram';
 GPRS		:	'gprs';
-OP_CODE		:	'opcode';
-//CLOCK : 'clock';
-//STACK : 'stack';
-//SIZE  : 'size';
+OP_CODE		:	'op';
 
 IDENTIFIER		:	LETTER (LETTER | DIGIT)* ;
 
