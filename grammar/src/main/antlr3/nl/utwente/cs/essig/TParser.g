@@ -42,14 +42,31 @@ microcontroller:	IDENTIFIER^ LBRACK! parameters registers instructions RBRACK! E
 parameters:		PARAMETERS^ LBRACK! (parameter LINE_SEPERATOR!)+ RBRACK!;
 parameter:		RAM NUMBER
 	|		GPRS NUMBER
+	|   SIZE NUMBER
+	|   CLOCK NUMBER
 	;
 
 registers:		REGISTERS^ LBRACK! (register LINE_SEPERATOR!)+ RBRACK!;
 register:		IDENTIFIER;
 
 instructions:		INSTRUCTIONS^ LBRACK! instruction+ RBRACK!;
-instruction:		IDENTIFIER^ arguments? LBRACK! expr+ RBRACK!;
-arguments:		IDENTIFIER (ARG_SEPERATOR! IDENTIFIER)*;
+instruction:		IDENTIFIER^ params? arguments?  LBRACK! expr+ RBRACK!;
+
+
+params : LBRACE! param (ARG_SEPERATOR! param)* RBRACE!;
+param : (SIZE | CLOCK) ASSIGN! NUMBER
+      | opcode;
+
+// Params
+opcode	:		OP_CODE^ ASSIGN!(NUMBER | opcode_param)* ;
+opcode_param	:	IDENTIFIER (LBRACE! NUMBER RBRACE!)?;
+
+//clock_cycles : CLOCK^ ASSIGN! NUMBER;
+//size : SIZE^ ASSIGN! NUMBER;   
+
+arguments:		argument (ARG_SEPERATOR! argument)*;
+
+argument : IDENTIFIER;
 
 expr	:		assignExpr LINE_SEPERATOR!
 	|		ifExpr;
@@ -57,7 +74,7 @@ expr	:		assignExpr LINE_SEPERATOR!
 assignExpr:		IDENTIFIER ASSIGN^ word (operator word)*;
 ifExpr:			IF^ condition LBRACK! expr+ RBRACK! (ELSE LBRACK! expr+ RBRACK!)?;
 
-condition:		word EQUALS word;
-word:			NOT? IDENTIFIER | NUMBER;
+condition:		(word | (LPAREN! word operator word RPAREN!))  EQUALS word;
+word:			NOT? (IDENTIFIER (LPAREN! word RPAREN!)?| NUMBER);
 
 operator:		AND | OR | XOR | ADD;
