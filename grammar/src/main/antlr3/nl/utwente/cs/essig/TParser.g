@@ -48,13 +48,22 @@ registers:		REGISTERS^ LBRACK! (register LINE_SEPERATOR!)+ RBRACK!;
 register:		IDENTIFIER;
 
 instructions:		INSTRUCTIONS^ LBRACK! instruction+ RBRACK!;
-instruction:		IDENTIFIER^ (opcode ARG_SEPERATOR)? arguments? LBRACK! expr+ RBRACK!;
-
-opcode	:		OP_CODE ASSIGN (NUMBER | opcode_param)* ;
+instruction:		IDENTIFIER^ params? arguments?  LBRACK! expr+ RBRACK!;
 
 
+params : LBRACE! param (ARG_SEPERATOR! param)* RBRACE!;
+param : opcode | IDENTIFIER ASSIGN! NUMBER;
+
+// Params
+opcode	:		OP_CODE^ ASSIGN! (NUMBER | opcode_param)* ;
 opcode_param	:	IDENTIFIER (LBRACE! NUMBER RBRACE!)?;
-arguments:		IDENTIFIER (ARG_SEPERATOR! IDENTIFIER)*;
+
+//clock_cycles : CLOCK^ ASSIGN! NUMBER;
+//size : SIZE^ ASSIGN! NUMBER;   
+
+arguments:		argument (ARG_SEPERATOR! argument)*;
+
+argument : IDENTIFIER;
 
 expr	:		assignExpr LINE_SEPERATOR!
 	|		ifExpr;
