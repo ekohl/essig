@@ -62,7 +62,7 @@ opcode	:		OP_CODE^ ASSIGN!(NUMBER | opcode_param)* ;
 opcode_param	:	IDENTIFIER (LBRACE! NUMBER RBRACE!)?;
 
 //clock_cycles : CLOCK^ ASSIGN! NUMBER;
-//size : SIZE^ ASSIGN! NUMBER;   
+//size : SIZE^ ASSIGN! NUMBER;
 
 arguments:		argument (ARG_SEPERATOR! argument)*;
 

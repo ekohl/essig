@@ -2,12 +2,12 @@ atmel {
 	parameters {
 		gprs 32;
 		ram 1024;
-		
-		/* Standard Values */
-    clock 1; /* 1 clock_cycle */
-    size 1; /* 1 word */
 
-  }
+		/* Standard Values */
+		clock 1; /* 1 clock_cycle */
+		size 1; /* 1 word */
+
+	}
 
 	registers {
 		/* -- Status Register (SREG) -- */
@@ -27,48 +27,48 @@ atmel {
 
 	instructions {
 
-    /* Add with Carry */
-    adc [clock=1, opcode= 0001 11rd dddd rrrr, size=1] Rd, Rr {
-      Rd = Rd + Rr + C;
-      
-      H = Rd3 & Rr3 + Rr3 & !R3 + !R3 & d3;
-      S = N ^ V;
-      V = Rd7 & Rr7 &  !R7 + !Rd7 & !Rr7 & R7;
-      N = R7;
-      Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
-      C = Rd7 & Rr7 + Rr7 & !R7 + !R7 & Rd7;
-      
-      PC = PC + 1;
-      
-    }
-    
-    /* Add without Carry */
-    add [opcode=0000 11rd dddd rrrr] Rd, Rr {
-      Rd = Rd + Rr;
-      
-      H = Rd3 & Rr3 + Rr3 & !R3 + !R3 & d3;
-      S = N ^ V;
-      V = Rd7 & Rr7 &  !R7 + !Rd7 & !Rr7 & R7;
-      N = R7;
-      Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
-      C = Rd7 & Rr7 + Rr7 & !R7 + !R7 & Rd7;
-      
-      PC = PC + 1;
-    }
-    
-    /* Add Immediate to Word  TODO: solve: ADIW Rd+1:Rd,K*/
-    adiw [opcode= 1001 0110 KKdd KKKK] Rd, K {
-      /* Rd+1:Rd ? Rd+1:Rd + K; */     
-      S = N ^ V;
-      PC = PC + 1;
-      V = !Rdh7 & R15;
-      N = R15;
-      Z = !R15 & !R14 & !R13 & !R12 & !R11 & !R10 & !R9 & !R8 & !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
-      C = !R15 & Rdh7;
-    }       
-    
-    /* Logical AND */
-		and [opcode= 0010 00rd dddd rrrr] Rd, Rr {
+		/* Add with Carry */
+		adc [clock=1, opcode=0001 11rd dddd rrrr, size=1] Rd, Rr {
+			Rd = Rd + Rr + C;
+
+			H = Rd3 & Rr3 + Rr3 & !R3 + !R3 & d3;
+			S = N ^ V;
+			V = Rd7 & Rr7 &  !R7 + !Rd7 & !Rr7 & R7;
+			N = R7;
+			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
+			C = Rd7 & Rr7 + Rr7 & !R7 + !R7 & Rd7;
+
+			PC = PC + 1;
+
+		}
+
+		/* Add without Carry */
+		add [opcode=0000 11rd dddd rrrr] Rd, Rr {
+			Rd = Rd + Rr;
+
+			H = Rd3 & Rr3 + Rr3 & !R3 + !R3 & d3;
+			S = N ^ V;
+			V = Rd7 & Rr7 &  !R7 + !Rd7 & !Rr7 & R7;
+			N = R7;
+			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
+			C = Rd7 & Rr7 + Rr7 & !R7 + !R7 & Rd7;
+
+			PC = PC + 1;
+		}
+
+		/* Add Immediate to Word  TODO: solve: ADIW Rd+1:Rd,K*/
+		adiw [opcode=1001 0110 KKdd KKKK] Rd, K {
+			/* Rd+1:Rd ? Rd+1:Rd + K; */
+			S = N ^ V;
+			PC = PC + 1;
+			V = !Rdh7 & R15;
+			N = R15;
+			Z = !R15 & !R14 & !R13 & !R12 & !R11 & !R10 & !R9 & !R8 & !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
+			C = !R15 & Rdh7;
+		}
+
+		/* Logical AND */
+		and [opcode=0010 00rd dddd rrrr] Rd, Rr {
 			/* 0 <= d <= 31, 0 <= r 31 */
 			Rd = Rd & Rr;
 			PC = PC + 1;
@@ -77,198 +77,199 @@ atmel {
 			N = R7;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
 		}
-    
-    /* Branch if Equal */
-    breq [opcode= 1111 00kk kkkk k001] k {
+
+		/* Branch if Equal */
+		breq [opcode=1111 00kk kkkk k001] k {
 			if Z == 1 {
 				PC = PC + k + 1;
 			} else {
 				PC = PC + 1;
 			}
 		}
-		
+
 		/* Branch if Greater or Equal (Signed) */
-		brge [opcode= 1111 01kk kkk k100] k {
-      if (N ^ V) == 0 {
-        PC = PC + k + 1;
-      } else {
-        PC = PC + 1;
-      }            
-    }
-		
-		/* Branch if Not Equal */
-		brne [opcode= 1111 00kk kkk k001] k {
-       if Z == 0 {
+		brge [opcode=1111 01kk kkk k100] k {
+			if (N ^ V) == 0 {
 				PC = PC + k + 1;
 			} else {
 				PC = PC + 1;
 			}
-    }
-    
-    /* Clear Global Interrupt Flag */
-    cli {
-       I = 0;
-       PC = PC + 1;
-    }
-		
+		}
+
+		/* Branch if Not Equal */
+		brne [opcode=1111 00kk kkk k001] k {
+			if Z == 0 {
+				PC = PC + k + 1;
+			} else {
+				PC = PC + 1;
+			}
+		}
+
+		/* Clear Global Interrupt Flag */
+		cli {
+			I = 0;
+			PC = PC + 1;
+		}
+
 		/* Compare */
 		cp Rd, Rr {
-      H = !Rd3 & Rr3+ Rr3 &R3 +R3 &!Rd3;
-      S = N ^ V;
-      V = Rd7 & !Rr7 & !R7 + !Rd7 & Rr7 & R7;
-      N = R7;
-      Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0 & Z;
-      C = !Rd7 & Rr7 + Rr7 & R7 + R7 & !Rd7;
-      PC = PC + 1;
-    }
-    
+			H = !Rd3 & Rr3+ Rr3 &R3 +R3 &!Rd3;
+			S = N ^ V;
+			V = Rd7 & !Rr7 & !R7 + !Rd7 & Rr7 & R7;
+			N = R7;
+			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0 & Z;
+			C = !Rd7 & Rr7 + Rr7 & R7 + R7 & !Rd7;
+			PC = PC + 1;
+		}
+
 		/* Compare with Carry */
 		cpc Rd, Rr {
-	   	H = !Rd3 & Rr3+ Rr3 &R3 +R3 &!Rd3;
-      S = N ^ V;
-      V = Rd7 & !Rr7 & !R7 + !Rd7 & Rr7 & R7;
-      N = R7;
-      Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0 & Z;
-      C = !Rd7 & Rr7 + Rr7 & R7 + R7 & !Rd7;
-      PC = PC + 1;
-    }
-    
+			H = !Rd3 & Rr3+ Rr3 &R3 +R3 &!Rd3;
+			S = N ^ V;
+			V = Rd7 & !Rr7 & !R7 + !Rd7 & Rr7 & R7;
+			N = R7;
+			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0 & Z;
+			C = !Rd7 & Rr7 + Rr7 & R7 + R7 & !Rd7;
+			PC = PC + 1;
+		}
+
 		/* Compare with Immediate */
 		cpi Rd, K {
-		  H = !Rd3 & K3 + K3 & R3 + R3 & Rd3;
-		  S = N ^ V;
-		  V = Rd7 & !K7 & !R7 + !Rd7 & K7 & R7;
-		  N = R7;
-		  Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
-		  C = !Rd7 & K7 + K7 & R7 + R7 & !Rd7;
-      PC = PC + 1;
-    }
-		
+			H = !Rd3 & K3 + K3 & R3 + R3 & Rd3;
+			S = N ^ V;
+			V = Rd7 & !K7 & !R7 + !Rd7 & K7 & R7;
+			N = R7;
+			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
+			C = !Rd7 & K7 + K7 & R7 + R7 & !Rd7;
+			PC = PC + 1;
+		}
+
 		/* Exclusive Or */
 		eor Rd, Rr {
-      Rd = Rd ^ Rr;
-      S = N ^ V;
-      V = 0;
-      N = R7;
-      Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
-      PC = PC + 1;
-    }
-		
+			Rd = Rd ^ Rr;
+			S = N ^ V;
+			V = 0;
+			N = R7;
+			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
+			PC = PC + 1;
+		}
+
 		/* Load an I/O Location to Register */
 		in Rd, A {
-        A = Rd;
-        PC = PC + 1;
-    }
-    
-    /* Load Immediate */
-    ldi Rd, K {
+			A = Rd;
+			PC = PC + 1;
+		}
+
+		/* Load Immediate */
+		ldi Rd, K {
 			Rd = K;
 			PC = PC + 1;
 		}
-		
+
 		/* TODO aswell (check datasheet) */
 		ldd {
-       PC = PC + 1;
-    }
-    
-    /* Logical Shift Right */
-    lsr Rd {
-      S = N ^ V;
-      V = N ^ C;
-      N = 0;
-      Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
-      C = Rd0;
-      PC = PC + 1;
-    }
-		
+			PC = PC + 1;
+		}
+
+		/* Logical Shift Right */
+		lsr Rd {
+			S = N ^ V;
+			V = N ^ C;
+			N = 0;
+			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
+			C = Rd0;
+			PC = PC + 1;
+		}
+
 		/* Load Program Memory */
 		lpm {
-      /* TODO */
-      PC = PC + 1;
-    }
+			/* TODO */
+			PC = PC + 1;
+		}
 
-    /* Copy Register */
+		/* Copy Register */
 		mov Rd, Rr {
 			Rd = Rr;
 			PC = PC + 1;
 		}
-		
+
 		/* Store Register to I/O Location */
 		out A, Rr {
-      A = Rr;
-      PC = PC + 1;
-    }
-    
-    /* Push Register on Stack   */
-    push Rr {
-      stack = Rr;      
-      PC = PC + 1;
-      
-      /* TODO ADD to stack */
-      /* STACK ? Rr */
-    }
-    
-    /* Pop Register from Stack */
-    pop Rd {       
-      Rd = stack;
-    }                   
-		
-		/* Return from Subroutine */ 
+			A = Rr;
+			PC = PC + 1;
+		}
+
+		/* Push Register on Stack   */
+		push Rr {
+			stack = Rr;
+			PC = PC + 1;
+
+			/* TODO ADD to stack */
+			/* STACK ? Rr */
+		}
+
+		/* Pop Register from Stack */
+		pop Rd {
+			Rd = stack;
+		}
+
+		/* Return from Subroutine */
 		ret {
-      /* TODO zie datasheet */
-      PC = PC + 1;
-    }
-		/* Relative Call to Subroutine */ 
-		rcall k { 
-      /* TODO, this is about a 'WORD' and not a single byte */
-      PC = PC + k + 1;
-    }
-    
+			/* TODO zie datasheet */
+			PC = PC + 1;
+		}
+
+		/* Relative Call to Subroutine */
+		rcall k {
+			/* TODO, this is about a 'WORD' and not a single byte */
+			PC = PC + k + 1;
+		}
+
 		/* Relative Jump */
 		rjmp k {
-      PC = PC + k + 1;
-    }
-    
-    /* Rotate Right through Carry */
-    ror Rd {
-       /* TODO: zie datasheet */      
-       C = Rd0;                        
-    }
-    
-    /* Subtract Immediate from Word */
-    sbiw Rd, K{
-      /* Rd+1:Rd ? Rd+1:Rd - K; */  
-      /* TODO same as adiw */   
-      S = N ^ V;
-      PC = PC + 1;
-      V = Rdh7 & !R15;
-      N = R15;
-      Z = !R15 & !R14 & !R13 & !R12 & !R11 & !R10 & !R9 & !R8 & !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
-      C = R15 & !Rdh7;
-      /* R (Result) equals Rdh:Rdl after the operation (Rdh7-Rdh0 = R15-R8, Rdl7-Rdl0=R7-R0). */
-    }
-    
-    /* Skip if Bit in Register is Set */
-    sbrs Rr, b {
-      /* If Rr(b) = 1 then PC ? PC + 2 (or 3) else PC ? PC + 1 */
-      if Rr(b) == 1 {
-        PC = PC + 2; 
-      } else {
-        PC = PC + 1;
-      } 
-    }
-    
-    /* Store Indirect From Register to Data Space using Index X */
-    st X, Rr {
-      /* TODO fixen voor  (X , X+ en -X) */
-      PC = PC + 1;
-    }   
-    
-    /* Store Indirect From Register to Data Space using Index Y */ 
-    std {
-     /* TODO multiple choices */
-     PC = PC + 1;
-    }
-		
+			PC = PC + k + 1;
+		}
+
+		/* Rotate Right through Carry */
+		ror Rd {
+			/* TODO: zie datasheet */
+			C = Rd0;
+		}
+
+		/* Subtract Immediate from Word */
+		sbiw Rd, K {
+			/* Rd+1:Rd ? Rd+1:Rd - K; */
+			/* TODO same as adiw */
+			S = N ^ V;
+			PC = PC + 1;
+			V = Rdh7 & !R15;
+			N = R15;
+			Z = !R15 & !R14 & !R13 & !R12 & !R11 & !R10 & !R9 & !R8 & !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
+			C = R15 & !Rdh7;
+			/* R (Result) equals Rdh:Rdl after the operation (Rdh7-Rdh0 = R15-R8, Rdl7-Rdl0=R7-R0). */
+		}
+
+		/* Skip if Bit in Register is Set */
+		sbrs Rr, b {
+			/* If Rr(b) = 1 then PC ? PC + 2 (or 3) else PC ? PC + 1 */
+			if Rr(b) == 1 {
+				PC = PC + 2;
+			} else {
+				PC = PC + 1;
+			}
+		}
+
+		/* Store Indirect From Register to Data Space using Index X */
+		st X, Rr {
+			/* TODO fixen voor  (X , X+ en -X) */
+			PC = PC + 1;
+		}
+
+		/* Store Indirect From Register to Data Space using Index Y */
+		std {
+			/* TODO multiple choices */
+			PC = PC + 1;
+		}
+
 	}
 }

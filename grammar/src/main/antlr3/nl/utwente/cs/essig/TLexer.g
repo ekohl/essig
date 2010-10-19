@@ -5,7 +5,7 @@ options {
    language=Java;  // Default
 
    // Tell ANTLR to make the generated lexer class extend the
-   // the named class, which is where any supporting code and 
+   // the named class, which is where any supporting code and
    // variables will be placed.
    //
    superClass = AbstractTLexer;
@@ -52,9 +52,9 @@ fragment LETTER		:	('a'..'z'|'A'..'Z');
 LBRACK		:	'{';
 RBRACK		:	'}';
 LBRACE		:	'[';
-RBRACE		:	']'; 
+RBRACE		:	']';
 LPAREN		:	'(';
-RPAREN		:	')'; 
+RPAREN		:	')';
 ASSIGN		:	'=';
 LINE_SEPERATOR	:	';';
 ARG_SEPERATOR	:	',';
