@@ -42,7 +42,8 @@ microcontroller:	IDENTIFIER^ LBRACK! parameters registers instructions RBRACK! E
 parameters:		PARAMETERS^ LBRACK! (parameter LINE_SEPERATOR!)+ RBRACK!;
 parameter:		RAM NUMBER
 	|		GPRS NUMBER
-	|   IDENTIFIER ASSIGN! (NUMBER | opcode)
+	|   SIZE NUMBER
+	|   CLOCK NUMBER
 	;
 
 registers:		REGISTERS^ LBRACK! (register LINE_SEPERATOR!)+ RBRACK!;
@@ -53,10 +54,11 @@ instruction:		IDENTIFIER^ params? arguments?  LBRACK! expr+ RBRACK!;
 
 
 params : LBRACE! param (ARG_SEPERATOR! param)* RBRACE!;
-param : IDENTIFIER ASSIGN! (NUMBER | opcode);
+param : (SIZE | CLOCK) ASSIGN! NUMBER
+      | opcode;
 
 // Params
-opcode	:		OP_CODE^ (NUMBER | opcode_param)* ;
+opcode	:		OP_CODE^ ASSIGN!(NUMBER | opcode_param)* ;
 opcode_param	:	IDENTIFIER (LBRACE! NUMBER RBRACE!)?;
 
 //clock_cycles : CLOCK^ ASSIGN! NUMBER;
