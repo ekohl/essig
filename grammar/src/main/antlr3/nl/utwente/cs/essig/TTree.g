@@ -36,33 +36,50 @@ microcontroller:
 	-> microcontroller(name={$n},parameters={$p},registers={$r},instructions={$i})
 	;
 
-parameter:	RAM ram=NUMBER -> ram(ram={$ram})
-	|	GPRS n=NUMBER -> gprs(registers={$n})
+parameter:	^(RAM ram=NUMBER) -> ram(ram={$ram})
+	|	^(GPRS n=NUMBER) -> gprs(registers={$n})
+	|	^(SIZE NUMBER)
+	|	^(CLOCK NUMBER)
 	;
 
 register:	name=IDENTIFIER -> register(name={$name});
 
 instruction:	^(
 			f=IDENTIFIER
-			(a+=IDENTIFIER)*
+			(p+=param)*
+			(a+=argument)+
 			(e+=expr)+
 		)
 		-> instruction(name={$f},arguments={$a},expressions={$e})
 	;
 
+param	:	^(SIZE NUMBER)
+	|	^(CLOCK NUMBER)
+	|	^(OP_CODE OPCODE)
+	;
+
+argument:	IDENTIFIER;
 
 expr	:	a=assignExpr -> {$a.st}
 	|	i=ifExpr -> {$i.st}
 	;
 
-assignExpr:	^(ASSIGN var=IDENTIFIER value+=word (value+=operator value+=word)*)
-	->	assign(var={$var},value={$value})
+assignExpr:	^(ASSIGN var=IDENTIFIER value=operatorExpr)
+		-> assign(var={$var},value={$value.st})
+	;
+
+
+ifExpr:		^(IF condition expr+ (ELSE expr+)?);
+
+operatorExpr:	w=word
+		-> {$w.st}
+	|	^(o=operator w=word e=operatorExpr)
+		-> operator(operator={$o.st},word={$w.st},expression={$e.st})
+	;
+
+condition:	^(EQUALS word (operator word)? word);
+word	:	NUMBER
+	|	^(IDENTIFIER NOT? (IDENTIFIER | NUMBER)?)
 	;
 
 operator:	AND | OR | XOR | ADD;
-
-ifExpr:		^(IF condition expr+ (ELSE expr+)?);
-condition:	word EQUALS word;
-word	:	n=NOT? i=IDENTIFIER
-	|	NUMBER
-	;

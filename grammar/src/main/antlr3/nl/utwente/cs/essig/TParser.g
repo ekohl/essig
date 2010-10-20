@@ -39,42 +39,50 @@ options {
 //
 microcontroller:	IDENTIFIER^ LBRACK! parameters registers instructions RBRACK! EOF!;
 
-parameters:		PARAMETERS^ LBRACK! (parameter LINE_SEPERATOR!)+ RBRACK!;
-parameter:		RAM NUMBER
-	|		GPRS NUMBER
-	|   SIZE NUMBER
-	|   CLOCK NUMBER
+parameters:		PARAMETERS LBRACK (parameter LINE_SEPERATOR)+ RBRACK
+		-> ^(PARAMETERS parameter+);
+parameter:		RAM^ NUMBER
+	|		GPRS^ NUMBER
+	|		SIZE^ NUMBER
+	|		CLOCK^ NUMBER
 	;
 
-registers:		REGISTERS^ LBRACK! (register LINE_SEPERATOR!)+ RBRACK!;
+registers:		REGISTERS LBRACK (register LINE_SEPERATOR)+ RBRACK
+		-> ^(REGISTERS register+);
 register:		IDENTIFIER;
 
 instructions:		INSTRUCTIONS^ LBRACK! instruction+ RBRACK!;
-instruction:		IDENTIFIER^ params? arguments?  LBRACK! expr+ RBRACK!;
+instruction:		IDENTIFIER^ params? arguments? LBRACK! expr+ RBRACK!;
 
 
-params : LBRACE! param (ARG_SEPERATOR! param)* RBRACE!;
-param : (SIZE | CLOCK) ASSIGN! NUMBER
-      | opcode;
+params:			LBRACE param (ARG_SEPERATOR param)* RBRACE
+		-> param+;
 
-// Params
-opcode	:		OP_CODE^ ASSIGN!(NUMBER | opcode_param)* ;
-opcode_param	:	IDENTIFIER (LBRACE! NUMBER RBRACE!)?;
+param	:		SIZE^ ASSIGN! NUMBER
+	|		CLOCK^ ASSIGN! NUMBER
+	|		OP_CODE^ ASSIGN! OPCODE
+	;
 
-//clock_cycles : CLOCK^ ASSIGN! NUMBER;
-//size : SIZE^ ASSIGN! NUMBER;
+arguments:		argument (ARG_SEPERATOR argument)*
+		-> argument+;
 
-arguments:		argument (ARG_SEPERATOR! argument)*;
-
-argument : IDENTIFIER;
+argument :		IDENTIFIER;
 
 expr	:		assignExpr LINE_SEPERATOR!
 	|		ifExpr;
 
-assignExpr:		IDENTIFIER ASSIGN^ word (operator word)*;
+assignExpr:		IDENTIFIER ASSIGN^ operatorExpr;
+
 ifExpr:			IF^ condition LBRACK! expr+ RBRACK! (ELSE LBRACK! expr+ RBRACK!)?;
 
-condition:		(word | (LPAREN! word operator word RPAREN!))  EQUALS word;
-word:			NOT? (IDENTIFIER (LPAREN! word RPAREN!)?| NUMBER);
+operatorExpr:		word (operator^ operatorExpr)?;
+
+condition:		word EQUALS^ word
+	|		LPAREN! operatorExpr RPAREN! EQUALS^ word
+	;
+
+word	:		NOT? IDENTIFIER^ (LPAREN! (IDENTIFIER | NUMBER) RPAREN!)?
+	|		NUMBER
+	;
 
 operator:		AND | OR | XOR | ADD;

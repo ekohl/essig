@@ -11,13 +11,35 @@ operator:
 "+" OK
 
 parameters:
-"parameter { }" FAIL			// Invalid token (missing s)
-"parameters }" FAIL			// Missing {
-"parameters {" FAIL			// Missing }
-"parameters { }" FAIL			// Missing parameters
-"parameters { bla 12; }" FAIL		// Invalid parameter
-"parameters { ram 102e }" FAIL		// Non-numeric ram, missing colon
-"parameters { ram 1024 }" FAIL		// Missing colon
-"parameters { ram 1024; }" OK
-"parameters { ram 1024; gprs 32 }" FAIL	// Missing colon
-"parameters { ram 1024; gprs 32; }" OK
+"parameter { }"				FAIL	// Invalid token (missing s)
+"parameters }"				FAIL	// Missing {
+"parameters {"				FAIL	// Missing }
+"parameters { }"			FAIL	// Missing parameters
+"parameters { bla 12; }"		FAIL	// Invalid parameter
+"parameters { ram 102e }"		FAIL	// Non-numeric ram, missing colon
+"parameters { ram 1024 }"		FAIL	// Missing colon
+"parameters { ram 1024; }"		OK
+"parameters { ram 1024; gprs 32 }"	FAIL	// Missing colon
+"parameters { ram 1024; gprs 32; }"	OK
+
+OPCODE:
+"\"0\""					OK
+"\"a\""					OK
+"\"01\""				OK
+"\"01a\""				OK
+"\"01ab\""				OK
+"\"01ab \""				OK
+"\"01ab c\""				OK
+"\"01ab c1\""				OK
+
+ifExpr:
+"if V == 0 { PC = 1; }"			OK
+"if V == 0 { PC = PC + k + 1; }"	OK
+"if (N ^ V) == 0 { PC = PC + k + 1; }"	OK
+"if V == 0 { PC = PC + k + 1; } else { PC = PC + 1; }" OK
+"if (N ^ V) == 0 { PC = PC + k + 1; } else { PC = PC + 1; }" OK
+
+assignExpr:
+"a"					FAIL	// No assignment
+"a ="					FAIL	// No value
+"a = 0"					OK
