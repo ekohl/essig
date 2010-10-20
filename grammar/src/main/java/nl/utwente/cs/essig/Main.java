@@ -166,6 +166,15 @@ class Main {
                 //
                 Tree t = (Tree)psrReturn.getTree();
 
+		// Run checker
+
+		TChecker checker = new TChecker(new CommonTreeNodeStream(t));
+		System.out.println("    Checker Start\n");
+		pStart = System.currentTimeMillis();
+                checker.microcontroller();
+                stop = System.currentTimeMillis();
+                System.out.println("      Checking finished in " + (stop - pStart) + "ms.");
+
                 // NOw walk it with the generic tree walker, which does nothing but
                 // verify the tree really.
                 //

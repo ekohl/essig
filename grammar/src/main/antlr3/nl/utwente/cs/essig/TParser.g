@@ -59,7 +59,7 @@ param : (SIZE | CLOCK) ASSIGN! NUMBER
 
 // Params
 opcode	:		OP_CODE^ ASSIGN!(NUMBER | opcode_param)* ;
-opcode_param	:	IDENTIFIER (LBRACE! NUMBER RBRACE!)?;
+opcode_param	:	IDENTIFIER (LBRACE NUMBER RBRACE!)?;
 
 //clock_cycles : CLOCK^ ASSIGN! NUMBER;
 //size : SIZE^ ASSIGN! NUMBER;
