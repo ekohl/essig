@@ -53,7 +53,7 @@ parameter
 register:	IDENTIFIER
 	;
 
-instruction:	^(IDENTIFIER param* argument* expr+)
+instruction:	^(IDENTIFIER ^(PARAM param*) ^(ARGUMENT argument*) expr+)
 	;
 
 param	:	^((SIZE | CLOCK) NUMBER)
@@ -71,7 +71,7 @@ operatorExpr:	word
 	|	^(operator word operatorExpr)
 	;
 
-condition:	^(EQUALS word (operator word)? word)
+condition:	^(EQUALS operatorExpr word)
 	;
 
 word	:	NUMBER

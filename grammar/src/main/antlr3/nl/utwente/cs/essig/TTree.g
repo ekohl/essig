@@ -46,8 +46,8 @@ register:	name=IDENTIFIER -> register(name={$name});
 
 instruction:	^(
 			f=IDENTIFIER
-			(p+=param)*
-			(a+=argument)+
+			^(PARAM (p+=param)*)
+			^(ARGUMENT (a+=argument)*)
 			(e+=expr)+
 		)
 		-> instruction(name={$f},arguments={$a},expressions={$e})
@@ -65,7 +65,7 @@ expr	:	a=assignExpr -> {$a.st}
 	;
 
 assignExpr:	^(ASSIGN var=IDENTIFIER value=operatorExpr)
-		-> assign(var={$var},value={$value.st})
+		-> assignExpr(var={$var},value={$value.st})
 	;
 
 
@@ -74,10 +74,11 @@ ifExpr:		^(IF condition expr+ (ELSE expr+)?);
 operatorExpr:	w=word
 		-> {$w.st}
 	|	^(o=operator w=word e=operatorExpr)
-		-> operator(operator={$o.st},word={$w.st},expression={$e.st})
+		-> operatorExpr(operator={$o.st},word={$w.st},expression={$e.st})
 	;
 
-condition:	^(EQUALS word (operator word)? word);
+condition:	^(EQUALS operatorExpr word);
+
 word	:	NUMBER
 	|	^(IDENTIFIER NOT? (IDENTIFIER | NUMBER)?)
 	;
