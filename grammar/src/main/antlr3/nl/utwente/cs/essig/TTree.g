@@ -26,23 +26,24 @@ options {
     package nl.utwente.cs.essig;
 }
 
-microcontroller:
-	^(
-		n=IDENTIFIER
-		^(PARAMETERS (p+=parameter)+)
-		^(REGISTERS (r+=register)*)
-		^(INSTRUCTIONS (i+=instruction)*)
-	)
-	-> microcontroller(name={$n},parameters={$p},registers={$r},instructions={$i})
+microcontroller: ^(
+			IDENTIFIER
+			^(PARAMETERS (p+=parameter)+)
+			^(REGISTERS (r+=register)*)
+			^(INSTRUCTIONS (i+=instruction)*)
+		)
+	-> microcontroller(name={$IDENTIFIER},parameters={$p},registers={$r},instructions={$i})
 	;
 
-parameter:	^(RAM ram=NUMBER) -> ram(ram={$ram})
-	|	^(GPRS n=NUMBER) -> gprs(registers={$n})
+parameter:	^(RAM NUMBER)
+	-> ram(ram={$NUMBER})
+	|	^(GPRS NUMBER)
+	-> gprs(registers={$NUMBER})
 	|	^(SIZE NUMBER)
 	|	^(CLOCK NUMBER)
 	;
 
-register:	name=IDENTIFIER -> register(name={$name});
+register:	IDENTIFIER -> register(name={$IDENTIFIER});
 
 instruction:	^(
 			IDENTIFIER
@@ -58,29 +59,40 @@ param	:	^(SIZE NUMBER)
 	|	^(OP_CODE OPCODE)
 	;
 
-argument:	IDENTIFIER;
-
-expr	:	a=assignExpr -> {$a.st}
-	|	i=ifExpr -> {$i.st}
+argument:	IDENTIFIER
+	-> template(name={$IDENTIFIER}) "<name>"
 	;
 
-assignExpr:	^(ASSIGN var=IDENTIFIER value=operatorExpr)
-		-> assignExpr(var={$var},value={$value.st})
+expr	:	assignExpr
+	-> {$assignExpr.st}
+	|	ifExpr
+	-> {$ifExpr.st}
+	;
+
+assignExpr:	^(ASSIGN IDENTIFIER operatorExpr)
+	-> assignExpr(var={$IDENTIFIER},value={$operatorExpr.st})
 	;
 
 
-ifExpr:		^(IF condition expr+ (ELSE expr+)?);
+ifExpr	:	^(IF condition (i+=expr)+ (ELSE (e+=expr)+)?)
+	-> ifExpr(condition={$condition.st},ifExpr={$i},elseExpr={$e})
+	;
 
-operatorExpr:	w=word
-		-> {$w.st}
+operatorExpr:	word
+	-> {$word.st}
 	|	^(o=operator w=word e=operatorExpr)
-		-> operatorExpr(operator={$o.st},word={$w.st},expression={$e.st})
+	-> operatorExpr(operator={$o.st},word={$w.st},expression={$e.st})
 	;
 
-condition:	^(EQUALS operatorExpr word);
+condition:	^(EQUALS l=operatorExpr r=word)
+	-> condition(left={$l.st},right={$r.st})
+	;
 
 word	:	NUMBER
-	|	^(IDENTIFIER NOT? (IDENTIFIER | NUMBER)?)
+	-> template(number={$NUMBER}) "<number>"
+	|	^(i=IDENTIFIER NOT? (IDENTIFIER | NUMBER)?)
+	-> template(i={$i}) "<i>"
 	;
 
-operator:	AND | OR | XOR | ADD;
+operator:	(o=AND | o=OR | o=XOR | o=ADD)
+	-> template(operator={$o}) "<operator>";

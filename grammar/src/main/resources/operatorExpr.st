@@ -1,1 +1,1 @@
-<word> <operator>
+<word> <operator> <expression>

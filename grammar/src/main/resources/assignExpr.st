@@ -1,1 +1,1 @@
-//<var> = <value; separator=" ">;
+<var> = <value>;
