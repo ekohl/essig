@@ -431,13 +431,16 @@ vm_write(VMState *state, VMStateDiff *diff, VMInfoType type,
         goto error;
     
     /* update our diffs */
-    err_malloc((singlediff = calloc(1, sizeof(VMSingleStateDiff))));
+    err_malloc((singlediff = malloc(sizeof(VMSingleStateDiff))));
     singlediff->oldval = *dest;
     singlediff->newval = value;
     singlediff->type = type;
     singlediff->location = destaddr;
     singlediff->cycles = state->cycles;
     singlediff->pc = state->pc;
+    
+    singlediff->next = (VMIterable *) diff->singlediff;
+    diff->singlediff = singlediff;
     
     /* finally, write the value */
     *dest = value;
