@@ -26,6 +26,35 @@ options {
     package nl.utwente.cs.essig;
 }
 
+@members {
+public String convertReg(String value) {
+
+	String var_name = "";
+	String number = "";
+	String output = "";
+
+	char tempChar;
+	for (int i=0; i < value.length(); i++) {
+		tempChar = value.charAt(i);
+		
+		//Check if byte is a number ASCII value
+		if (tempChar <= 57 && tempChar >= 48) {
+			number += tempChar;
+		} else {
+                    var_name+=tempChar;
+                }
+	}
+	
+	if (!number.equals("")) 
+	{
+		output = "GetBit("+ var_name + ","+number+")";
+	} else { output = var_name; };
+
+        return output;
+    }
+
+}
+
 microcontroller: ^(
 			IDENTIFIER
 			^(PARAMETERS (p+=parameter)+)
@@ -70,7 +99,7 @@ expr	:	assignExpr
 	;
 
 assignExpr:	^(ASSIGN IDENTIFIER operatorExpr)
-	-> assignExpr(var={$IDENTIFIER},value={$operatorExpr.st})
+	-> assignExpr(var={$IDENTIFIER},value={$operatorExpr.st}) 
 	;
 
 
@@ -90,9 +119,10 @@ condition:	^(EQUALS l=operatorExpr r=word)
 
 word	:	NUMBER
 	-> template(number={$NUMBER}) "<number>"
-	|	^(i=IDENTIFIER NOT? (IDENTIFIER | NUMBER)?)
-	-> template(i={$i}) "<i>"
+	|	^(i=IDENTIFIER NOT? (IDENTIFIER | NUMBER)?) -> template (i={convertReg(($i).toString())}) "<i>"
 	;
+
+//ident : IDENTIFIER {String temp=;}  -> template (i={temp}) "<i>";
 
 operator:	(o=AND | o=OR | o=XOR | o=ADD)
 	-> template(operator={$o}) "<operator>";

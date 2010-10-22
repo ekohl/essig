@@ -1,4 +1,4 @@
-EEmbedded System SImulator Generator
+Embedded System SImulator Generator
 ===================================
 
 About
