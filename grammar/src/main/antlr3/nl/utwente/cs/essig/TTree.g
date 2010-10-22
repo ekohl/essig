@@ -45,12 +45,12 @@ parameter:	^(RAM ram=NUMBER) -> ram(ram={$ram})
 register:	name=IDENTIFIER -> register(name={$name});
 
 instruction:	^(
-			f=IDENTIFIER
-			^(PARAM (p+=param)*)
-			^(ARGUMENT (a+=argument)*)
-			(e+=expr)+
+			IDENTIFIER
+			^(PARAMS (p+=param)*)
+			^(ARGUMENTS (a+=argument)*)
+			^(EXPR (e+=expr)+)
 		)
-		-> instruction(name={$f},arguments={$a},expressions={$e})
+	-> instruction(name={$IDENTIFIER},arguments={$a},expressions={$e})
 	;
 
 param	:	^(SIZE NUMBER)

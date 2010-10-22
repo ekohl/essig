@@ -26,8 +26,9 @@ options {
 // Some imaginary tokens for tree rewrites
 //
 tokens {
-	PARAM;
-	ARGUMENT;
+	PARAMS;
+	ARGUMENTS;
+	EXPR;
 }
 
 // What package should the generated source exist in?
@@ -55,7 +56,7 @@ register:		IDENTIFIER;
 
 instructions:		INSTRUCTIONS^ LBRACK! instruction+ RBRACK!;
 instruction:		IDENTIFIER params? arguments? LBRACK expr+ RBRACK
-		-> ^(IDENTIFIER ^(PARAM params?) ^(ARGUMENT arguments?) expr+);
+		-> ^(IDENTIFIER ^(PARAMS params?) ^(ARGUMENTS arguments?) ^(EXPR expr+));
 
 
 params:			LBRACE param (ARG_SEPERATOR param)* RBRACE
