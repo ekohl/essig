@@ -14,11 +14,11 @@
 #ifdef VM_WITH_THREADS
 #   include <pthread.h>
 #   define ACQUIRE_STATE(state) do { \
-		pthread_mutex_lock(&state->lock); \
-	} while (0)
+        pthread_mutex_lock(&state->lock); \
+    } while (0)
 #   define RELEASE_STATE(state) do { \
-		pthread_mutex_unlock(&state->lock); \
-	} while (0)
+        pthread_mutex_unlock(&state->lock); \
+    } while (0)
 #else
 #   define ACQUIRE_STATE(state) do {} while (0)
 #   define RELEASE_STATE(state) do {} while (0)
@@ -211,7 +211,7 @@ bool vm_cont(VMState *state, VMStateDiff *diff, bool *hit_bp);
     \param state The state of the VM
     \param[in] diff Each step applies one diff until we reach the beginning
                or until we hit a breakpoint.
-	\return a pointer to the current diff.
+    \return a pointer to the current diff.
      */
 VMStateDiff *vm_rcont(VMState *state, VMStateDiff *diff, bool *hit_bp);
 
@@ -223,9 +223,9 @@ VMStateDiff *vm_rcont(VMState *state, VMStateDiff *diff, bool *hit_bp);
 bool vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp);
 /*! Reverse step. The list of diffs must be in reverse order and must be at 
     least as long as nsteps. This function cleans diffs that are used during the 
-	reverse stepping and returns a pointer to the current VMStateDiff. */
+    reverse stepping and returns a pointer to the current VMStateDiff. */
 VMStateDiff *vm_rstep(VMState *state, int nsteps, VMStateDiff *diff, 
-					  bool *hit_bp);
+                      bool *hit_bp);
 
 /*! Set a breakpoint asynchronously when the interpreter is running. This
     function is async-signal-safe. */

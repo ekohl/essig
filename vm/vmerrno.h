@@ -11,5 +11,5 @@ __vm_errno__(VM_MULTIPLE_EXECUTABLE_SEGMENTS, "ELF file has multiple "
 __vm_errno__(VM_ERROR_PROGRAM_TOO_BIG, "The program is too big for the "
              "microcontroller.")
 __vm_errno__(VM_OUT_OF_BOUNDS_ERROR, 
-			 "Address points outside the address space")
+             "Address points outside the address space")
           
