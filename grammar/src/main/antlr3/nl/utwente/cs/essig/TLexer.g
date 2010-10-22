@@ -5,7 +5,7 @@ options {
    language=Java;  // Default
 
    // Tell ANTLR to make the generated lexer class extend the
-   // the named class, which is where any supporting code and 
+   // the named class, which is where any supporting code and
    // variables will be placed.
    //
    superClass = AbstractTLexer;
@@ -29,8 +29,11 @@ ELSE		:	'else';
 // Parameters
 RAM		:	'ram';
 GPRS		:	'gprs';
+OP_CODE		:	'opcode';
+SIZE		:	'size';
+CLOCK		:	'clock';
 
-IDENTIFIER		:	LETTER (LETTER | DIGIT)*;
+IDENTIFIER		:	LETTER (LETTER | DIGIT)* ;
 
 NUMBER			:	DIGIT+;
 
@@ -41,16 +44,23 @@ COMMENT
 			|	'/*' ( options {greedy=false;} : . )* '*/' {skip();}
 			;
 
+OPCODE			:	QUOTE (DIGIT | LETTER | ' ')+ QUOTE;
+
 fragment DIGIT		:	'0'..'9';
 
 fragment LETTER		:	('a'..'z'|'A'..'Z');
 
 LBRACK		:	'{';
 RBRACK		:	'}';
+LBRACE		:	'[';
+RBRACE		:	']';
+LPAREN		:	'(';
+RPAREN		:	')';
 ASSIGN		:	'=';
 LINE_SEPERATOR	:	';';
 ARG_SEPERATOR	:	',';
 EQUALS		:	'==';
+QUOTE		:	'"';
 
 // Logical operators
 NOT		:	'!';

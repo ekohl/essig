@@ -25,8 +25,11 @@ options {
 
 // Some imaginary tokens for tree rewrites
 //
-//tokens {
-//}
+tokens {
+	PARAMS;
+	ARGUMENTS;
+	EXPR;
+}
 
 // What package should the generated source exist in?
 //
@@ -39,25 +42,51 @@ options {
 //
 microcontroller:	IDENTIFIER^ LBRACK! parameters registers instructions RBRACK! EOF!;
 
-parameters:		PARAMETERS^ LBRACK! (parameter LINE_SEPERATOR!)+ RBRACK!;
-parameter:		RAM NUMBER
-	|		GPRS NUMBER
+parameters:		PARAMETERS LBRACK (parameter LINE_SEPERATOR)+ RBRACK
+		-> ^(PARAMETERS parameter+);
+parameter:		RAM^ NUMBER
+	|		GPRS^ NUMBER
+	|		SIZE^ NUMBER
+	|		CLOCK^ NUMBER
 	;
 
-registers:		REGISTERS^ LBRACK! (register LINE_SEPERATOR!)+ RBRACK!;
+registers:		REGISTERS LBRACK (register LINE_SEPERATOR)+ RBRACK
+		-> ^(REGISTERS register+);
 register:		IDENTIFIER;
 
 instructions:		INSTRUCTIONS^ LBRACK! instruction+ RBRACK!;
-instruction:		IDENTIFIER^ arguments? LBRACK! expr+ RBRACK!;
-arguments:		IDENTIFIER (ARG_SEPERATOR! IDENTIFIER)*;
+instruction:		IDENTIFIER params? arguments? LBRACK expr+ RBRACK
+		-> ^(IDENTIFIER ^(PARAMS params?) ^(ARGUMENTS arguments?) ^(EXPR expr+));
+
+
+params:			LBRACE param (ARG_SEPERATOR param)* RBRACE
+		-> param+;
+
+param	:		SIZE^ ASSIGN! NUMBER
+	|		CLOCK^ ASSIGN! NUMBER
+	|		OP_CODE^ ASSIGN! OPCODE
+	;
+
+arguments:		argument (ARG_SEPERATOR argument)*
+		-> argument+;
+
+argument :		IDENTIFIER;
 
 expr	:		assignExpr LINE_SEPERATOR!
 	|		ifExpr;
 
-assignExpr:		IDENTIFIER ASSIGN^ word (operator word)*;
+assignExpr:		IDENTIFIER ASSIGN^ operatorExpr;
+
 ifExpr:			IF^ condition LBRACK! expr+ RBRACK! (ELSE LBRACK! expr+ RBRACK!)?;
 
-condition:		word EQUALS word;
-word:			NOT? IDENTIFIER | NUMBER;
+operatorExpr:		word (operator^ operatorExpr)?;
+
+condition:		word EQUALS^ word
+	|		LPAREN! operatorExpr RPAREN! EQUALS^ word
+	;
+
+word	:		NOT? IDENTIFIER^ (LPAREN! (IDENTIFIER | NUMBER) RPAREN!)?
+	|		NUMBER
+	;
 
 operator:		AND | OR | XOR | ADD;

@@ -26,43 +26,73 @@ options {
     package nl.utwente.cs.essig;
 }
 
-microcontroller:
-	^(
-		n=IDENTIFIER
-		^(PARAMETERS (p+=parameter)+)
-		^(REGISTERS (r+=register)*)
-		^(INSTRUCTIONS (i+=instruction)*)
-	)
-	-> microcontroller(name={$n},parameters={$p},registers={$r},instructions={$i})
+microcontroller: ^(
+			IDENTIFIER
+			^(PARAMETERS (p+=parameter)+)
+			^(REGISTERS (r+=register)*)
+			^(INSTRUCTIONS (i+=instruction)*)
+		)
+	-> microcontroller(name={$IDENTIFIER},parameters={$p},registers={$r},instructions={$i})
 	;
 
-parameter:	RAM ram=NUMBER -> ram(ram={$ram})
-	|	GPRS n=NUMBER -> gprs(registers={$n})
+parameter:	^(RAM NUMBER)
+	-> ram(ram={$NUMBER})
+	|	^(GPRS NUMBER)
+	-> gprs(registers={$NUMBER})
+	|	^(SIZE NUMBER)
+	|	^(CLOCK NUMBER)
 	;
 
-register:	name=IDENTIFIER -> register(name={$name});
+register:	IDENTIFIER -> register(name={$IDENTIFIER});
 
 instruction:	^(
-			f=IDENTIFIER
-			(a+=IDENTIFIER)*
-			(e+=expr)+
+			IDENTIFIER
+			^(PARAMS (p+=param)*)
+			^(ARGUMENTS (a+=argument)*)
+			^(EXPR (e+=expr)+)
 		)
-		-> instruction(name={$f},arguments={$a},expressions={$e})
+	-> instruction(name={$IDENTIFIER},arguments={$a},expressions={$e})
+	;
+
+param	:	^(SIZE NUMBER)
+	|	^(CLOCK NUMBER)
+	|	^(OP_CODE OPCODE)
+	;
+
+argument:	IDENTIFIER
+	-> template(name={$IDENTIFIER}) "<name>"
+	;
+
+expr	:	assignExpr
+	-> {$assignExpr.st}
+	|	ifExpr
+	-> {$ifExpr.st}
+	;
+
+assignExpr:	^(ASSIGN IDENTIFIER operatorExpr)
+	-> assignExpr(var={$IDENTIFIER},value={$operatorExpr.st})
 	;
 
 
-expr	:	a=assignExpr -> {$a.st}
-	|	i=ifExpr -> {$i.st}
+ifExpr	:	^(IF condition (i+=expr)+ (ELSE (e+=expr)+)?)
+	-> ifExpr(condition={$condition.st},ifExpr={$i},elseExpr={$e})
 	;
 
-assignExpr:	^(ASSIGN var=IDENTIFIER value+=word (value+=operator value+=word)*)
-	->	assign(var={$var},value={$value})
+operatorExpr:	word
+	-> {$word.st}
+	|	^(o=operator w=word e=operatorExpr)
+	-> operatorExpr(operator={$o.st},word={$w.st},expression={$e.st})
 	;
 
-operator:	AND | OR | XOR | ADD;
-
-ifExpr:		^(IF condition expr+ (ELSE expr+)?);
-condition:	word EQUALS word;
-word	:	n=NOT? i=IDENTIFIER
-	|	NUMBER
+condition:	^(EQUALS l=operatorExpr r=word)
+	-> condition(left={$l.st},right={$r.st})
 	;
+
+word	:	NUMBER
+	-> template(number={$NUMBER}) "<number>"
+	|	^(i=IDENTIFIER NOT? (IDENTIFIER | NUMBER)?)
+	-> template(i={$i}) "<i>"
+	;
+
+operator:	(o=AND | o=OR | o=XOR | o=ADD)
+	-> template(operator={$o}) "<operator>";
