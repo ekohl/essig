@@ -220,6 +220,7 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
 {
 	Opcode *opcode;
 	opcode_handler *handler;
+	VMStateDiff *newdiff;
 	
 	*hit_bp = false;
 	while (nsteps > 0) {
@@ -256,41 +257,73 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
 				return false;
 		}
 		nsteps--;
+		newdiff = vm_newdiff();
+		if (!newdiff)
+			return false;
+		diff->next = (VMIterable *) newdiff;
+		diff = newdiff;
 		RELEASE_STATE(state);
 	}
 	return true;
 }
 
-bool
+static OPCODE_TYPE *
+_get_location(VMState *state, VMInfoType type, size_t addr)
+{
+	OPCODE_TYPE *location = NULL;
+
+	switch (type) {
+		case VM_INFO_REGISTER:
+			location = state->registers;
+			if (addr > nregisters)
+				goto error;
+			break;
+		case VM_INFO_RAM:
+			location = state->ram;
+			if (addr > ramsize)
+				goto error;
+			break;
+		case VM_INFO_PIN:
+			location = state->ram + pinoffset;
+			if (addr > npins)
+				goto error;
+			break;
+	}
+	
+	return location + addr;
+
+error:
+	_vm_errno = VM_OUT_OF_BOUNDS_ERROR;
+	return NULL;
+}
+
+VMStateDiff *
 vm_rstep(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
 {
 	VMSingleStateDiff *singlediff;
-	
+	VMStateDiff *next;
 	
 	*hit_bp = false;
 	
 	while (nsteps--) {
 		singlediff = diff->singlediff;
 		while (singlediff) {
-			char *location;
-			switch (singlediff->type) {
-				case VM_INFO_REGISTER:
-					location = state->registers;
-					break;
-				case VM_INFO_RAM:
-					location = state->ram;
-					break;
-				case VM_INFO_PIN:
-					location = state->ram + pinoffset;
-					break;
-			}
-			location[singlediff->location] = singlediff->oldval;
+			OPCODE_TYPE *location;
+			
+			location = _get_location(state, singlediff->type, 
+								     singlediff->location);
+			*location = singlediff->oldval;
+			state->cycles = singlediff->cycles;
+			state->pc = singlediff->pc;
 			singlediff = (VMSingleStateDiff *) singlediff->next;
 		}
-		
-		diff = (VMStateDiff *) diff->next;
+		/* unwind the diff list */
+		_vm_close_iterable((VMIterable *) diff->singlediff);
+		next = (VMStateDiff *) diff->next;
+		free(diff);
+		diff = next;
 	}
-	return true;
+	return diff;
 }
 
 bool
@@ -305,20 +338,19 @@ vm_cont(VMState *state, VMStateDiff *diff, bool *hit_bp)
 	return true;
 }
 
-bool
+VMStateDiff *
 vm_rcont(VMState *state, VMStateDiff *diff, bool *hit_bp)
 {
 	diff = (VMStateDiff *) vm_reversed_it((VMIterable *) diff);
 	
 	while (true) {
-		if (!vm_rstep(state, 1000, diff, hit_bp))
-			return false;
+		diff = vm_rstep(state, 1000, diff, hit_bp);
 		if (*hit_bp)
 			break;
 	}
 	
 	(void) vm_reversed_it((VMIterable *) diff);
-	return true;
+	return diff;
 }
 
 bool 
@@ -377,23 +409,42 @@ vm_interrupt(VMState *state, VMInterruptType type, ...)
 	return true;
 }
 
-int 
-vm_info(VMState *state, VMInfoType type, size_t vmaddr)
+bool
+vm_info(VMState *state, VMInfoType type, size_t vmaddr, OPCODE_TYPE *result)
 {
-	int result = 0;
-	switch (type) {
-		case VM_INFO_REGISTER:
-			result = *(((int *) (state->registers)) + vmaddr);
-			break;
-		case VM_INFO_RAM:
-			result =  *(((unsigned char *) (state->ram)) + vmaddr);
-			break;
-		case VM_INFO_PIN:
-			// FIXME: No way to access pin values in VMState
-			result = 0;
-			break;
-	}
-	return result;
+	OPCODE_TYPE *dest;
+	
+	if (!(dest = _get_location(state, type, vmaddr)))
+		return false;
+	*result = *dest;
+	return true;
+}
+
+bool
+vm_write(VMState *state, VMStateDiff *diff, VMInfoType type, 
+		 size_t destaddr, OPCODE_TYPE value)
+{
+	OPCODE_TYPE *dest; 
+	VMSingleStateDiff *singlediff;
+	
+	if (!(dest =_get_location(state, type, destaddr)))
+		goto error;
+	
+	/* update our diffs */
+	err_malloc((singlediff = calloc(1, sizeof(VMSingleStateDiff))));
+	singlediff->oldval = *dest;
+    singlediff->newval = value;
+    singlediff->type = type;
+    singlediff->location = destaddr;
+	singlediff->cycles = state->cycles;
+	singlediff->pc = state->pc;
+	
+	/* finally, write the value */
+	*dest = value;
+	return true;
+	
+error:
+	return false;
 }
 
 static Opcode *
