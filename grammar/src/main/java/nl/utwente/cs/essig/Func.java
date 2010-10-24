@@ -35,36 +35,37 @@ public static String convertReg(String value) {
 }
 
 public static String parseOpcode(String opcode) {
-        HashMap<String,String> arguments = new HashMap<String,String>();
-	opcode = opcode.replace('"',' ');        
-	opcode = opcode.replace(" ","");
+                HashMap<String,String> arguments = new HashMap<String,String>();
+        opcode = opcode.replace('"',' ');
+        opcode = opcode.replace(" ","");
+        int opcode_size = opcode.length()-1;
+
         char var = 0;
         String addr = "";
         for (int i = 0; i < opcode.length(); i++)
         {
-            
+
             var = opcode.charAt(i);
             addr = var + "";
             //System.out.println(i + ": "+var);
             if (!isDigit(var)){
+                String toAdd = "AddBit(&"+addr+",opcode,"+(opcode_size-i)+"); ";
                 if (!arguments.containsKey(addr)) {
-                    arguments.put(addr, "op["+i+"]");
+                    arguments.put(addr, "int " +addr+"=0; " + toAdd);
                 } else {
-                    arguments.put(addr, arguments.get(addr) + " & op["+i+"]");
+                    arguments.put(addr, arguments.get(addr) + toAdd);
                 }
             }
         }
 
-	ArrayList aList = new ArrayList(arguments.entrySet());
+       //ArrayList aList = new ArrayList(arguments.values());
+        ArrayList aList = new ArrayList(arguments.values());
         String output = "";
         for (int i = 0; i < arguments.size(); i++)
         {
-             output += aList.get(i).toString() + ";\n";
+             output += aList.get(i).toString() + "\n";
         }
-        
         return output;
-	
-        
     }
 
 public static void main(String[] args) {

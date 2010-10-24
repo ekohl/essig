@@ -15,11 +15,17 @@ int nregisters = <length(registers)>;
 char* register_names = { <registers:{"<it.name>"}; separator=", "> };
 // End of registers
 
-// helper functions (should be in VM I Think
-bool GetBit(byte b, int pos)
+// helper functions (should be in VM I Think)
+bool GetBit(int b, int pos)
 {
-	return ((b & (byte)(1 \<\< pos)) != 0);
+	return ((b & (char)(1 \<\< pos)) != 0);
 }
+
+void AddBit(int *val, int source, int pos)
+{
+	*val \<\<=1;
+	*val |= GetBit(source,pos);
+} 
 
 // Instructions
 <instructions; separator="\n">
