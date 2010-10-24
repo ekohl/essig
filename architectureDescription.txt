@@ -1,0 +1,34 @@
+Requirements
+
+
+
+
+Architecture Description
+
+Essig is roughly composed out of three components.
+
+First we have the input language, which can be used to describe the micro controller a simulator should be generated for. 
+
+Than we have a generator, which creates an implementation of the private API (see VM) that the VM can use in simulating the micro controller.
+
+Than we have our VM, in which the micro controller will be simulated. It exposes a public API to a client which can then simulate programs like they were running on the simulator
+
+The following diagram illustrates how the components relate to each other.
+
+Micro Controller Definition language
+
+...
+
+Generator
+
+...
+
+VM
+
+The VM is responsible for the exectution of a program and 
+
+The VM is a library in which functions are gathered that most simulators have in common. These functions are defined in terms of a private API for which implementations can be generated using the generator and the definition language. Linked together they form a library that can run programs like they were running on the simulated micro controller. It is state driven in that most functions are parameterised with a state which is then manipulated to the desired state by the function. This design gives the client full freedom in manipulating and reading the state, which when used properly gives interesting possibilities when debugging a program. 
+
+Micro Controller state
+
+To be able to generate functions that could 
