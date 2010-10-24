@@ -51,6 +51,7 @@ int instruction_return_size = <size>;
 >>
 
 assignExpr(var,value,comment) ::= <<
+// <comment>
 <var> = <value>;
 >>
 
@@ -59,10 +60,10 @@ condition(left,right) ::= <<
 >>
 
 
-instruction(name,arguments,expressions) ::= <<
-void <name> (VMState * state, VMStateDiff *diff, unsigned int opcode) {
-	//<arguments; separator=",">
-
+instruction(name,params,arguments,expressions) ::= <<
+void <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
+	//Arguments <arguments; separator= ",">
+	<params;  separator = "">
 	<expressions; separator="\n">
 
 	//Update instruction pointer
@@ -78,6 +79,11 @@ opcodehandler() ::= <<
 
 parameter(key,value) ::= <<
 //set("<key>", <value>);
+>>
+
+param(name,value) ::=  <<
+<name> = <value>;
+
 >>
 
 register(name) ::= <<

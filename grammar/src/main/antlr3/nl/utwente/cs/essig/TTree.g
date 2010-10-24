@@ -24,34 +24,10 @@ options {
 @header {
 
     package nl.utwente.cs.essig;
+	import java.util.HashMap;
 }
 
 @members {
-public String convertReg(String value) {
-
-	String var_name = "";
-	String number = "";
-	String output = "";
-
-	char tempChar;
-	for (int i=0; i < value.length(); i++) {
-		tempChar = value.charAt(i);
-		
-		//Check if byte is a number ASCII value
-		if (tempChar <= 57 && tempChar >= 48) {
-			number += tempChar;
-		} else {
-                    var_name+=tempChar;
-                }
-	}
-	
-	if (!number.equals("")) 
-	{
-		output = "GetBit("+ var_name + ","+number+")";
-	} else { output = var_name; };
-
-        return output;
-    }
 
 }
 
@@ -75,17 +51,16 @@ parameter:	^(RAM NUMBER)
 register:	IDENTIFIER -> register(name={$IDENTIFIER});
 
 instruction:	^(
-			IDENTIFIER
+			IDENTIFIER 
 			^(PARAMS (p+=param)*)
 			^(ARGUMENTS (a+=argument)*)
 			^(EXPR (e+=expr)+)
 		)
-	-> instruction(name={$IDENTIFIER},arguments={$a},expressions={$e})
+	-> instruction(name={$IDENTIFIER},params={$p},arguments={$a},expressions={$e})
 	;
 
-param	:	^(SIZE NUMBER)
-	|	^(CLOCK NUMBER)
-	|	^(OP_CODE OPCODE)
+param	: ^(i=word  v=word) -> param(name={$i.st},value={$v.comment},comment={$i.st + "=" + $v.comment})
+	| ^(OP_CODE v2=word) -> template(v={$v2.st}) "<v>"
 	;
 
 argument:	IDENTIFIER
@@ -98,8 +73,8 @@ expr	:	assignExpr
 	-> {$ifExpr.st}
 	;
 
-assignExpr:	^(ASSIGN IDENTIFIER operatorExpr)
-	-> assignExpr(var={$IDENTIFIER},value={$operatorExpr.st}) 
+assignExpr:	^(ASSIGN IDENTIFIER o=operatorExpr)
+	-> assignExpr(var={$IDENTIFIER},value={$o.st},comment={$IDENTIFIER + " = " + $o.comment}) 
 	;
 
 
@@ -107,9 +82,9 @@ ifExpr	:	^(IF condition (i+=expr)+ (ELSE (e+=expr)+)?)
 	-> ifExpr(condition={$condition.st},ifExpr={$i},elseExpr={$e})
 	;
 
-operatorExpr:	word
+operatorExpr returns [String comment = ""] :	word  {$comment = $word.comment;}
 	-> {$word.st}
-	|	^(o=operator w=word e=operatorExpr)
+	|	^(o=operator w=word e=operatorExpr) {$comment = $w.comment + " " +  $o.st + " " + $e.comment +  " ";}
 	-> operatorExpr(operator={$o.st},word={$w.st},expression={$e.st})
 	;
 
@@ -117,12 +92,16 @@ condition:	^(EQUALS l=operatorExpr r=word)
 	-> condition(left={$l.st},right={$r.st})
 	;
 
-word	:	NUMBER
-	-> template(number={$NUMBER}) "<number>"
-	|	^(i=IDENTIFIER NOT? (IDENTIFIER | NUMBER)?) -> template (i={convertReg(($i).toString())}) "<i>"
+word returns [String comment = ""]:	NUMBER {$comment = $NUMBER.toString();}
+			-> template (number={$NUMBER}) "<number>" 
+	|	^(i=IDENTIFIER NOT? (IDENTIFIER | NUMBER)?) {$comment = $i.toString();}
+			-> template (i={Func.convertReg(($i).toString())}) "<i>"
+	|	OPCODE {$comment=$OPCODE.toString(); } -> template (v={Func.parseOpcode($OPCODE.toString())}) "<v>"
+	|	(i=CLOCK | i=SIZE) 
+			-> template(v={$i}) "<v>"
 	;
 
 //ident : IDENTIFIER {String temp=;}  -> template (i={temp}) "<i>";
 
-operator:	(o=AND | o=OR | o=XOR | o=ADD)
+operator:	(o=AND | o=OR | o=XOR | o=ADD) 
 	-> template(operator={$o}) "<operator>";
