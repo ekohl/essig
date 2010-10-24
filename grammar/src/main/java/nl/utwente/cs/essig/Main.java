@@ -166,6 +166,15 @@ class Main {
                 //
                 Tree t = (Tree)psrReturn.getTree();
 
+		// Run checker
+
+		TChecker checker = new TChecker(new CommonTreeNodeStream(t));
+		System.out.println("    Checker Start\n");
+		pStart = System.currentTimeMillis();
+                checker.microcontroller();
+                stop = System.currentTimeMillis();
+                System.out.println("      Checking finished in " + (stop - pStart) + "ms.");
+
                 // NOw walk it with the generic tree walker, which does nothing but
                 // verify the tree really.
                 //
@@ -173,18 +182,29 @@ class Main {
                 {
                     if (parser.getNumberOfSyntaxErrors() == 0) {
                         TTree walker = new TTree(new CommonTreeNodeStream(t));
-			//walker.setTemplateLib(new StringTemplateGroup("c", "templates/c"));
-                        System.out.println("    AST Walk Start\n");
+
+  			// Load Stringtemplate
+                        FileReader groupFileR = new FileReader("templates/c.stg");
+                        StringTemplateGroup templates = new StringTemplateGroup(groupFileR);
+                        groupFileR.close();
+
+			walker.setTemplateLib(templates);
+
+                      	System.out.println("    AST Walk Start\n");
                         pStart = System.currentTimeMillis();
                         TTree.microcontroller_return mr = walker.microcontroller();
                         stop = System.currentTimeMillis();
                         System.out.println("      AST Walked in " + (stop - pStart) + "ms.");
 
-                        // Create the output file and write the dot spec to it
+                        
+			StringTemplate output = (StringTemplate) mr.getTemplate();
+                      	//System.out.println(output.toString());
+                        
+			// Create the output file and write the dot spec to it
                         //
-                        source = source.substring(0, source.length()-3);
-                        FileWriter outputStream = new FileWriter(source + "c");
-                        outputStream.write(mr.toString());
+                        //source = source.substring(0, source.length()-3);
+                        FileWriter outputStream = new FileWriter(source + ".c");
+                        outputStream.write(output.toString());
                         outputStream.close();
                      }
                 }

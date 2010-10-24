@@ -9,14 +9,16 @@
 #include <signal.h>
 #include <stdarg.h>
 
+#include "generated_simulator.h"
+
 #ifdef VM_WITH_THREADS
 #   include <pthread.h>
 #   define ACQUIRE_STATE(state) do { \
-		pthread_mutex_lock(&state->lock); \
-	} while (0)
+        pthread_mutex_lock(&state->lock); \
+    } while (0)
 #   define RELEASE_STATE(state) do { \
-		pthread_mutex_unlock(&state->lock); \
-	} while (0)
+        pthread_mutex_unlock(&state->lock); \
+    } while (0)
 #else
 #   define ACQUIRE_STATE(state) do {} while (0)
 #   define RELEASE_STATE(state) do {} while (0)
@@ -86,12 +88,12 @@ struct VMBreakpoint;
 
 typedef bool opcode_handler(struct VMState *, 
                             struct VMStateDiff *, 
-                            unsigned int);
+                            OPCODE_TYPE);
 
 typedef struct {
     char *opcode_name;
-    unsigned int opcode;
-    unsigned int mask;
+    OPCODE_TYPE opcode;
+    OPCODE_TYPE mask;
     opcode_handler *handler;
 } OpcodeHandler;
 
@@ -114,8 +116,8 @@ typedef struct VMState {
     size_t pc;
     /*! Number of executed cycles */
     unsigned int cycles;
-    char *ram;
-    char *registers;
+    OPCODE_TYPE *ram;
+    OPCODE_TYPE *registers;
     VMInterruptPolicy interrupt_policy;
     struct VMInterruptItem *interrupts;
 #ifdef VM_WITH_THREADS
@@ -142,6 +144,8 @@ typedef struct VMSingleStateDiff {
     size_t newval;
     VMInfoType type;
     size_t location;
+	unsigned int cycles;
+	size_t pc;
 } VMSingleStateDiff;
 
 /*! Item in the interrupt queue */
@@ -207,8 +211,9 @@ bool vm_cont(VMState *state, VMStateDiff *diff, bool *hit_bp);
     \param state The state of the VM
     \param[in] diff Each step applies one diff until we reach the beginning
                or until we hit a breakpoint.
+    \return a pointer to the current diff.
      */
-bool vm_rcont(VMState *state, VMStateDiff *diff, bool *hit_bp);
+VMStateDiff *vm_rcont(VMState *state, VMStateDiff *diff, bool *hit_bp);
 
 /*! Step n steps
     \param state The state of the VM
@@ -216,8 +221,11 @@ bool vm_rcont(VMState *state, VMStateDiff *diff, bool *hit_bp);
     \param[out] diff If not NULL, populate with the difference for each step
 */
 bool vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp);
-/*! Reverse step. The list of diff must be in reverse order. */
-bool vm_rstep(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp);
+/*! Reverse step. The list of diffs must be in reverse order and must be at 
+    least as long as nsteps. This function cleans diffs that are used during the 
+    reverse stepping and returns a pointer to the current VMStateDiff. */
+VMStateDiff *vm_rstep(VMState *state, int nsteps, VMStateDiff *diff, 
+                      bool *hit_bp);
 
 /*! Set a breakpoint asynchronously when the interpreter is running. This
     function is async-signal-safe. */
@@ -239,7 +247,14 @@ bool vm_interrupt(VMState *state, VMInterruptType type, ...);
 /* @} */
 
 /*! Query the VM for information */
-int vm_info(VMState *state, VMInfoType type, size_t vmaddr);
+bool vm_info(VMState *state, VMInfoType type, size_t vmaddr, OPCODE_TYPE *result);
+/*! Write a value to a destination of type 'type' at addr 'destaddr'. 
+    This function updates 'state' and 'diff' appropriately. 
+    On error, this function returns 'false' with _vm_errno set 
+    appropriately (opcode handlers can just propagate this error by returning
+    'false'). */
+bool vm_write(VMState *state, VMStateDiff *diff, VMInfoType type, 
+              size_t destaddr, OPCODE_TYPE value);
 
 /*! \defgroup VMERRNO Error Reporting */
 /* @{ */

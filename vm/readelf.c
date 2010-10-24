@@ -13,8 +13,10 @@ _elf32_read(VMState *state, char *program, size_t program_size)
 {
     Elf32_Ehdr *ehdr;
     Elf32_Phdr *phdr;
+    char *ram;
     int i;
     
+    ram = (char *) state->ram;
     ehdr = (Elf32_Ehdr *) program;
     
     state->pc = ehdr->e_entry;
@@ -31,7 +33,7 @@ _elf32_read(VMState *state, char *program, size_t program_size)
         if (phdr->p_type & PT_LOAD) {
             char *startaddr;
     
-            startaddr = state->ram + phdr->p_vaddr;
+            startaddr = ram + phdr->p_vaddr;
     
             if (phdr->p_flags & PF_X) {
                 /* executable segment, disassemble */
@@ -47,8 +49,8 @@ _elf32_read(VMState *state, char *program, size_t program_size)
                     phdr->p_filesz);
             }
             
-            if (startaddr + phdr->p_memsz > state->ram + ramsize ||
-                startaddr + phdr->p_memsz < state->ram) {
+            if (startaddr + phdr->p_memsz > ram + ramsize ||
+                startaddr + phdr->p_memsz < ram) {
                 _vm_errno = VM_ERROR_PROGRAM_TOO_BIG;
                 return false;
             }

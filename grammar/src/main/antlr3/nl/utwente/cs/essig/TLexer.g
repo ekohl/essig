@@ -30,9 +30,8 @@ ELSE		:	'else';
 RAM		:	'ram';
 GPRS		:	'gprs';
 OP_CODE		:	'opcode';
-SIZE : 'size';
-CLOCK : 'clock';
-
+SIZE		:	'size';
+CLOCK		:	'clock';
 
 IDENTIFIER		:	LETTER (LETTER | DIGIT)* ;
 
@@ -44,6 +43,8 @@ COMMENT
 			:	'//' ~('\n'|'\r')* '\r'? '\n' {skip();}
 			|	'/*' ( options {greedy=false;} : . )* '*/' {skip();}
 			;
+
+OPCODE			:	QUOTE (DIGIT | LETTER | ' ')+ QUOTE;
 
 fragment DIGIT		:	'0'..'9';
 
@@ -59,6 +60,7 @@ ASSIGN		:	'=';
 LINE_SEPERATOR	:	';';
 ARG_SEPERATOR	:	',';
 EQUALS		:	'==';
+QUOTE		:	'"';
 
 // Logical operators
 NOT		:	'!';

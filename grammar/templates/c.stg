@@ -1,0 +1,100 @@
+group c;
+
+microcontroller(name,parameters,registers,instructions) ::= <<
+#include \<stdio.h\>
+#include "simulator.h"
+
+// Spec for <name>
+
+// Parameters
+<parameters; separator="\n">
+// End of parameters
+
+// Registers
+int nregisters = <length(registers)>;
+char* register_names = { <registers:{"<it.name>"}; separator=", "> };
+// End of registers
+
+// helper functions (should be in VM I Think
+bool GetBit(byte b, int pos)
+{
+	return ((b & (byte)(1 \<\< pos)) != 0);
+}
+
+// Instructions
+<instructions; separator="\n">
+
+int n_opcode_handlers = <length(instructions)>;
+OpcodeHandler opcode_handlers[] = { <instructions:opcodehandler(); separator=", "> };
+// End of instructions
+
+
+>>
+
+
+gprs (registers) ::= <<
+//int nregisters = <registers>;
+>>
+
+ram (ram) ::= <<
+size_t ramsize = <ram>;
+>>
+
+clock (clock) ::= <<
+// Standard value for Clock Cycles for 1 instruction.
+int standard_clock = <clock>;
+>>
+
+instruction_return_size (size) ::= <<
+// Standard size (words) of 1 instruction return value;
+int instruction_return_size = <size>;
+>>
+
+assignExpr(var,value,comment) ::= <<
+<var> = <value>;
+>>
+
+condition(left,right) ::= <<
+<left> == <right>
+>>
+
+
+instruction(name,arguments,expressions) ::= <<
+void <name> (VMState * state, VMStateDiff *diff, unsigned int opcode) {
+	//<arguments; separator=",">
+
+	<expressions; separator="\n">
+
+	//Update instruction pointer
+	state->pc += 1;
+}
+>>
+
+opcodehandler() ::= <<
+<! FIXME fill me up !>
+<! name, opcode, mask, handler !>
+{ "<it.name>", 0, 0, (opcode_handler *) <it.name> }
+>>
+
+parameter(key,value) ::= <<
+//set("<key>", <value>);
+>>
+
+register(name) ::= <<
+"<name>"
+>>
+
+ifExpr(conditio,ifExpr,elseExpr) ::= <<
+if (<condition>) {
+	<ifExpr; separator="\n">
+}
+<if(elseExpr)>
+else {
+	<elseExpr; separator="\n">
+}
+<endif>
+>>
+
+operatorExpr(word,operator,expression) ::= <<
+<word> <operator> <expression>
+>>

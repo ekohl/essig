@@ -1,0 +1,15 @@
+gunit test walks T;
+
+@header {
+    package nl.utwente.cs.essig;
+}
+
+OPCODE:
+"\"0\""					OK
+"\"a\""					OK
+"\"01\""				OK
+"\"01a\""				OK
+"\"01ab\""				OK
+"\"01ab \""				OK
+"\"01ab c\""				OK
+"\"01ab c1\""				OK

@@ -4,6 +4,8 @@ cdef extern from "vm.h":
         true
         false
 
+    ctypedef int OPCODE_TYPE
+    
     ctypedef enum VMInterruptPolicy:
         VM_POLICY_INTERRUPT_NEVER
         VM_POLICY_INTERRUPT_AVOID
@@ -55,11 +57,14 @@ cdef extern from "vm.h":
     void vm_closediff(VMStateDiff *)
     bint vm_break(VMState *state, size_t code_offset)
     bint vm_cont(VMState *state, VMStateDiff *diffs, bint *hit_bp)
-    bint vm_rcont(VMState *state, VMStateDiff *diffs, bint *hit_bp)
+    VMStateDiff *vm_rcont(VMState *state, VMStateDiff *diffs, bint *hit_bp)
     bint vm_step(VMState *state, int nsteps, VMStateDiff *diffs, bint *hit_bp)
-    bint vm_rstep(VMState *state, int nsteps, VMStateDiff *diffs, bint *hit_bp)
-    void vm_break_async(VMState *state)
+    VMStateDiff *vm_rstep(VMState *state, int nsteps, VMStateDiff *diffs, 
+                          bint *hit_bp)
+    void vm_break_async_from_signal(VMState *state)
+    void vm_break_async_from_thread(VMState *state)
     bint vm_interrupt(VMState *state, VMInterruptType type, ...)
-    int vm_info(VMState *state, VMInfoType type, size_t vmaddr)
+    bint vm_info(VMState *state, VMInfoType type, size_t vmaddr, 
+                 OPCODE_TYPE *result)
     int vm_errno()
     char *vm_strerror(int vm_errno)

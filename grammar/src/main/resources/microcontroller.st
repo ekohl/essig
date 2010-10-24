@@ -16,5 +16,7 @@ char* register_names[] = { <registers:{"<it.name>"}; separator=", "> };
 <instructions; separator="\n">
 
 int n_opcode_handlers = <length(instructions)>;
-OpcodeHandler opcode_handlers[] = { <instructions:opcodehandler(); separator=", "> };
+OpcodeHandler opcode_handlers[] = {
+	<instructions:opcodehandler(); separator=",\n">
+};
 // End of instructions
