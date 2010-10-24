@@ -26,7 +26,7 @@ public class Func {
 	public static String parseOpcode(String opcode) {
 		Map<Character, String> arguments = new HashMap<Character, String>();
 		opcode = opcode.replace('"', ' ').replace(" ", "");
-                int opcode_size = opcode.length();
+                int opcode_size = opcode.length() -1;
 		char[] opcodeArray = opcode.toCharArray();
 
 		for (int i = 0; i < opcodeArray.length; i++) {

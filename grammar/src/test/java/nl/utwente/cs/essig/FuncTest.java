@@ -36,7 +36,7 @@ public class FuncTest {
 
 		// An opcode with multiple registers
 		opcode = "00 0111 rdddd dr rrr";
-		expectedResult = "int d = 0; AddBit(&d,opcode,9); AddBit(&d,opcode,8); AddBit(&d,opcode,7); AddBit(&d,opcode,6); AddBit(&d,opcode,5); \nint r = 0; AddBit(&r,opcode,10); AddBit(&r,opcode,4); AddBit(&r,opcode,3); AddBit(&r,opcode,2); AddBit(&r,opcode,1); \n";
+		expectedResult = "int d = 0; AddBit(&d,opcode,8); AddBit(&d,opcode,7); AddBit(&d,opcode,6); AddBit(&d,opcode,5); AddBit(&d,opcode,4); \nint r = 0; AddBit(&r,opcode,9); AddBit(&r,opcode,3); AddBit(&r,opcode,2); AddBit(&r,opcode,1); AddBit(&r,opcode,0); \n";
 		//System.out.println("\\"+Func.parseOpcode(opcode)+"\\");
                 assertEquals(expectedResult, Func.parseOpcode(opcode));
 	}
