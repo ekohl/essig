@@ -22,13 +22,7 @@ options {
 // What package should the generated source exist in?
 //
 @header {
-
     package nl.utwente.cs.essig;
-	import java.util.HashMap;
-}
-
-@members {
-
 }
 
 microcontroller: ^(
@@ -92,11 +86,11 @@ condition:	^(EQUALS l=operatorExpr r=word)
 	-> condition(left={$l.st},right={$r.st})
 	;
 
-word returns [String comment = ""]:	NUMBER {$comment = $NUMBER.toString();}
+word returns [String comment = ""]:	NUMBER {$comment = $NUMBER.text;}
 			-> template (number={$NUMBER}) "<number>" 
-	|	^(i=IDENTIFIER NOT? (IDENTIFIER | NUMBER)?) {$comment = $i.toString();}
-			-> template (i={Func.convertReg(($i).toString())}) "<i>"
-	|	OPCODE {$comment=$OPCODE.toString(); } -> template (v={Func.parseOpcode($OPCODE.toString())}) "<v>"
+	|	^(i=IDENTIFIER NOT? (IDENTIFIER | NUMBER)?) {$comment = $i.text;}
+			-> template (i={Func.convertReg($i)}) "<i>"
+	|	OPCODE {$comment=$OPCODE.text; } -> template (v={new Opcode($OPCODE.text)}) "<v>"
 	|	(i=CLOCK | i=SIZE) 
 			-> template(v={$i}) "<v>"
 	;

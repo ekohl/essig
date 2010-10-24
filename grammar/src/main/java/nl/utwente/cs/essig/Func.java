@@ -1,64 +1,34 @@
 package nl.utwente.cs.essig;
 
-import java.util.*;
-
+/**
+ * A utility class.
+ */
 public class Func {
 
+	/**
+	 * Convert a register into a string that is usable. It splits the numbers
+	 * from the name and if there is a number, it returns a GetBit function. For
+	 * example, <code>R5</code> returns <code>GetBit(R,5)</code> while
+	 * <code>Rd</code> simply returns <code>Rd</code>.
+	 *
+	 * @param value
+	 *            The register
+	 * @return A usable string representation of the register
+	 */
 	public static String convertReg(String value) {
-
-		String var_name = "";
-		String number = "";
+		StringBuilder varName = new StringBuilder();
+		StringBuilder number = new StringBuilder();
 
 		for (char tempChar : value.toCharArray()) {
 			// Check if byte is a number ASCII value
 			if (Character.isDigit(tempChar)) {
-				number += tempChar;
+				number.append(tempChar);
 			} else {
-				var_name += tempChar;
+				varName.append(tempChar);
 			}
 		}
 
-		return !number.equals("") ? "GetBit(" + var_name + "," + number + ")"
-				: var_name;
-	}
-
-
-	public static String parseOpcode(String opcode) {
-		Map<Character, String> arguments = new HashMap<Character, String>();
-		opcode = opcode.replace('"', ' ').replace(" ", "");
-                int opcode_size = opcode.length() -1;
-		char[] opcodeArray = opcode.toCharArray();
-
-		for (int i = 0; i < opcodeArray.length; i++) {
-			Character addr = opcodeArray[i];
-			// System.out.println(i + ": "+var);
-
-
-			if (!Character.isDigit(addr)) {
-                                String toAdd = "AddBit(&"+addr+",opcode,"+(opcode_size-i)+"); ";
-                                if (!arguments.containsKey(addr)) {
-                                    arguments.put(addr, "int "+addr+" = 0; "+toAdd);
-                                } else {
-                                    arguments.put(addr, arguments.get(addr) + toAdd);
-                                }
-                                        }
-                                }
-
-		StringBuilder builder = new StringBuilder();
-		for (Map.Entry<Character, String> entry : arguments.entrySet()) {
-			builder.append(entry.getValue()).append("\n");
-		}
-
-		return builder.toString();
-	}
-
-
-	public static void main(String[] args) {
-		// TODO code application logic here
-		// System.out.println("Rd7 word dan:" + convertReg("Rd7"));
-
-		String input = "00 0111 rdddd dr rrr";
-		// String actual = "";
-		System.out.println(parseOpcode(input));
+		return number.length() > 0 ? "GetBit(" + varName.toString() + ","
+				+ number.toString() + ")" : varName.toString();
 	}
 }
