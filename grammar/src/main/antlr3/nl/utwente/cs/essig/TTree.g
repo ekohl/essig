@@ -89,7 +89,7 @@ condition:	^(EQUALS l=operatorExpr r=word)
 word returns [String comment = ""]:	NUMBER {$comment = $NUMBER.text;}
 			-> template (number={$NUMBER}) "<number>" 
 	|	^(i=IDENTIFIER NOT? (IDENTIFIER | NUMBER)?) {$comment = $i.text;}
-			-> template (i={Func.convertReg($i)}) "<i>"
+			-> template (i={Func.convertReg($i.text)}) "<i>"
 	|	OPCODE {$comment=$OPCODE.text; } -> template (v={new Opcode($OPCODE.text)}) "<v>"
 	|	(i=CLOCK | i=SIZE) 
 			-> template(v={$i}) "<v>"
