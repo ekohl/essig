@@ -17,6 +17,8 @@ class Main {
 
     static  TLexer lexer;
 
+    public static final String SUFFIX = ".dmo";
+
     /** Just a simple test driver for the ASP parser
      * to show how to call it.
      */
@@ -48,7 +50,7 @@ class Main {
                 }
                 else
                 {
-                    System.err.println("Usage: java -jar essig-0.1-jar-with-dependencies.jar <directory | filename.dmo>");
+                    System.err.println("Usage: java -jar essig-0.1-jar-with-dependencies.jar [-dot] <directory | filename" + SUFFIX + ">");
                 }
             }
             catch (Exception ex)
@@ -73,31 +75,17 @@ class Main {
                     System.out.println("Directory: " + source.getAbsolutePath());
                     String files[] = source.list();
 
-                    for (int i=0; i<files.length; i++)
+                    for (String file : source.list())
                     {
-                        parse(new File(source, files[i]));
+                        parse(new File(source, file));
                     }
                 }
 
-                // Else find out if it is an ASP.Net file and parse it if it is
+                // Else find out if it ends with the correct suffix and parse it
                 //
-                else
+                else if (source.getName().endsWith(SUFFIX))
                 {
-                    // File without paths etc
-                    //
-                    String sourceFile = source.getName();
-
-                    if  (sourceFile.length() > 3)
-                    {
-                        String suffix = sourceFile.substring(sourceFile.length()-4).toLowerCase();
-
-                        // Ensure that this is a DEMO script (or seemingly)
-                        //
-                        if  (suffix.compareTo(".dmo") == 0)
-                        {
-                            parseSource(source.getAbsolutePath());
-                        }
-                    }
+                    parseSource(source.getAbsolutePath());
                 }
             }
             catch (Exception ex)
@@ -110,6 +98,8 @@ class Main {
 
         public static void parseSource(String source) throws Exception
         {
+            String sourceName = source.substring(0, source.length()-SUFFIX.length());
+
             // Parse an ANTLR demo file
             //
             try
@@ -136,8 +126,8 @@ class Main {
                 //
                 System.out.println("    Lexer Start");
                 long start = System.currentTimeMillis();
-                
-                // Force token load and lex (don't do this normally, 
+
+                // Force token load and lex (don't do this normally,
                 // it is just for timing the lexer)
                 //
                 tokens.LT(1);
@@ -166,29 +156,28 @@ class Main {
                 //
                 Tree t = (Tree)psrReturn.getTree();
 
-		// Run checker
-
-		TChecker checker = new TChecker(new CommonTreeNodeStream(t));
-		System.out.println("    Checker Start\n");
-		pStart = System.currentTimeMillis();
+                // Run checker
+                //
+                TChecker checker = new TChecker(new CommonTreeNodeStream(t));
+                System.out.println("    Checker Start\n");
+                pStart = System.currentTimeMillis();
                 checker.microcontroller();
                 stop = System.currentTimeMillis();
                 System.out.println("      Checking finished in " + (stop - pStart) + "ms.");
 
-                // NOw walk it with the generic tree walker, which does nothing but
-                // verify the tree really.
+                // Now walk it with the tree walker, which generates the C file
                 //
                 try
                 {
                     if (parser.getNumberOfSyntaxErrors() == 0) {
                         TTree walker = new TTree(new CommonTreeNodeStream(t));
 
-  			// Load Stringtemplate
+                        // Load Stringtemplate
                         FileReader groupFileR = new FileReader("templates/c.stg");
                         StringTemplateGroup templates = new StringTemplateGroup(groupFileR);
                         groupFileR.close();
 
-			walker.setTemplateLib(templates);
+                        walker.setTemplateLib(templates);
 
                       	System.out.println("    AST Walk Start\n");
                         pStart = System.currentTimeMillis();
@@ -196,14 +185,10 @@ class Main {
                         stop = System.currentTimeMillis();
                         System.out.println("      AST Walked in " + (stop - pStart) + "ms.");
 
-                        
-			StringTemplate output = (StringTemplate) mr.getTemplate();
-                      	//System.out.println(output.toString());
-                        
-			// Create the output file and write the dot spec to it
+                        // Create the output file and write the dot spec to it
                         //
-                        //source = source.substring(0, source.length()-3);
-                        FileWriter outputStream = new FileWriter(source + ".c");
+                        StringTemplate output = (StringTemplate) mr.getTemplate();
+                        FileWriter outputStream = new FileWriter(sourceName + ".c");
                         outputStream.write(output.toString());
                         outputStream.close();
                      }
@@ -230,7 +215,7 @@ class Main {
                     // the graphviz tools or zgrviewer (Java) to view the graphical
                     // version of the dot file.
                     //
-                    String outputName = source + "dot";
+                    String outputName = sourceName + ".dot";
 
                     System.out.println("    Producing AST dot (graphviz) file");
 
@@ -248,7 +233,7 @@ class Main {
                     //
                     System.out.println("    Producing png graphic for tree");
                     pStart = System.currentTimeMillis();
-                    Process proc = Runtime.getRuntime().exec("dot -Tpng -o" + source + "png " + outputName);
+                    Process proc = Runtime.getRuntime().exec("dot -Tpng -o" + sourceName + ".png " + outputName);
                     proc.waitFor();
                     stop = System.currentTimeMillis();
                     System.out.println("      PNG graphic produced in " + (stop - pStart) + "ms.");
