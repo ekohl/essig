@@ -15,20 +15,26 @@ int nregisters = <length(registers)>;
 char* register_names = { <registers:{"<it.name>"}; separator=", "> };
 // End of registers
 
-// helper functions (should be in VM I Think
-bool GetBit(byte b, int pos)
+// helper functions (should be in VM I Think)
+bool GetBit(int b, int pos)
 {
-	return ((b & (byte)(1 \<\< pos)) != 0);
+	return ((b & (char)(1 \<\< pos)) != 0);
 }
+
+void AddBit(int *val, int source, int pos)
+{
+	*val \<\<=1;
+	*val |= GetBit(source,pos);
+} 
 
 // Instructions
 <instructions; separator="\n">
 
 int n_opcode_handlers = <length(instructions)>;
-OpcodeHandler opcode_handlers[] = { <instructions:opcodehandler(); separator=", "> };
+OpcodeHandler opcode_handlers[] = {
+	<instructions:opcodehandler(); separator=",\n">
+};
 // End of instructions
-
-
 >>
 
 
@@ -64,6 +70,7 @@ instruction(name,params,arguments,expressions) ::= <<
 void <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Arguments <arguments; separator= ",">
 	<params;  separator = "">
+	<opcodeparsed>
 	<expressions; separator="\n">
 
 	//Update instruction pointer
@@ -72,9 +79,8 @@ void <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 >>
 
 opcodehandler() ::= <<
-<! FIXME fill me up !>
 <! name, opcode, mask, handler !>
-{ "<it.name>", 0, 0, (opcode_handler *) <it.name> }
+{ "<it.name>", 0b<it.opcode>, 0b<it.mask>, (opcode_handler *) <it.name> }
 >>
 
 parameter(key,value) ::= <<

@@ -22,13 +22,7 @@ options {
 // What package should the generated source exist in?
 //
 @header {
-
     package nl.utwente.cs.essig;
-	import java.util.HashMap;
-}
-
-@members {
-
 }
 
 microcontroller: ^(
@@ -52,15 +46,16 @@ register:	IDENTIFIER -> register(name={$IDENTIFIER});
 
 instruction:	^(
 			IDENTIFIER 
+			^(OP_CODE op=OPCODE) { Opcode opcode = new Opcode($op.text);}
 			^(PARAMS (p+=param)*)
 			^(ARGUMENTS (a+=argument)*)
 			^(EXPR (e+=expr)+)
 		)
-	-> instruction(name={$IDENTIFIER},params={$p},arguments={$a},expressions={$e})
+	-> instruction(name={$IDENTIFIER},params={$p},arguments={$a},expressions={$e},mask={opcode.getMask()},opcode={opcode.getOpcode()},opcodeparsed = {opcode})
 	;
 
-param	: ^(i=word  v=word) -> param(name={$i.st},value={$v.comment},comment={$i.st + "=" + $v.comment})
-	| ^(OP_CODE v2=word) -> template(v={$v2.st}) "<v>"
+param : ^(i=word  v=word) -> param(name={$i.st},value={$v.comment},comment={$i.st + "=" + $v.comment}) 
+	//| ^(OP_CODE v2=word) -> template(v={$v2.st}) "<v>"
 	;
 
 argument:	IDENTIFIER
@@ -92,11 +87,11 @@ condition:	^(EQUALS l=operatorExpr r=word)
 	-> condition(left={$l.st},right={$r.st})
 	;
 
-word returns [String comment = ""]:	NUMBER {$comment = $NUMBER.toString();}
+word returns [String comment = ""]:	NUMBER {$comment = $NUMBER.text;}
 			-> template (number={$NUMBER}) "<number>" 
-	|	^(i=IDENTIFIER NOT? (IDENTIFIER | NUMBER)?) {$comment = $i.toString();}
-			-> template (i={Func.convertReg(($i).toString())}) "<i>"
-	|	OPCODE {$comment=$OPCODE.toString(); } -> template (v={Func.parseOpcode($OPCODE.toString())}) "<v>"
+	|	^(i=IDENTIFIER NOT? (IDENTIFIER | NUMBER)?) {$comment = $i.text;}
+			-> template (i={Func.convertReg($i.text)}) "<i>"
+	//	|	OPCODE {$comment=$OPCODE.text; } -> template (v={new Opcode($OPCODE.text)}) "<v>"
 	|	(i=CLOCK | i=SIZE) 
 			-> template(v={$i}) "<v>"
 	;

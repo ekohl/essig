@@ -1,79 +1,34 @@
 package nl.utwente.cs.essig;
 
-import java.util.*;
+/**
+ * A utility class.
+ */
+public class Func {
 
-class Func { 
+	/**
+	 * Convert a register into a string that is usable. It splits the numbers
+	 * from the name and if there is a number, it returns a GetBit function. For
+	 * example, <code>R5</code> returns <code>GetBit(R,5)</code> while
+	 * <code>Rd</code> simply returns <code>Rd</code>.
+	 *
+	 * @param value
+	 *            The register
+	 * @return A usable string representation of the register
+	 */
+	public static String convertReg(String value) {
+		StringBuilder varName = new StringBuilder();
+		StringBuilder number = new StringBuilder();
 
-public static boolean isDigit(char digit) {
-        return (digit <= 57 && digit >= 48);
-}
+		for (char tempChar : value.toCharArray()) {
+			// Check if byte is a number ASCII value
+			if (Character.isDigit(tempChar)) {
+				number.append(tempChar);
+			} else {
+				varName.append(tempChar);
+			}
+		}
 
-public static String convertReg(String value) {
-
-	String var_name = "";
-	String number = "";
-	String output = "";
-
-	char tempChar;
-	for (int i=0; i < value.length(); i++) {
-		tempChar = value.charAt(i);
-		
-		//Check if byte is a number ASCII value
-		if (isDigit(tempChar)) {
-			number += tempChar;
-		} else {
-                    var_name+=tempChar;
-                }
+		return number.length() > 0 ? "GetBit(" + varName.toString() + ","
+				+ number.toString() + ")" : varName.toString();
 	}
-	
-	if (!number.equals("")) 
-	{
-		output = "GetBit("+ var_name + ","+number+")";
-	} else { output = var_name; };
-
-	return output;
-}
-
-public static String parseOpcode(String opcode) {
-        HashMap<String,String> arguments = new HashMap<String,String>();
-	opcode = opcode.replace('"',' ');        
-	opcode = opcode.replace(" ","");
-        char var = 0;
-        String addr = "";
-        for (int i = 0; i < opcode.length(); i++)
-        {
-            
-            var = opcode.charAt(i);
-            addr = var + "";
-            //System.out.println(i + ": "+var);
-            if (!isDigit(var)){
-                if (!arguments.containsKey(addr)) {
-                    arguments.put(addr, "op["+i+"]");
-                } else {
-                    arguments.put(addr, arguments.get(addr) + " & op["+i+"]");
-                }
-            }
-        }
-
-	ArrayList aList = new ArrayList(arguments.entrySet());
-        String output = "";
-        for (int i = 0; i < arguments.size(); i++)
-        {
-             output += aList.get(i).toString() + ";\n";
-        }
-        
-        return output;
-	
-        
-    }
-
-public static void main(String[] args) {
-        // TODO code application logic here
-        //System.out.println("Rd7 word dan:" + convertReg("Rd7"));
-
-        String input = "00 0111 rdddd dr rrr";
-        //String actual = "";
-        System.out.println(parseOpcode(input));
-    }
-
 }

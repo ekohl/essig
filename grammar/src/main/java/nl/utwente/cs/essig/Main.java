@@ -6,267 +6,277 @@ import org.antlr.stringtemplate.*;
 
 import java.io.*;
 
-/**
- * Test driver program for the ANTLR3 Maven Architype demo
- *
- * @author Jim Idle (jimi@temporal-wave.com)
- */
-class Main {
+public class Main {
 
-    private static boolean makeDot = false;
+	private static boolean makeDot = false;
 
-    static  TLexer lexer;
+	static TLexer lexer;
 
-    /** Just a simple test driver for the ASP parser
-     * to show how to call it.
-     */
+	/** The file suffix which we accept */
+	public static final String SUFFIX = ".dmo";
 
-    	public static void main(String[] args)
-        {
-            try
-            {
-                // Create the lexer, which we can keep reusing if we like
-                //
-                lexer = new TLexer();
+	public static final String TEMPLATE = "templates/c.stg";
 
-                if  (args.length > 0)
-                {
-                    int s = 0;
+	/**
+	 * Just a simple test driver for the ASP parser to show how to call it.
+	 */
 
-                    if  (args[0].startsWith("-dot"))
-                    {
-                        makeDot = true;
-                        s = 1;
-                    }
-                    // Recursively parse each directory, and each file on the
-                    // command line
-                    //
-                    for (int i=s; i<args.length; i++)
-                    {
-                        parse(new File(args[i]));
-                    }
-                }
-                else
-                {
-                    System.err.println("Usage: java -jar essig-0.1-jar-with-dependencies.jar <directory | filename.dmo>");
-                }
-            }
-            catch (Exception ex)
-            {
-                System.err.println("ANTLR demo parser threw exception:");
-                ex.printStackTrace();
-            }
-        }
+	public static void main(String[] args) {
+		try {
+			// Create the lexer, which we can keep reusing if we like
+			lexer = new TLexer();
 
-        public static void parse(File source) throws Exception
-        {
+			if (args.length > 0) {
+				int s = 0;
 
-            // Open the supplied file or directory
-            //
-            try
-            {
+				if (args[0].startsWith("-dot")) {
+					makeDot = true;
+					s = 1;
+				}
+				// Recursively parse each directory, and each file on the
+				// command line
+				for (int i = s; i < args.length; i++) {
+					parse(new File(args[i]));
+				}
+			} else {
+				System.err
+						.println("Usage: java -jar essig-0.1-jar-with-dependencies.jar [-dot] <directory | filename"
+								+ SUFFIX + ">");
+			}
+		} catch (Exception ex) {
+			System.err.println("ANTLR demo parser threw exception:");
+			ex.printStackTrace();
+		}
+	}
 
-                // From here, any exceptions are just thrown back up the chain
-                //
-                if (source.isDirectory())
-                {
-                    System.out.println("Directory: " + source.getAbsolutePath());
-                    String files[] = source.list();
+	public static void parse(File source) {
 
-                    for (int i=0; i<files.length; i++)
-                    {
-                        parse(new File(source, files[i]));
-                    }
-                }
+		// Open the supplied file or directory
+		//
+		try {
 
-                // Else find out if it is an ASP.Net file and parse it if it is
-                //
-                else
-                {
-                    // File without paths etc
-                    //
-                    String sourceFile = source.getName();
+			// From here, any exceptions are just thrown back up the chain
+			//
+			if (source.isDirectory()) {
+				System.out.println("Directory: " + source.getAbsolutePath());
 
-                    if  (sourceFile.length() > 3)
-                    {
-                        String suffix = sourceFile.substring(sourceFile.length()-4).toLowerCase();
+				for (String file : source.list()) {
+					parse(new File(source, file));
+				}
+			}
 
-                        // Ensure that this is a DEMO script (or seemingly)
-                        //
-                        if  (suffix.compareTo(".dmo") == 0)
-                        {
-                            parseSource(source.getAbsolutePath());
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                System.err.println("ANTLR demo parser caught error on file open:");
-                ex.printStackTrace();
-            }
+			// Else find out if it ends with the correct suffix and parse it
+			//
+			else if (source.getName().endsWith(SUFFIX)) {
+				parseSource(source.getAbsolutePath());
+			}
+		} catch (Exception ex) {
+			System.err.println("ANTLR demo parser caught error on file open:");
+			ex.printStackTrace();
+		}
+	}
 
-        }
+	public static void parseSource(String source) {
+		String sourceName = source.substring(0, source.length()
+				- SUFFIX.length());
 
-        public static void parseSource(String source) throws Exception
-        {
-            // Parse an ANTLR demo file
-            //
-            try
-            {
-                // First create a file stream using the povided file/path
-                // and tell the lexer that that is the character source.
-                // You can also use text that you have already read of course
-                // by using the string stream.
-                //
-                lexer.setCharStream(new ANTLRFileStream(source, "UTF8"));
+		// Parse an ANTLR demo file
+		//
+		try {
+			// First create a file stream using the provided file/path
+			// and tell the lexer that that is the character source.
+			// You can also use text that you have already read of course
+			// by using the string stream.
+			lexer.setCharStream(new ANTLRFileStream(source, "UTF8"));
 
-                // Using the lexer as the token source, we create a token
-                // stream to be consumed by the parser
-                //
-                CommonTokenStream tokens = new CommonTokenStream(lexer);
+			// Using the lexer as the token source, we create a token
+			// stream to be consumed by the parser
+			CommonTokenStream tokens = new CommonTokenStream(lexer);
 
-                // Now we need an instance of our parser
-                //
-                TParser parser = new TParser(tokens);
+			System.out.println("file: " + source);
 
-                System.out.println("file: " + source);
+			// Lex the tokens. Note that this is only to provide feedback
+			lex(tokens);
 
-                // Provide some user feedback
-                //
-                System.out.println("    Lexer Start");
-                long start = System.currentTimeMillis();
-                
-                // Force token load and lex (don't do this normally, 
-                // it is just for timing the lexer)
-                //
-                tokens.LT(1);
-                long lexerStop = System.currentTimeMillis();
-                System.out.println("      lexed in " + (lexerStop - start) + "ms.");
+			// Pick up the generic tree
+			Tree t = parseTokens(tokens);
 
-                // And now we merely invoke the start rule for the parser
-                //
-                System.out.println("    Parser Start");
-                long pStart = System.currentTimeMillis();
-                TParser.microcontroller_return psrReturn = parser.microcontroller();
-                long stop = System.currentTimeMillis();
-                System.out.println("      Parsed in " + (stop - pStart) + "ms.");
+			// Run checker
+			checkTree(t);
 
-                // If we got a valid a tree (the syntactic validity of the source code
-                // was found to be solid), then let's print the tree to show we
-                // did something; our testing public wants to know!
-                // We do something fairly cool here and generate a graphviz/dot
-                // specification for the tree, which will allow the users to visualize
-                // it :-) we only do that if asked via the -dot option though as not
-                // all users will hsve installed the graphviz toolset from
-                // http://www.graphviz.org
-                //
+			// Now walk it with the tree walker, which generates the C file
+			try {
+				StringTemplate output = generateCode(t);
+				FileWriter outputStream = new FileWriter(sourceName + ".c");
+				outputStream.write(output.toString());
+				outputStream.close();
+			} catch (Exception w) {
+				System.out.println("AST walk caused exception.");
+				w.printStackTrace();
+			}
 
-                // Pick up the generic tree
-                //
-                Tree t = (Tree)psrReturn.getTree();
+			// Optionally make a dot file
+			if (makeDot && tokens.size() < 4096) {
+				dot(sourceName, t);
+			}
+		} catch (FileNotFoundException ex) {
+			// The file we tried to parse does not exist
+			System.err.println("\n  !!The file " + source
+					+ " does not exist!!\n");
+		} catch (Exception ex) {
+			// Something went wrong in the parser, report this
+			System.err.println("Parser threw an exception:\n\n");
+			ex.printStackTrace();
+		}
+	}
 
-		// Run checker
+	/**
+	 * Lex the token stream. This is not needed, but provides some timing.
+	 *
+	 * @param tokens
+	 *            The tokens to lex
+	 */
+	private static void lex(CommonTokenStream tokens) {
+		System.out.println("    Lexer Start");
+		long start = System.currentTimeMillis();
+		tokens.LT(1);
+		long lexerStop = System.currentTimeMillis();
+		System.out.println("      lexed in " + (lexerStop - start) + "ms.");
+	}
 
-		TChecker checker = new TChecker(new CommonTreeNodeStream(t));
+	/**
+	 * Parse the tokens into a tree.
+	 *
+	 * @param tokens
+	 *            The tokens to parse
+	 * @return The tree generated from the tokens
+	 * @throws RecognitionException
+	 *             In case the parser couldn't construct a tree
+	 */
+	private static Tree parseTokens(CommonTokenStream tokens)
+			throws RecognitionException {
+		TParser parser = new TParser(tokens);
+		System.out.println("    Parser Start");
+		long pStart = System.currentTimeMillis();
+		TParser.microcontroller_return psrReturn = parser.microcontroller();
+		long stop = System.currentTimeMillis();
+		System.out.println("      Parsed in " + (stop - pStart) + "ms.");
+
+		if (parser.getNumberOfSyntaxErrors() != 0) {
+			throw new RecognitionException();
+		}
+
+		// Pick up the generic tree
+		return (Tree) psrReturn.getTree();
+	}
+
+	/**
+	 * Checks the tree for inconsistencies and throws an exception in case
+	 * something is wrong.
+	 *
+	 * @param tree
+	 *            The tree to check
+	 * @throws RecognitionException
+	 *             In case the tree has an inconsistency
+	 */
+	private static void checkTree(Tree tree) throws RecognitionException {
+		TChecker checker = new TChecker(new CommonTreeNodeStream(tree));
 		System.out.println("    Checker Start\n");
-		pStart = System.currentTimeMillis();
-                checker.microcontroller();
-                stop = System.currentTimeMillis();
-                System.out.println("      Checking finished in " + (stop - pStart) + "ms.");
+		long pStart = System.currentTimeMillis();
+		checker.microcontroller();
+		long stop = System.currentTimeMillis();
+		System.out.println("      Checking finished in " + (stop - pStart)
+				+ "ms.");
+	}
 
-                // NOw walk it with the generic tree walker, which does nothing but
-                // verify the tree really.
-                //
-                try
-                {
-                    if (parser.getNumberOfSyntaxErrors() == 0) {
-                        TTree walker = new TTree(new CommonTreeNodeStream(t));
+	/**
+	 * Generates a {@link StringTemplate} from the given <code>tree</code>
+	 *
+	 * @param tree
+	 *            The tree to generate code from
+	 * @return A {@link StringTemplate} containing the generated code
+	 * @throws IOException
+	 *             If template could not be opened
+	 * @throws RecognitionException
+	 *             If the tree could not be walked
+	 */
+	private static StringTemplate generateCode(Tree tree) throws IOException,
+			RecognitionException {
+		TTree walker = new TTree(new CommonTreeNodeStream(tree));
 
-  			// Load Stringtemplate
-                        FileReader groupFileR = new FileReader("templates/c.stg");
-                        StringTemplateGroup templates = new StringTemplateGroup(groupFileR);
-                        groupFileR.close();
+		// Load Stringtemplate
+		InputStream template = getInputStreamForFilename(TEMPLATE);
+		Reader groupFileR = new InputStreamReader(template);
+		StringTemplateGroup templates = new StringTemplateGroup(groupFileR);
+		template.close();
+		groupFileR.close();
 
-			walker.setTemplateLib(templates);
+		walker.setTemplateLib(templates);
 
-                      	System.out.println("    AST Walk Start\n");
-                        pStart = System.currentTimeMillis();
-                        TTree.microcontroller_return mr = walker.microcontroller();
-                        stop = System.currentTimeMillis();
-                        System.out.println("      AST Walked in " + (stop - pStart) + "ms.");
+		System.out.println("    AST Walk Start\n");
+		long pStart = System.currentTimeMillis();
+		TTree.microcontroller_return mr = walker.microcontroller();
+		long stop = System.currentTimeMillis();
+		System.out.println("      AST Walked in " + (stop - pStart) + "ms.");
 
-                        
-			StringTemplate output = (StringTemplate) mr.getTemplate();
-                      	//System.out.println(output.toString());
-                        
-			// Create the output file and write the dot spec to it
-                        //
-                        //source = source.substring(0, source.length()-3);
-                        FileWriter outputStream = new FileWriter(source + ".c");
-                        outputStream.write(output.toString());
-                        outputStream.close();
-                     }
-                }
-                catch(Exception w)
-                {
-                    System.out.println("AST walk caused exception.");
-                    w.printStackTrace();
-                }
+		return (StringTemplate) mr.getTemplate();
+	}
 
-                if  (makeDot && tokens.size() < 4096)
-                {
+	/**
+	 * Generate a tree from dot and save it.
+	 *
+	 * @param sourceName
+	 *            The source filename without any suffix
+	 * @param tree
+	 *            The tree to generate from
+	 * @throws IOException
+	 *             If an I/O error occurs
+	 * @throws InterruptedException
+	 *             If the thread is interrupted while waiting.
+	 */
+	private static void dot(String sourceName, Tree tree) throws IOException,
+			InterruptedException {
+		// Use the ANLTR built in dot generator
+		DOTTreeGenerator gen = new DOTTreeGenerator();
 
-                    // Now stringify it if you want to...
-                    //
-                    // System.out.println(t.toStringTree());
+		String outputName = sourceName + ".dot";
 
-                    // Use the ANLTR built in dot generator
-                    //
-                    DOTTreeGenerator gen = new DOTTreeGenerator();
+		System.out.println("    Producing AST dot (graphviz) file");
 
-                    // Which we can cause to generate the DOT specification
-                    // with the input file name suffixed with .dot. You can then use
-                    // the graphviz tools or zgrviewer (Java) to view the graphical
-                    // version of the dot file.
-                    //
-                    String outputName = source + "dot";
+		// Create a string template and write it to a file
+		StringTemplate st = gen.toDOT(tree, new CommonTreeAdaptor());
+		FileWriter outputStream = new FileWriter(outputName);
+		outputStream.write(st.toString());
+		outputStream.close();
 
-                    System.out.println("    Producing AST dot (graphviz) file");
+		// Invoke dot to generate a .png file
+		System.out.println("    Producing png graphic for tree");
+		long pStart = System.currentTimeMillis();
+		Process proc = Runtime.getRuntime().exec(
+				"dot -Tpng -o" + sourceName + ".png " + outputName);
+		proc.waitFor();
+		long stop = System.currentTimeMillis();
+		System.out.println("      PNG graphic produced in " + (stop - pStart)
+				+ "ms.");
+	}
 
-                    // It produces a jguru string template.
-                    //
-                    StringTemplate st = gen.toDOT(t, new CommonTreeAdaptor());
-
-                    // Create the output file and write the dot spec to it
-                    //
-                    FileWriter outputStream = new FileWriter(outputName);
-                    outputStream.write(st.toString());
-                    outputStream.close();
-
-                    // Invoke dot to generate a .png file
-                    //
-                    System.out.println("    Producing png graphic for tree");
-                    pStart = System.currentTimeMillis();
-                    Process proc = Runtime.getRuntime().exec("dot -Tpng -o" + source + "png " + outputName);
-                    proc.waitFor();
-                    stop = System.currentTimeMillis();
-                    System.out.println("      PNG graphic produced in " + (stop - pStart) + "ms.");
-                }
-            }
-            catch (FileNotFoundException ex)
-            {
-                // The file we tried to parse does not exist
-                //
-                System.err.println("\n  !!The file " + source + " does not exist!!\n");
-            }
-            catch (Exception ex)
-            {
-                // Something went wrong in the parser, report this
-                //
-                System.err.println("Parser threw an exception:\n\n");
-                ex.printStackTrace();
-            }
-        }
-
+	/**
+	 * This method returns an InputStream for the given filename.
+	 *
+	 * @param name the filename
+	 * @return the InputStream
+	 */
+	public static InputStream getInputStreamForFilename( String name )
+	{
+		InputStream result = Main.class.getResourceAsStream( "/" + name );
+		if( result == null )
+		{
+			try
+			{
+				result = new FileInputStream( name );
+			}
+			catch( FileNotFoundException e ) {}
+		}
+		return result;
+	}
 }
