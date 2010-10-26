@@ -45,7 +45,7 @@ parameter:	^(RAM NUMBER)
 register:	IDENTIFIER -> register(name={$IDENTIFIER});
 
 instruction:	^(
-			IDENTIFIER 
+			IDENTIFIER
 			^(OP_CODE op=OPCODE) { Opcode opcode = new Opcode($op.text);}
 			^(PARAMS (p+=param)*)
 			^(ARGUMENTS (a+=argument)*)
@@ -62,8 +62,8 @@ instruction:	^(
 	)
 	;
 
-param : ^(i=word  v=word) -> param(name={$i.st},value={$v.comment},comment={$i.st + "=" + $v.comment}) 
-	//| ^(OP_CODE v2=word) -> template(v={$v2.st}) "<v>"
+param	: ^(i=word  v=word)
+	-> param(name={$i.st},value={$v.comment},comment={$i.st + "=" + $v.comment})
 	;
 
 argument:	IDENTIFIER
@@ -77,7 +77,7 @@ expr	:	assignExpr
 	;
 
 assignExpr:	^(ASSIGN IDENTIFIER o=operatorExpr)
-	-> assignExpr(var={$IDENTIFIER},value={$o.st},comment={$IDENTIFIER + " = " + $o.comment}) 
+	-> assignExpr(var={$IDENTIFIER},value={$o.st},comment={$IDENTIFIER + " = " + $o.comment})
 	;
 
 
@@ -85,7 +85,8 @@ ifExpr	:	^(IF condition (i+=expr)+ (ELSE (e+=expr)+)?)
 	-> ifExpr(condition={$condition.st},ifExpr={$i},elseExpr={$e})
 	;
 
-operatorExpr returns [String comment = ""] :	word  {$comment = $word.comment;}
+operatorExpr returns [String comment = ""] :
+		word  {$comment = $word.comment;}
 	-> {$word.st}
 	|	^(o=operator w=word e=operatorExpr) {$comment = $w.comment + " " +  $o.st + " " + $e.comment +  " ";}
 	-> operatorExpr(operator={$o.st},word={$w.st},expression={$e.st})
@@ -95,16 +96,14 @@ condition:	^(EQUALS l=operatorExpr r=word)
 	-> condition(left={$l.st},right={$r.st})
 	;
 
-word returns [String comment = ""]:	NUMBER {$comment = $NUMBER.text;}
-			-> template (number={$NUMBER}) "<number>" 
+word returns [String comment = ""]:
+		NUMBER {$comment = $NUMBER.text;}
+	-> template (number={$NUMBER}) "<number>"
 	|	^(i=IDENTIFIER NOT? (IDENTIFIER | NUMBER)?) {$comment = $i.text;}
-			-> template (i={Func.convertReg($i.text)}) "<i>"
-	//	|	OPCODE {$comment=$OPCODE.text; } -> template (v={new Opcode($OPCODE.text)}) "<v>"
-	|	(i=CLOCK | i=SIZE) 
-			-> template(v={$i}) "<v>"
+	-> template (i={Func.convertReg($i.text)}) "<i>"
+	|	(i=CLOCK | i=SIZE)
+	-> template(v={$i}) "<v>"
 	;
 
-//ident : IDENTIFIER {String temp=;}  -> template (i={temp}) "<i>";
-
-operator:	(o=AND | o=OR | o=XOR | o=ADD) 
+operator:	(o=AND | o=OR | o=XOR | o=ADD)
 	-> template(operator={$o}) "<operator>";
