@@ -12,9 +12,12 @@ import java.util.Map;
 public class Opcode {
 	/** Map from argument name to a list of indices in the opcode */
 	private final Map<Character, List<Integer>> arguments;
-	private String opcode = "";
-	private String mask = "";
-	private String opcode_withoutsymbols = "";
+
+	/** The bit-mask */
+	private int mask;
+	
+	/** The bit-mask */
+	private int opcode;
 
 	/**
 	 * Constructor that parses an opcode.
@@ -24,10 +27,9 @@ public class Opcode {
 	 */
 	public Opcode(String opcode) {
 		this.arguments = new HashMap<Character, List<Integer>>();
-		opcode = opcode.replace('"', ' ').replace(" ", "");
-		
-		this.opcode = opcode;
+		this.mask = 0;
 
+		opcode = opcode.replace('"', ' ').replace(" ", "");
 		char[] opcodeArray = opcode.toCharArray();
 		int opcodeSize = opcodeArray.length - 1;
 
@@ -35,18 +37,15 @@ public class Opcode {
 		for (int i = 0; i < opcodeArray.length; i++) {
 			Character addr = opcodeArray[i];
 			if (!Character.isDigit(addr)) {
-				if (!arguments.containsKey(addr)) {
-					arguments.put(addr, new ArrayList<Integer>());
+				if (!this.arguments.containsKey(addr)) {
+					this.arguments.put(addr, new ArrayList<Integer>());
 				}
-				arguments.get(addr).add(opcodeSize - i);
-				this.mask += "0";
-				this.opcode_withoutsymbols += "0";
+				this.arguments.get(addr).add(opcodeSize - i);
 			} else {
-				this.mask += "1";
-				this.opcode_withoutsymbols += "" + addr;
+				this.mask |= 1 << (opcodeSize - i);
+				this.opcode |= Character.digit(addr, 2) << (opcodeSize - i);
 			}
 		}
-		
 	}
 
 	/**
@@ -90,11 +89,42 @@ public class Opcode {
 		return builder.toString();
 	}
 
-	public String getMask() {
+	/**
+	 * Returns the bit-mask that should result into the opcode. A matching
+	 * opcode is found if for a given opcode the following is true:
+	 * 
+	 * <pre>
+	 * opcode &amp; o.getMask() == o.getMask()
+	 * </pre>
+	 * 
+	 * @return The bit-mask for this opcode
+	 */
+	public int getMask() {
 		return this.mask;
 	}
 
-	public String getOpcode() {
-		return this.opcode_withoutsymbols;
-	}	
+	/**
+	 * Returns the opcode. A matching opcode is found if for a given opcode the
+	 * following is true:
+	 * 
+	 * <pre>
+	 * opcode &amp; o.getMask() == o.getMask()
+	 * </pre>
+	 * 
+	 * @return The opcode
+	 */
+	public int getOpcode() {
+		return this.opcode;
+	}
+
+	/**
+	 * Returns whether the given <code>opcode</code> matches this opcode.
+	 * 
+	 * @param opcode
+	 *            The opcode to match
+	 * @return whether the given <code>opcode</code> matches this opcode.
+	 */
+	public boolean matches(int opcode) {
+		return (opcode & this.getMask()) == this.getOpcode();
+	}
 }

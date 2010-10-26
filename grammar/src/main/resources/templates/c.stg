@@ -12,7 +12,7 @@ microcontroller(name,parameters,registers,instructions) ::= <<
 
 // Registers
 int nregisters = <length(registers)>;
-char* register_names = { <registers:{"<it.name>"}; separator=", "> };
+char* register_names[] = { <registers:{"<it.name>"}; separator=", "> };
 // End of registers
 
 // helper functions (should be in VM I Think)
@@ -79,7 +79,6 @@ void <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 >>
 
 opcodehandler() ::= <<
-<! name, opcode, mask, handler !>
 { "<it.name>", 0b<it.opcode>, 0b<it.mask>, (opcode_handler *) <it.name> }
 >>
 

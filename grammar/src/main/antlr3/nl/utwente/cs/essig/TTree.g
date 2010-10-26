@@ -51,7 +51,15 @@ instruction:	^(
 			^(ARGUMENTS (a+=argument)*)
 			^(EXPR (e+=expr)+)
 		)
-	-> instruction(name={$IDENTIFIER},params={$p},arguments={$a},expressions={$e},mask={opcode.getMask()},opcode={opcode.getOpcode()},opcodeparsed = {opcode})
+	-> instruction(
+		name={$IDENTIFIER},
+		params={$p},
+		arguments={$a},
+		expressions={$e},
+		mask={Integer.toBinaryString(opcode.getMask())},
+		opcode={Integer.toBinaryString(opcode.getOpcode())},
+		opcodeparsed={opcode}
+	)
 	;
 
 param : ^(i=word  v=word) -> param(name={$i.st},value={$v.comment},comment={$i.st + "=" + $v.comment}) 
