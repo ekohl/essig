@@ -1,1 +1,0 @@
-//int nregisters = <registers>;
