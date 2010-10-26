@@ -70,6 +70,7 @@ instruction(name,params,arguments,expressions) ::= <<
 void <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Arguments <arguments; separator= ",">
 	<params;  separator = "">
+	<opcodeparsed>
 	<expressions; separator="\n">
 
 	//Update instruction pointer
@@ -80,7 +81,7 @@ void <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 opcodehandler() ::= <<
 <! FIXME fill me up !>
 <! name, opcode, mask, handler !>
-{ "<it.name>", 0, 0, (opcode_handler *) <it.name> }
+{ "<it.name>", 0b<it.opcode>, 0b<it.mask>, (opcode_handler *) <it.name> }
 >>
 
 parameter(key,value) ::= <<

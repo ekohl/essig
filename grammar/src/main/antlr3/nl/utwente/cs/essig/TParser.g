@@ -55,16 +55,16 @@ registers:		REGISTERS LBRACK (register LINE_SEPERATOR)+ RBRACK
 register:		IDENTIFIER;
 
 instructions:		INSTRUCTIONS^ LBRACK! instruction+ RBRACK!;
-instruction:		IDENTIFIER params? arguments? LBRACK expr+ RBRACK
-		-> ^(IDENTIFIER ^(PARAMS params?) ^(ARGUMENTS arguments?) ^(EXPR expr+));
+instruction:		IDENTIFIER opcode params? arguments? LBRACK expr+ RBRACK
+		-> ^(IDENTIFIER ^(opcode) ^(PARAMS params?) ^(ARGUMENTS arguments?) ^(EXPR expr+));
 
+opcode : OP_CODE^ ASSIGN! OPCODE;
 
 params:			LBRACE param (ARG_SEPERATOR param)* RBRACE
 		-> param+;
 
 param	:		SIZE^ ASSIGN! NUMBER
 	|		CLOCK^ ASSIGN! NUMBER
-	|		OP_CODE^ ASSIGN! OPCODE
 	;
 
 arguments:		argument (ARG_SEPERATOR argument)*
