@@ -12,6 +12,9 @@ import java.util.Map;
 public class Opcode {
 	/** Map from argument name to a list of indices in the opcode */
 	private final Map<Character, List<Integer>> arguments;
+	private String opcode = "";
+	private String mask = "";
+	private String opcode_withoutsymbols = "";
 
 	/**
 	 * Constructor that parses an opcode.
@@ -22,6 +25,9 @@ public class Opcode {
 	public Opcode(String opcode) {
 		this.arguments = new HashMap<Character, List<Integer>>();
 		opcode = opcode.replace('"', ' ').replace(" ", "");
+		
+		this.opcode = opcode;
+
 		char[] opcodeArray = opcode.toCharArray();
 		int opcodeSize = opcodeArray.length - 1;
 
@@ -33,8 +39,14 @@ public class Opcode {
 					arguments.put(addr, new ArrayList<Integer>());
 				}
 				arguments.get(addr).add(opcodeSize - i);
+				this.mask += "0";
+				this.opcode_withoutsymbols += "0";
+			} else {
+				this.mask += "1";
+				this.opcode_withoutsymbols += "" + addr;
 			}
 		}
+		
 	}
 
 	/**
@@ -77,4 +89,12 @@ public class Opcode {
 
 		return builder.toString();
 	}
+
+	public String getMask() {
+		return this.mask;
+	}
+
+	public String getOpcode() {
+		return this.opcode_withoutsymbols;
+	}	
 }

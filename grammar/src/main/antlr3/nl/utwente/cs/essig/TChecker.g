@@ -53,11 +53,11 @@ parameter
 register:	IDENTIFIER
 	;
 
-instruction:	^(IDENTIFIER ^(PARAMS param*) ^(ARGUMENTS argument*) ^(EXPR expr+))
+instruction:	^(IDENTIFIER ^(OP_CODE OPCODE) ^(PARAMS param*) ^(ARGUMENTS argument*) ^(EXPR expr+))
 	;
 
 param	:	^((SIZE | CLOCK) NUMBER)
-	|	^(OP_CODE OPCODE)
+//	|	^(OP_CODE OPCODE)
 	;
 
 argument:	IDENTIFIER
