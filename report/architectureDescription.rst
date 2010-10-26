@@ -44,4 +44,4 @@ To be able to let our VM execute any code for any microcontroller we defined a s
 Generated code in the VM
 ------------------------
 
-The generated portion of the VM works over a private API that the generated code exports. This contains a lot of information (Like the state information), but more importantly the opcode information. This is stored in small structures that contains an instruction handler and a maskes
+The generated portion of the VM works over a private API that the generated code exports. This contains a lot of information (Like the micro controller architecture information for the state), but more importantly the opcode information. This is stored in small structures that contains an instruction handler, a name and a mask. The instruction handlers are private functions of the generated component, but they all have the same signature as defined by the VM. The VM passes execution on to this handlers when an instruction needs to be executed (in the step or cont methods for example)and they then manipulate the state through functions exported by the VM.

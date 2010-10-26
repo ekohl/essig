@@ -16,4 +16,4 @@ This isn't used that much at all but for smaller architectures it can be done. T
 Our solution
 ------------
 
-We wanted to be able to find our instruction in an array, but not have an entry for every possible opcode. So we decided to make masks for opcodes (these masks are then specified in the specification) and before execution of the code match this to an instruction handler. This gives the advantage of fast opcode resolution in exchange for a slichtly longer load time. This idea is further illustrated in the following diagram:
+We wanted to be able to find our instruction in an array, but not have an entry for every possible opcode. So we decided to make masks for opcodes (these masks are then specified in the specification) and before execution of the code match this to an instruction handler. This process (lets call it disassembling) gives the advantage of fast opcode resolution in exchange for a slichtly longer load time. This idea is further illustrated in the following diagram:
