@@ -31,10 +31,10 @@ void AddBit(int *val, int source, int pos)
 <instructions; separator="\n">
 
 int n_opcode_handlers = <length(instructions)>;
-OpcodeHandler opcode_handlers[] = { <instructions:opcodehandler(); separator=", "> };
+OpcodeHandler opcode_handlers[] = {
+	<instructions:opcodehandler(); separator=",\n">
+};
 // End of instructions
-
-
 >>
 
 
@@ -79,7 +79,6 @@ void <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 >>
 
 opcodehandler() ::= <<
-<! FIXME fill me up !>
 <! name, opcode, mask, handler !>
 { "<it.name>", 0b<it.opcode>, 0b<it.mask>, (opcode_handler *) <it.name> }
 >>
