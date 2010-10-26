@@ -1,7 +1,10 @@
+Architecture
+============
+
 Requirements
 ------------
 
-
+...
 
 Architecture Description
 ------------------------
@@ -16,7 +19,7 @@ Than we have our VM, in which the micro controller will be simulated. It exposes
 
 The following diagram illustrates how the components relate to each other.
 
-.. image:: diagrams/Simulator Generation.png
+.. image:: diagrams/Model.png
 
 Micro Controller Definition language
 ------------------------------------
