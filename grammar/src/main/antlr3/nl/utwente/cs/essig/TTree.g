@@ -64,6 +64,10 @@ instruction:	^(
 
 param	: ^(i=word  v=word)
 	-> param(name={$i.st},value={$v.comment},comment={$i.st + "=" + $v.comment})
+	|	^(CLOCK NUMBER)
+	-> template(cycles={$NUMBER.text}) "state->cycles += <cycles>;"
+	|	^(SIZE NUMBER)
+	-> template(v={$NUMBER.text}) "//size = <v>;"
 	;
 
 argument:	IDENTIFIER
@@ -101,8 +105,6 @@ word returns [String comment = ""]:
 	-> template (number={$NUMBER}) "<number>"
 	|	^(i=IDENTIFIER NOT? (IDENTIFIER | NUMBER)?) {$comment = $i.text;}
 	-> template (i={Func.convertReg($i.text)}) "<i>"
-	|	(i=CLOCK | i=SIZE)
-	-> template(v={$i}) "<v>"
 	;
 
 operator:	(o=AND | o=OR | o=XOR | o=ADD)

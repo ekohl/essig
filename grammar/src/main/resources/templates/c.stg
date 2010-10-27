@@ -58,7 +58,8 @@ int instruction_return_size = <size>;
 
 assignExpr(var,value,comment) ::= <<
 // <comment>
-<var> = <value>;
+if(!vm_write(state, diff, VM_INFO_REGISTER, <var>, <value>))
+	return false;
 >>
 
 condition(left,right) ::= <<
@@ -67,14 +68,20 @@ condition(left,right) ::= <<
 
 
 instruction(name,params,arguments,expressions) ::= <<
-void <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
-	//Arguments <arguments; separator= ",">
-	<params;  separator = "">
+bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
+	//Arguments <arguments; separator=",">
+	<params; separator="\n">
+
+	// Decode the opcode
 	<opcodeparsed>
+
+	// Execute expressions
 	<expressions; separator="\n">
 
 	//Update instruction pointer
 	state->pc += 1;
+
+	return true;
 }
 >>
 
