@@ -17,16 +17,23 @@ options {
     // Output a template
     //
     output = template;
+
+   // Use AbstractTChecker to get custom error reporting
+   //
+   superClass = AbstractTChecker;
 }
 
 // What package should the generated source exist in?
 //
 @header {
     package nl.utwente.cs.essig;
+    import java.util.Map;
+    import java.util.HashMap;
 }
 
 @members {
 	List<String> params = new ArrayList<String>();
+	Map<String, Integer> registers = new HashMap<String, Integer>();
 }
 
 microcontroller:
@@ -37,27 +44,28 @@ microcontroller:
 		)
 	;
 
-parameter
-@init {
-	String paramName = ((CommonTree) (input.LT(1))).getText();
-      }
-	:	^((RAM | GPRS | SIZE | CLOCK) NUMBER)
+parameter:	^(p=(RAM | GPRS | SIZE | CLOCK) NUMBER)
 {
-	if (!params.contains(paramName))
-		params.add(paramName);
-	else
-		System.out.println("Param " + paramName + " defined more than once");
+	if(params.contains($p.text)) {
+		throw new TCheckerException(input, "Found duplicate parameter: " + $p.text);
+	}
+	params.add($p.text);
 }
 	;
 
 register:	IDENTIFIER
+{
+	if(registers.containsKey($IDENTIFIER.text)) {
+		throw new TCheckerException(input, "Found duplicate register: "+$IDENTIFIER.text);
+	}
+	registers.put($IDENTIFIER.text, registers.size());
+}
 	;
 
 instruction:	^(IDENTIFIER ^(OP_CODE OPCODE) ^(PARAMS param*) ^(ARGUMENTS argument*) ^(EXPR expr+))
 	;
 
 param	:	^((SIZE | CLOCK) NUMBER)
-//	|	^(OP_CODE OPCODE)
 	;
 
 argument:	IDENTIFIER
