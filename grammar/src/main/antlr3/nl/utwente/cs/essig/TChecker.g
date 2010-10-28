@@ -62,7 +62,7 @@ register:	IDENTIFIER
 }
 	;
 
-instruction:	^(IDENTIFIER ^(OP_CODE OPCODE) ^(PARAMS param*) ^(ARGUMENTS argument*) ^(EXPR expr+))
+instruction:	^(IDENTIFIER OPCODE ^(PARAMS param*) ^(ARGUMENTS argument*) ^(EXPR expr+))
 	;
 
 param	:	^((SIZE | CLOCK) NUMBER)

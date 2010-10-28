@@ -15,13 +15,13 @@ public class Opcode {
 
 	/** The bit-mask */
 	private int mask;
-	
+
 	/** The bit-mask */
 	private int opcode;
 
 	/**
 	 * Constructor that parses an opcode.
-	 * 
+	 *
 	 * @param opcode
 	 *            The opcode
 	 */
@@ -52,7 +52,7 @@ public class Opcode {
 	 * Returns the opcode in a map structure. Each key is a variable name and
 	 * the value is a list of indices where you can find values for that
 	 * variable in the opcode.
-	 * 
+	 *
 	 * @return the opcode in a map structure
 	 */
 	public Map<Character, List<Integer>> getArguments() {
@@ -64,7 +64,7 @@ public class Opcode {
 	 * code. The output is a line for each address that is in the original
 	 * opcode. Each line is composed of an initial assignment and for each
 	 * position in the address an AddBit function.
-	 * 
+	 *
 	 * <pre>
 	 * int ADDR = 0; AddBit(&ADDR,opcode,INDEX); \n
 	 * </pre>
@@ -92,11 +92,11 @@ public class Opcode {
 	/**
 	 * Returns the bit-mask that should result into the opcode. A matching
 	 * opcode is found if for a given opcode the following is true:
-	 * 
+	 *
 	 * <pre>
 	 * opcode &amp; o.getMask() == o.getMask()
 	 * </pre>
-	 * 
+	 *
 	 * @return The bit-mask for this opcode
 	 */
 	public int getMask() {
@@ -104,13 +104,23 @@ public class Opcode {
 	}
 
 	/**
+	 * Returns the mask as a binary string
+	 *
+	 * @return the mask as a binary string
+	 * @see #getMask()
+	 */
+	public String getMaskString() {
+		return Integer.toBinaryString(getMask());
+	}
+
+	/**
 	 * Returns the opcode. A matching opcode is found if for a given opcode the
 	 * following is true:
-	 * 
+	 *
 	 * <pre>
 	 * opcode &amp; o.getMask() == o.getMask()
 	 * </pre>
-	 * 
+	 *
 	 * @return The opcode
 	 */
 	public int getOpcode() {
@@ -118,8 +128,18 @@ public class Opcode {
 	}
 
 	/**
+	 * Returns the opcode as a binary string
+	 *
+	 * @return the opcode as a binary string
+	 * @see #getOpcode()
+	 */
+	public String getOpcodeString() {
+		return Integer.toBinaryString(getOpcode());
+	}
+
+	/**
 	 * Returns whether the given <code>opcode</code> matches this opcode.
-	 * 
+	 *
 	 * @param opcode
 	 *            The opcode to match
 	 * @return whether the given <code>opcode</code> matches this opcode.

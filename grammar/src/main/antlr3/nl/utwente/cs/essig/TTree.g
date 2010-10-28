@@ -46,7 +46,7 @@ register:	IDENTIFIER -> register(name={$IDENTIFIER});
 
 instruction:	^(
 			IDENTIFIER
-			^(OP_CODE op=OPCODE) { Opcode opcode = new Opcode($op.text);}
+			OPCODE { Opcode opcode = new Opcode($OPCODE.text);}
 			^(PARAMS (p+=param)*)
 			^(ARGUMENTS (a+=argument)*)
 			^(EXPR (e+=expr)+)
@@ -56,8 +56,8 @@ instruction:	^(
 		params={$p},
 		arguments={$a},
 		expressions={$e},
-		mask={Integer.toBinaryString(opcode.getMask())},
-		opcode={Integer.toBinaryString(opcode.getOpcode())},
+		mask={opcode.getMaskString()},
+		opcode={opcode.getOpcodeString()},
 		opcodeparsed={opcode}
 	)
 	;
