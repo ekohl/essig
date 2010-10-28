@@ -1,5 +1,5 @@
 essig:
-	mvn
+	mvn --quiet
 
 test:
 	mvn test
