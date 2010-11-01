@@ -61,19 +61,18 @@ typedef enum {
 /*! Policy the VM should use with regard to interrupts */
 typedef enum {
     VM_POLICY_INTERRUPT_NEVER,
-    VM_POLICY_INTERRUPT_AVOID,
+    // VM_POLICY_INTERRUPT_AVOID,
     VM_POLICY_INTERRUPT_ALWAYS,
-    VM_POLICY_INTERRUPT_RANDOM,
-    VM_POLICY_INTERRUPT_INTERACTIVE,
-    VM_POLICY_INTERRUPT_SCRIPTED
+    // VM_POLICY_INTERRUPT_INTERACTIVE,
 } VMInterruptPolicy;
 
 /*! Types of interrupts */
 typedef enum {
     VM_INTERRUPT_TIMER,
+    VM_N_INTERRUPT_TYPES,
 } VMInterruptType;
 
-/*! Flags indicationg which part of the VM we want to know something 
+/*! Flags indicating which part of the VM we want to know something 
     about/do something with */
 typedef enum {
     VM_INFO_REGISTER,
@@ -86,10 +85,12 @@ struct VMStateDiff;
 struct VMInterruptItem;
 struct VMBreakpoint;
 
+/*! Signature of opcode handlers. */
 typedef bool opcode_handler(struct VMState *, 
                             struct VMStateDiff *, 
                             OPCODE_TYPE);
 
+/*! Each OpcodeHandler corresponds with one instruction handler. */
 typedef struct {
     char *opcode_name;
     OPCODE_TYPE opcode;
@@ -97,6 +98,8 @@ typedef struct {
     opcode_handler *handler;
 } OpcodeHandler;
 
+/*! Each Opcode corresponds to an instruction from the binary code. The code is
+    disassembled and represented with entries of this type. */
 typedef struct {
     int opcode_index;
     unsigned int opcode;
@@ -121,7 +124,6 @@ typedef struct VMState {
     VMInterruptPolicy interrupt_policy;
     struct VMInterruptItem *interrupts;
 #ifdef VM_WITH_THREADS
-    /*! Make sure this mutex is recursive */
     pthread_mutex_t lock;
 #endif
     /*! If true, have the interpreter halt execution as soon as possible */
@@ -132,6 +134,7 @@ typedef struct VMState {
 
 /*! Use this macro as the first attribute of a struct to make it an iterable */
 #define VMIterable_Head struct VMIterable *next
+
 /*! A generic iterable type */
 typedef struct VMIterable {
     VMIterable_Head;
@@ -144,27 +147,27 @@ typedef struct VMSingleStateDiff {
     size_t newval;
     VMInfoType type;
     size_t location;
-	unsigned int cycles;
-	size_t pc;
 } VMSingleStateDiff;
 
-/*! Item in the interrupt queue */
-typedef struct VMInterruptItem {
-    VMIterable_Head;
-    VMInterruptType interrupt_type;
-    /*! This attribute can be set to anything and semantics depends on
-        the interrupt_type */
-    void *extra_arg;
-} VMInterruptItem;
-
 /*! Represents a difference in state between two consecutive steps.
-    This means it has a list of "single differences" in the state
-    (or is there only ever one difference with our ISA?) */
+    This means it has a list of "single differences" in the state. */
 typedef struct VMStateDiff {
     VMIterable_Head;
     VMSingleStateDiff *singlediff;
+    size_t pc;
+    unsigned int cycles;
 } VMStateDiff;
 
+/*! Item in the interrupt queue. */
+typedef struct VMInterruptItem {
+    VMIterable_Head;
+    VMInterruptType interrupt_type;
+    /*! Specifies how many cycles should have passed (in total) before 
+        the interrupt handler should be invoked. */
+    unsigned int cycles;
+} VMInterruptItem;
+
+/*! Represents a single breakpoint */
 typedef struct VMBreakpoint {
     VMIterable_Head;
     size_t offset;
@@ -174,18 +177,15 @@ typedef struct VMBreakpoint {
 /* @} */
 
 /*! Create a new VMState
-    \param[in] program The entire ELF executable read into memory */
+    \param[in] program The entire ELF executable read into memory 
+    \param[in] program_size Size of the program buffer
+*/
 VMState *vm_newstate(void *program,
                      size_t program_size, 
                      VMInterruptPolicy interrupt_policy);
 /*! Create a new diff that can be passed to functions like vm_cont() and 
     vm_step() */
 VMStateDiff *vm_newdiff(void);
-
-/*! Create a new interrupt item */
-VMInterruptItem *vm_new_interrupt_item(VMInterruptType interrupt_type, 
-                                       void *extra_arg,
-                                       size_t extra_arg_size);
 
 /*! Deallocate a VMState */
 void vm_closestate(VMState *);

@@ -161,20 +161,17 @@ error:
     return NULL;
 }
 
-VMInterruptItem *
-vm_new_interrupt_item(VMInterruptType interrupt_type, void *extra_arg, 
-                      size_t extra_arg_size)
+/*! Create a new interrupt item */
+static VMInterruptItem *
+vm_new_interrupt_item(VMInterruptType interrupt_type, unsigned int cycles)
 {
     VMInterruptItem *result = NULL;
     
     err_malloc(result = calloc(1, sizeof(VMInterruptItem)));
     result->interrupt_type = interrupt_type;
-    err_malloc(result->extra_arg = malloc(extra_arg_size));
-    memcpy(result->extra_arg, extra_arg, extra_arg_size);
+    result->cycles = cycles;
     return result;
 error:
-    if (result)
-        free(result->extra_arg);
     free(result);
     return NULL;
 }
@@ -183,8 +180,6 @@ error:
 void 
 vm_closestate(VMState *state) 
 {
-    VMIterable *it;
-    
     if (state) {
         free(state->instructions);
         free(state->ram);
@@ -193,11 +188,6 @@ vm_closestate(VMState *state)
         (void) pthread_mutex_destroy(&state->lock);
 #endif
         _vm_close_iterable((VMIterable *) state->breakpoints);
-        it = (VMIterable *) state->interrupts;
-        while (it) {
-            free(((VMInterruptItem *) it)->extra_arg);
-            it = it->next;
-        }
         _vm_close_iterable((VMIterable *) state->interrupts);
         free(state);
     }
@@ -221,6 +211,7 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
     Opcode *opcode;
     opcode_handler *handler;
     VMStateDiff *newdiff;
+    VMIterable *interrupt_item, *previous_interrupt_item = NULL;
     
     *hit_bp = false;
     while (nsteps > 0) {
@@ -229,27 +220,49 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
         ACQUIRE_STATE(state);
         if (state->break_async) {
             *hit_bp = true;
+            RELEASE_STATE(state); 
             break;
         }
         
         if (state->interrupts != NULL) {
             /* interrupt */
-            switch (state->interrupt_policy) {
-                case VM_POLICY_INTERRUPT_NEVER:
-                    // clean list
-                    break;
-                case VM_POLICY_INTERRUPT_ALWAYS:
-                    interrupt_handler(state, diff);
-                    break;
-                default:
-                    //For now clean list
-                    break;
+            interrupt_item = (VMIterable *) state->interrupts;
+            while (interrupt_item) {
+                VMInterruptItem *item; 
+                
+                item = (VMInterruptItem *) interrupt_item; 
+                if (item->cycles == state->cycles) {
+                    bool result; 
+                    
+                    result = interrupt_handler(state, item->interrupt_type);
+                    
+                    /* delete item from the queue */
+                    if (previous_interrupt_item) {
+                        previous_interrupt_item->next = interrupt_item->next;
+                    } else {
+                        state->interrupts = 
+                            (VMInterruptItem *) interrupt_item->next;
+                    }
+                    free(interrupt_item);
+                    interrupt_item = previous_interrupt_item;
+                }
+                interrupt_item = interrupt_item->next;
             }
         } else if (_hit_breakpoint(state)) {
             /* breakpoint */
             *hit_bp = true;
+             RELEASE_STATE(state);
             break;
         } else {
+            /* Save PC */
+            newdiff = vm_newdiff();
+            if (!newdiff)
+                return false;
+            newdiff->pc = state->pc;
+            newdiff->cycles = state->cycles;
+            diff->next = (VMIterable *) newdiff;
+            diff = newdiff;
+            
             /* Execute instruction */
             opcode = OPCODE(state);
             handler = opcode_handlers[opcode->opcode_index].handler;
@@ -257,11 +270,7 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
                 return false;
         }
         nsteps--;
-        newdiff = vm_newdiff();
-        if (!newdiff)
-            return false;
-        diff->next = (VMIterable *) newdiff;
-        diff = newdiff;
+        
         RELEASE_STATE(state);
     }
     return true;
@@ -306,15 +315,18 @@ vm_rstep(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
     *hit_bp = false;
     
     while (nsteps--) {
+        state->cycles = diff->cycles;
+        state->pc = diff->pc;
+        
         singlediff = diff->singlediff;
+        
         while (singlediff) {
             OPCODE_TYPE *location;
             
             location = _get_location(state, singlediff->type, 
                                      singlediff->location);
             *location = singlediff->oldval;
-            state->cycles = singlediff->cycles;
-            state->pc = singlediff->pc;
+            
             singlediff = (VMSingleStateDiff *) singlediff->next;
         }
         /* unwind the diff list */
@@ -382,23 +394,29 @@ vm_break_async_from_thread(VMState *state)
     RELEASE_STATE(state);
 }
 
+
 bool 
 vm_interrupt(VMState *state, VMInterruptType type, ...)
 {
     va_list args;
     VMInterruptItem *item;
-    unsigned int ncycles;
+    unsigned int cycles;
+    
+    if (state->interrupt_policy == VM_POLICY_INTERRUPT_NEVER)
+            return true;
     
     va_start(args, type);
     item = NULL;
     
     switch (type) {
         case VM_INTERRUPT_TIMER:
-            ncycles = va_arg(args, unsigned int);
-            item = vm_new_interrupt_item(VM_INTERRUPT_TIMER,
-                                         (void *) &ncycles, 
-                                         sizeof(unsigned int));
+            cycles = va_arg(args, unsigned int);
+            item = vm_new_interrupt_item(VM_INTERRUPT_TIMER, 
+                                         state->cycles + cycles);
             break;
+        default:
+            fputs("Only VM_INTERRUPT_TIMER is supported", stderr);
+            exit(EXIT_FAILURE);
     }
     if(!item)
         return false;
@@ -436,8 +454,6 @@ vm_write(VMState *state, VMStateDiff *diff, VMInfoType type,
     singlediff->newval = value;
     singlediff->type = type;
     singlediff->location = destaddr;
-    singlediff->cycles = state->cycles;
-    singlediff->pc = state->pc;
     
     singlediff->next = (VMIterable *) diff->singlediff;
     diff->singlediff = singlediff;
