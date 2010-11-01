@@ -81,8 +81,5 @@ extern OpcodeHandler opcode_handlers[];
 /*! Amount of opcode handlers in the microcontroller */
 extern int n_opcode_handlers;
 
-/*! Function that handles an interrupt */
-extern bool interrupt_handler(VMState *, VMInterruptType);
-
 /* @} */
 #endif /* simulator.h */

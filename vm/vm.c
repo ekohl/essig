@@ -233,8 +233,10 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
                 item = (VMInterruptItem *) interrupt_item; 
                 if (item->cycles == state->cycles) {
                     bool result; 
+                    interrupt_handler *handler;
                     
-                    result = interrupt_handler(state, item->interrupt_type);
+                    handler = state->interrupt_handlers[item->interrupt_type];
+                    result = handler(state, item->interrupt_type);
                     
                     /* delete item from the queue */
                     if (previous_interrupt_item) {
@@ -245,6 +247,9 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
                     }
                     free(interrupt_item);
                     interrupt_item = previous_interrupt_item;
+                    
+                    if (!result)
+                        return false;
                 }
                 interrupt_item = interrupt_item->next;
             }
@@ -425,6 +430,14 @@ vm_interrupt(VMState *state, VMInterruptType type, ...)
     state->interrupts = item;
     va_end(args);
     return true;
+}
+
+void
+vm_register_handler(VMState *state, 
+                    VMInterruptType type, 
+                    interrupt_handler *handler)
+{
+    state->interrupt_handlers[type] = handler;
 }
 
 bool

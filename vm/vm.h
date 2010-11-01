@@ -69,6 +69,7 @@ typedef enum {
 /*! Types of interrupts */
 typedef enum {
     VM_INTERRUPT_TIMER,
+    /*! Make this the last one */
     VM_N_INTERRUPT_TYPES,
 } VMInterruptType;
 
@@ -90,6 +91,8 @@ typedef bool opcode_handler(struct VMState *,
                             struct VMStateDiff *, 
                             OPCODE_TYPE);
 
+typedef bool interrupt_handler(struct VMState *, VMInterruptType);
+                            
 /*! Each OpcodeHandler corresponds with one instruction handler. */
 typedef struct {
     char *opcode_name;
@@ -123,6 +126,7 @@ typedef struct VMState {
     OPCODE_TYPE *registers;
     VMInterruptPolicy interrupt_policy;
     struct VMInterruptItem *interrupts;
+    interrupt_handler *interrupt_handlers[VM_N_INTERRUPT_TYPES];
 #ifdef VM_WITH_THREADS
     pthread_mutex_t lock;
 #endif
@@ -244,6 +248,10 @@ Interrupt the microcontroller
 \param[in] ... Extra arguments depending on the type of interrupt
 */
 bool vm_interrupt(VMState *state, VMInterruptType type, ...);
+
+/*! Register an interrupt handler */
+void
+vm_register_handler(VMState *state, VMInterruptType type, interrupt_handler);
 /* @} */
 
 /*! Query the VM for information */
