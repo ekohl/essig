@@ -9,7 +9,7 @@ atmel {
 
 	instructions {
 		/* Add with Carry */
-		adc [clock=1, opcode="0001 11rd dddd rrrr", size=1] Rd, Rr {
+		adc opcode="0001 11rd dddd rrrr" [clock=1, size=1] Rd, Rr {
 			Rd = Rd + Rr + C;
 
 			H = Rd3 & Rr3 + Rr3 & !R3 + !R3 & d3;

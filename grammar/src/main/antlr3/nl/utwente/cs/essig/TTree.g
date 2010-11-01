@@ -22,7 +22,6 @@ options {
 // What package should the generated source exist in?
 //
 @header {
-
     package nl.utwente.cs.essig;
 }
 
@@ -47,16 +46,28 @@ register:	IDENTIFIER -> register(name={$IDENTIFIER});
 
 instruction:	^(
 			IDENTIFIER
+			OPCODE { Opcode opcode = new Opcode($OPCODE.text);}
 			^(PARAMS (p+=param)*)
 			^(ARGUMENTS (a+=argument)*)
 			^(EXPR (e+=expr)+)
 		)
-	-> instruction(name={$IDENTIFIER},arguments={$a},expressions={$e})
+	-> instruction(
+		name={$IDENTIFIER},
+		params={$p},
+		arguments={$a},
+		expressions={$e},
+		mask={opcode.getMaskString()},
+		opcode={opcode.getOpcodeString()},
+		opcodeparsed={opcode}
+	)
 	;
 
-param	:	^(SIZE NUMBER)
+param	: ^(i=word  v=word)
+	-> param(name={$i.st},value={$v.comment},comment={$i.st + "=" + $v.comment})
 	|	^(CLOCK NUMBER)
-	|	^(OP_CODE OPCODE)
+	-> template(cycles={$NUMBER.text}) "state->cycles += <cycles>;"
+	|	^(SIZE NUMBER)
+	-> template(v={$NUMBER.text}) "//size = <v>;"
 	;
 
 argument:	IDENTIFIER
@@ -69,8 +80,8 @@ expr	:	assignExpr
 	-> {$ifExpr.st}
 	;
 
-assignExpr:	^(ASSIGN IDENTIFIER operatorExpr)
-	-> assignExpr(var={$IDENTIFIER},value={$operatorExpr.st})
+assignExpr:	^(ASSIGN IDENTIFIER o=operatorExpr)
+	-> assignExpr(var={$IDENTIFIER},value={$o.st},comment={$IDENTIFIER + " = " + $o.comment})
 	;
 
 
@@ -78,9 +89,10 @@ ifExpr	:	^(IF condition (i+=expr)+ (ELSE (e+=expr)+)?)
 	-> ifExpr(condition={$condition.st},ifExpr={$i},elseExpr={$e})
 	;
 
-operatorExpr:	word
+operatorExpr returns [String comment = ""] :
+		word  {$comment = $word.comment;}
 	-> {$word.st}
-	|	^(o=operator w=word e=operatorExpr)
+	|	^(o=operator w=word e=operatorExpr) {$comment = $w.comment + " " +  $o.st + " " + $e.comment +  " ";}
 	-> operatorExpr(operator={$o.st},word={$w.st},expression={$e.st})
 	;
 
@@ -88,10 +100,11 @@ condition:	^(EQUALS l=operatorExpr r=word)
 	-> condition(left={$l.st},right={$r.st})
 	;
 
-word	:	NUMBER
-	-> template(number={$NUMBER}) "<number>"
-	|	^(i=IDENTIFIER NOT? (IDENTIFIER | NUMBER)?)
-	-> template(i={$i}) "<i>"
+word returns [String comment = ""]:
+		NUMBER {$comment = $NUMBER.text;}
+	-> template (number={$NUMBER}) "<number>"
+	|	^(i=IDENTIFIER NOT? (IDENTIFIER | NUMBER)?) {$comment = $i.text;}
+	-> template (i={Func.convertReg($i.text)}) "<i>"
 	;
 
 operator:	(o=AND | o=OR | o=XOR | o=ADD)

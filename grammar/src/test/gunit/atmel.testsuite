@@ -6,4 +6,4 @@ gunit atmel walks T;
 
 // Parse an entire microcontroller spec
 microcontroller:
-atmel OK
+atmel.dmo OK
