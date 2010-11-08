@@ -440,15 +440,22 @@ vm_register_handler(VMState *state,
     state->interrupt_handlers[type] = handler;
 }
 
-bool
-vm_info(VMState *state, VMInfoType type, size_t vmaddr, OPCODE_TYPE *result)
+OPCODE_TYPE
+vm_info(VMState *state, VMInfoType type, size_t vmaddr, bool *successp)
 {
     OPCODE_TYPE *dest;
     
-    if (!(dest = _get_location(state, type, vmaddr)))
-        return false;
-    *result = *dest;
-    return true;
+    if (!(dest = _get_location(state, type, vmaddr))) {
+        if (successp)
+            *successp = false;
+        
+        return 0;
+    }
+    
+    if (successp)
+        *successp = true;
+    
+    return *dest;
 }
 
 bool

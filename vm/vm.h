@@ -254,8 +254,10 @@ void
 vm_register_handler(VMState *state, VMInterruptType type, interrupt_handler);
 /* @} */
 
-/*! Query the VM for information */
-bool vm_info(VMState *state, VMInfoType type, size_t vmaddr, OPCODE_TYPE *result);
+/*! Query the VM for information. 
+    \param[out] successp if not NULL, indicates whether the operation was 
+                successful */
+OPCODE_TYPE vm_info(VMState *state, VMInfoType type, size_t vmaddr, bool *successp);
 /*! Write a value to a destination of type 'type' at addr 'destaddr'. 
     This function updates 'state' and 'diff' appropriately. 
     On error, this function returns 'false' with _vm_errno set 
