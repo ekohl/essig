@@ -18,12 +18,12 @@ parameters:
 "parameters { bla 12; }"		FAIL	// Invalid parameter
 "parameters { ram 102e }"		FAIL	// Non-numeric ram, missing colon
 "parameters { ram 1024 }"		FAIL	// Missing colon
-"parameters { ram 1024; }"		OK
+"parameters { ram 1024; }"		-> (parameters (ram 1024))
 "parameters { ram 1024; gprs 32 }"	FAIL	// Missing colon
-"parameters { ram 1024; gprs 32; }"	OK
+"parameters { ram 1024; gprs 32; }"	-> (parameters (ram 1024) (gprs 32))
 
 ifExpr:
-"if V == 0 { PC = 1; }"			OK
+"if V == 0 { PC = 1; }"			-> (if (== V 0) (= PC 1))
 "if V == 0 { PC = PC + k + 1; }"	OK
 "if (N ^ V) == 0 { PC = PC + k + 1; }"	OK
 "if V == 0 { PC = PC + k + 1; } else { PC = PC + 1; }" OK
