@@ -105,7 +105,7 @@ typedef struct {
     disassembled and represented with entries of this type. */
 typedef struct {
     int opcode_index;
-    unsigned int opcode;
+    unsigned int instruction;
 } Opcode;
 
 
@@ -177,6 +177,12 @@ typedef struct VMBreakpoint {
     size_t offset;
 } VMBreakpoint;
 
+/*! Represents a single register holding the name of the register and the 
+    offset in the register file */
+typedef struct {
+   char *name;
+   size_t offset;
+} Register;
 
 /* @} */
 
@@ -256,7 +262,8 @@ vm_register_handler(VMState *state, VMInterruptType type, interrupt_handler);
 
 /*! Query the VM for information. 
     \param[out] successp if not NULL, indicates whether the operation was 
-                successful */
+                successful. *successp must be initialized to true if successp
+                is not NULL. I agree that this is totally weird. */
 OPCODE_TYPE vm_info(VMState *state, VMInfoType type, size_t vmaddr, bool *successp);
 /*! Write a value to a destination of type 'type' at addr 'destaddr'. 
     This function updates 'state' and 'diff' appropriately. 

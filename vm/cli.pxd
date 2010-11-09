@@ -45,9 +45,32 @@ cdef extern from "vm.h":
         VMIterable *next
         size_t offset
     
+    ctypedef struct OpcodeHandler:
+        char *opcode_name
+        OPCODE_TYPE opcode
+    
+    ctypedef struct Opcode:
+        int opcode_index
+        unsigned int instruction
+        Opcode *instructions
+        size_t instructions_size
+
+    ctypedef struct Register:
+        char *name
+        size_t offset
+
     ctypedef struct VMState:
+        Opcode *instructions
+        size_t instructions_size
         VMBreakpoint *breakpoints
-        size_t pc
+        size_t pc    
+        unsigned int cycles
+        OPCODE_TYPE *ram
+        OPCODE_TYPE *registers
+    
+    cdef extern OpcodeHandler opcode_handlers[]
+    cdef extern Register registers[]
+    cdef extern int nregisters
     
     VMState *vm_newstate(void *instructions, 
                          size_t instructions_size, 

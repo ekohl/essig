@@ -271,7 +271,7 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
             /* Execute instruction */
             opcode = OPCODE(state);
             handler = opcode_handlers[opcode->opcode_index].handler;
-            if (!handler(state, diff, opcode->opcode))
+            if (!handler(state, diff, opcode->instruction))
                 return false;
         }
         nsteps--;
@@ -420,8 +420,8 @@ vm_interrupt(VMState *state, VMInterruptType type, ...)
                                          state->cycles + cycles);
             break;
         default:
-            fputs("Only VM_INTERRUPT_TIMER is supported", stderr);
-            exit(EXIT_FAILURE);
+            _vm_errno = VM_NO_SUCH_INTERRUPT_TYPE_SUUPORT_ERROR;
+            return false;
     }
     if(!item)
         return false;
@@ -451,9 +451,6 @@ vm_info(VMState *state, VMInfoType type, size_t vmaddr, bool *successp)
         
         return 0;
     }
-    
-    if (successp)
-        *successp = true;
     
     return *dest;
 }
@@ -500,7 +497,7 @@ disassemble(unsigned int *assembly, size_t assembly_length)
             // If the opcode matches an opcode handlers opcode, we found our handler
             if ((assembly[i] & opcode_handlers[j].mask) == opcode_handlers[j].opcode) {
                 result->opcode_index = j;
-                result->opcode = assembly[i];
+                result->instruction = assembly[i];
                 break;
             }
         }

@@ -81,5 +81,8 @@ extern OpcodeHandler opcode_handlers[];
 /*! Amount of opcode handlers in the microcontroller */
 extern int n_opcode_handlers;
 
+/*! Holds the register names and offsets */
+extern Register registers[];
+
 /* @} */
 #endif /* simulator.h */

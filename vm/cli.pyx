@@ -8,6 +8,7 @@ import sys
 import cmd
 import subprocess
 
+
 class VMError(Exception):
     "raised for any error originating in the simulator"
     def __init__(self, *args):
@@ -118,7 +119,10 @@ class SimulatorCLI(cmd.Cmd, object):
        
         if vm_break((<Simulator> self.simulator).state, addr) != 0:
             self.print_err()
-        
+    
+    def complete_break(self, text, line, beginidx, endidx):
+        return self.complete_from_it(text, self.symtab)
+    
     def do_cont(self):
         "continue or run the program"
         cdef Simulator sim
@@ -133,27 +137,42 @@ class SimulatorCLI(cmd.Cmd, object):
             pc = (<Simulator> self.simulator).state.pc
             print 'Hit breakpoint at %x' % pc
     
-    def complete_break(self, text, line, beginidx, endidx):
-        return self.complete_from_it(text, self.symtab)
-    
     def do_info(self, about):
         """
         Show information about stuff:
             breakpoints
+            registers
+            
             ram address
             register name
             pin name
         """
         cdef Simulator sim = self.simulator
+        
         if about == 'breakpoints':
             it = create_VMPythonIterator(sim.state.breakpoints)
             for i, bp in enumerate(it):
                 print '%2d   %x' % (i + 1, (<VMBreakpoint *> bp.item).offset)
-    
+        elif about == 'registers':
+            for i in range(nregisters):
+                val = sim.state.registers[registers[i].offset]
+                print '%-15s 0x%016x' % (registers[i].name, val)
+        
     def complete_info(self, text, line, beginidx, endidx):
         options = 'breakpoints', 'ram', 'register', 'pin'
         return self.complete_from_it(text, options)
     
+    def do_disassemble(self):
+        cdef Simulator sim
+        cdef Opcode op
+        cdef OpcodeHandler op_handler
+        
+        sim = self.simulator
+        for i in range(sim.state.instructions_size):
+            op = sim.state.instructions[i]
+            op_handler = opcode_handlers[op.opcode_index]
+            print '%-15s 0x%016x' % (op_handler.name, op.instruction)
+            
     def complete_from_it(self, text, it):
         "complete command beginning with text from iterable"
         return [s for s in it if s.startswith(text)]
