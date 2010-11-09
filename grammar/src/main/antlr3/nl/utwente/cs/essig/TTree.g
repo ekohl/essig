@@ -39,7 +39,9 @@ parameter:	^(RAM NUMBER)
 	|	^(GPRS NUMBER)
 	-> gprs(registers={$NUMBER})
 	|	^(SIZE NUMBER)
+	-> template(size={$NUMBER.text}) "// FIXME: size = <size>;"
 	|	^(CLOCK NUMBER)
+	-> template(clock={$NUMBER.text}) "// FIXME: clock = <clock>;"
 	;
 
 register:	IDENTIFIER -> register(name={$IDENTIFIER});
@@ -67,7 +69,7 @@ param	: ^(i=word  v=word)
 	|	^(CLOCK NUMBER)
 	-> template(cycles={$NUMBER.text}) "state->cycles += <cycles>;"
 	|	^(SIZE NUMBER)
-	-> template(v={$NUMBER.text}) "//size = <v>;"
+	-> template(v={$NUMBER.text}) "// FIXME size = <v>;"
 	;
 
 argument:	IDENTIFIER
