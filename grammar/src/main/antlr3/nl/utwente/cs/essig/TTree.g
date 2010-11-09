@@ -104,7 +104,7 @@ word returns [String comment = ""]:
 		NUMBER {$comment = $NUMBER.text;}
 	-> template (number={$NUMBER}) "<number>"
 	|	^(i=IDENTIFIER NOT? (IDENTIFIER | NUMBER)?) {$comment = $i.text;}
-	-> template (i={Func.convertReg($i.text)}) "<i>"
+	-> template (i={Func.convertReg($i.text)}) "vm_info(state,VM_INFO_REGISTER,<i>,&error)"
 	;
 
 operator:	(o=AND | o=OR | o=XOR | o=ADD)

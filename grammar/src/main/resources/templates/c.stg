@@ -58,8 +58,16 @@ int instruction_return_size = <size>;
 
 assignExpr(var,value,comment) ::= <<
 // <comment>
-if(!vm_write(state, diff, VM_INFO_REGISTER, <var>, <value>))
+// Calculate expressions for the result var
+result = <value>;
+// Check if there was an error in the calculation of the result
+if (error)
 	return false;
+
+if(!vm_write(state, diff, VM_INFO_REGISTER, <var>, result))
+	return false;
+
+
 >>
 
 condition(left,right) ::= <<
@@ -80,6 +88,11 @@ bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
 	//Update instruction pointer
 	state->pc += 1;
+
+	// error
+	bool error = false;
+	// result
+	int result = 0;
 
 	return true;
 }
@@ -114,5 +127,5 @@ else {
 >>
 
 operatorExpr(word,operator,expression) ::= <<
-<word> <operator> <expression>
+<word> <operator> <expression> 
 >>
