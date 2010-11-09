@@ -103,8 +103,8 @@ condition:	^(EQUALS l=operatorExpr r=word)
 word returns [String comment = ""]:
 		NUMBER {$comment = $NUMBER.text;}
 	-> template (number={$NUMBER}) "<number>"
-	|	^(i=IDENTIFIER NOT? (IDENTIFIER | NUMBER)?) {$comment = $i.text;}
-	-> template (i={Func.convertReg($i.text)}) "vm_info(state,VM_INFO_REGISTER,<i>,&error)"
+	|	^(i=IDENTIFIER{String temp_not = "";} (NOT{temp_not = "!";})? (IDENTIFIER | NUMBER)?) {$comment = temp_not + $i.text;}
+	-> template (i={Func.convertReg($i.text)},temp_not={temp_not}) "<temp_not>vm_info(state,VM_INFO_REGISTER,<i>,&error)"
 	;
 
 operator:	(o=AND | o=OR | o=XOR | o=ADD)
