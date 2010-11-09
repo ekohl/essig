@@ -1,10 +1,23 @@
 atmel {
 	parameters {
 		gprs 32;
+		gprs 66;
 	}
 
 	registers {
 		SREG; /* Status register */
+		
+		C; /* Carry flag */
+		Z; /* Zero flag */
+		N; /* Negative flag */
+		V; /* Two's complement overflow indicator */
+		S; /* N^V, For signed tests */
+		H; /* Half Carry Flag */
+		T; /* Transfer bit used by BLD and BST instructions */
+
+		/* -- Rest -- */
+		PC; /* Program counter */
+		SP; /* Stack Pointer */
 	}
 
 	instructions {

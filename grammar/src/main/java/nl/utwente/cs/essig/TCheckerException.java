@@ -1,28 +1,47 @@
 package nl.utwente.cs.essig;
 
-import org.antlr.runtime.IntStream;
-import org.antlr.runtime.RecognitionException;
+import org.antlr.runtime.tree.Tree;
+import org.antlr.runtime.*;
 
 /**
- * A non-fatal exception that occurred in the checker.
- * 
- * @author Ewoud Kohl van Wijngaarden
- * @see TCheckerError
+ * Klasse voor het representeren van een foutmelding bij de ESSIG checker.
+ * Gebruikt/ontwikkeld voor eindopdracht VB.
+ * @author Danny Bergsma
+ * @version 0.1
  */
 public class TCheckerException extends RecognitionException {
-	/** Generated UID */
-	private static final long serialVersionUID = 8893205774955639424L;
-
-	/** A message for the user */
-	private final String message;
-
-	public TCheckerException(IntStream input, String message) {
-		super(input);
-		this.message = message;
+	/* extra info over fout */
+	private String msg;
+	
+	/**
+	 * Maakt een nieuwe TCheckerException met als extra info msg.
+	 * @param msg extra info over fout
+	 * @require msg != null
+	 * @ensure getMessage() == msg
+	 */
+	public TCheckerException(String msg) {
+		this.msg = msg;
 	}
-
-	@Override
+	
+	/**
+	 * Maakt een nieuwe TCheckerException met als extra info msg.
+	 * Destilleert uit tree extra info over de plaats (in de source) waar fout is opgetreden.
+	 * @param tree de knoop waaruit de extra info over plaats van fout wordt gedestilleerd
+	 * @param msg extra info over fout
+	 * @require tree != null && msg != null
+	 * @ensure getMessage().contains(msg)
+	 */
+	public TCheckerException(Tree tree, String msg) {
+		this.msg = (msg + " ['" + tree.getText() + "' (ln: " + tree.getLine() + ", col: " + tree.getCharPositionInLine() + ")]");
+	}
+	
+	/**
+	 * Geeft extra info terug over de fout, mogelijk inclusief info over plaats (in source)
+	 * waar fout heeft plaatsgevonden.
+	 * @return extra info over fout
+	 * @ensure result != null
+	 */
 	public String getMessage() {
-		return this.message;
+		return msg;
 	}
 }

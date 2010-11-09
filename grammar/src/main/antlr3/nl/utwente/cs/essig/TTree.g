@@ -39,7 +39,9 @@ parameter:	^(RAM NUMBER)
 	|	^(GPRS NUMBER)
 	-> gprs(registers={$NUMBER})
 	|	^(SIZE NUMBER)
+	-> template(size={$NUMBER.text}) "// FIXME: size = <size>;"
 	|	^(CLOCK NUMBER)
+	-> template(clock={$NUMBER.text}) "// FIXME: clock = <clock>;"
 	;
 
 register:	IDENTIFIER -> register(name={$IDENTIFIER});
@@ -67,7 +69,7 @@ param	: ^(i=word  v=word)
 	|	^(CLOCK NUMBER)
 	-> template(cycles={$NUMBER.text}) "state->cycles += <cycles>;"
 	|	^(SIZE NUMBER)
-	-> template(v={$NUMBER.text}) "//size = <v>;"
+	-> template(v={$NUMBER.text}) "// FIXME size = <v>;"
 	;
 
 argument:	IDENTIFIER
@@ -103,8 +105,8 @@ condition:	^(EQUALS l=operatorExpr r=word)
 word returns [String comment = ""]:
 		NUMBER {$comment = $NUMBER.text;}
 	-> template (number={$NUMBER}) "<number>"
-	|	^(i=IDENTIFIER NOT? (IDENTIFIER | NUMBER)?) {$comment = $i.text;}
-	-> template (i={Func.convertReg($i.text)}) "<i>"
+	|	^(i=IDENTIFIER{String temp_not = "";} (NOT{temp_not = "!";})? (IDENTIFIER | NUMBER)?) {$comment = temp_not + $i.text;}
+	-> template (i={Func.convertReg($i.text)},temp_not={temp_not}) "<temp_not>vm_info(state,VM_INFO_REGISTER,<i>,&error)"
 	;
 
 operator:	(o=AND | o=OR | o=XOR | o=ADD)
