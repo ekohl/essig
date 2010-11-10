@@ -261,10 +261,9 @@ vm_register_handler(VMState *state, VMInterruptType type, interrupt_handler);
 /* @} */
 
 /*! Query the VM for information. 
-    \param[out] successp if not NULL, indicates whether the operation was 
-                successful. *successp must be initialized to true if successp
-                is not NULL. I agree that this is totally weird. */
-OPCODE_TYPE vm_info(VMState *state, VMInfoType type, size_t vmaddr, bool *successp);
+    \param[out] errorp if not NULL, indicates whether there was an error during
+		the operation. */
+OPCODE_TYPE vm_info(VMState *state, VMInfoType type, size_t vmaddr, bool *errorp);
 /*! Write a value to a destination of type 'type' at addr 'destaddr'. 
     This function updates 'state' and 'diff' appropriately. 
     On error, this function returns 'false' with _vm_errno set 

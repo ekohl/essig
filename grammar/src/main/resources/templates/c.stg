@@ -12,7 +12,9 @@ microcontroller(name,parameters,registers,instructions) ::= <<
 
 // Registers
 int nregisters = <length(registers)>;
-char* register_names[] = { <registers:{"<it.name>"}; separator=", "> };
+Register registers[] = {
+	<registers:register(); separator=",\n">
+ };
 // End of registers
 
 // helper functions (should be in VM I Think)
@@ -35,6 +37,10 @@ OpcodeHandler opcode_handlers[] = {
 	<instructions:opcodehandler(); separator=",\n">
 };
 // End of instructions
+>>
+
+register() ::= <<
+{ "<it.name>", <it.name> }
 >>
 
 
@@ -77,6 +83,13 @@ condition(left,right) ::= <<
 
 instruction(name,params,arguments,expressions) ::= <<
 bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
+
+	// error
+	bool error = false;
+
+	// result
+	int result = 0;
+
 	//Arguments <arguments; separator=",">
 	<params; separator="\n">
 
@@ -88,11 +101,6 @@ bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
 	//Update instruction pointer
 	state->pc += 1;
-
-	// error
-	bool error = false;
-	// result
-	int result = 0;
 
 	return true;
 }
@@ -128,4 +136,12 @@ else {
 
 operatorExpr(word,operator,expression) ::= <<
 <word> <operator> <expression> 
+>>
+
+wordRegister(register, bit, type, not) ::= <<
+<not> <if(bit)>
+GetBit(vm_info(state,VM_INFO_<type>,<register>,&error), <bit>)
+<else>
+vm_info(state,VM_INFO_<type>,<register>,&error)
+<endif>
 >>

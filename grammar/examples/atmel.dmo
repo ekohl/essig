@@ -19,6 +19,7 @@ atmel {
 		S; /* N^V, For signed tests */
 		H; /* Half Carry Flag */
 		T; /* Transfer bit used by BLD and BST instructions */
+		I; /* Global Interrupt Enable/Disable Flag */
 
 		/* -- Rest -- */
 		PC; /* Program counter */
@@ -31,12 +32,12 @@ atmel {
 		adc opcode="0001 11rd dddd rrrr" [clock=1, size=1] Rd, Rr {
 			Rd = Rd + Rr + C;
 
-			H = Rd3 & Rr3 + Rr3 & !R3 + !R3 & d3;
+			H = Rd(3) & Rr(3) + Rr(3) & !R3 + !R3 & Rd(3);
 			S = N ^ V;
-			V = Rd7 & Rr7 &  !R7 + !Rd7 & !Rr7 & R7;
+			V = Rd(7) & Rr(7) &  !R7 + !Rd(7) & !Rr(7) & R7;
 			N = R7;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
-			C = Rd7 & Rr7 + Rr7 & !R7 + !R7 & Rd7;
+			C = Rd(7) & Rr(7) + Rr(7) & !R7 + !R7 & Rd(7);
 
 			PC = PC + 1;
 
@@ -46,12 +47,12 @@ atmel {
 		add opcode="0000 11rd dddd rrrr" Rd, Rr {
 			Rd = Rd + Rr;
 
-			H = Rd3 & Rr3 + Rr3 & !R3 + !R3 & d3;
+			H = Rd(3) & Rr(3) + Rr(3) & !R3 + !R3 & Rd(3);
 			S = N ^ V;
-			V = Rd7 & Rr7 &  !R7 + !Rd7 & !Rr7 & R7;
+			V = Rd(7) & Rr(7) &  !R7 + !Rd(7) & !Rr(7) & R7;
 			N = R7;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
-			C = Rd7 & Rr7 + Rr7 & !R7 + !R7 & Rd7;
+			C = Rd(7) & Rr(7) + Rr(7) & !R7 + !R7 & Rd(7);
 
 			PC = PC + 1;
 		}
@@ -61,10 +62,10 @@ atmel {
 			/* Rd+1:Rd ? Rd+1:Rd + K; */
 			S = N ^ V;
 			PC = PC + 1;
-			V = !Rdh7 & R15;
+			V = !Rdh(7) & R15;
 			N = R15;
 			Z = !R15 & !R14 & !R13 & !R12 & !R11 & !R10 & !R9 & !R8 & !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
-			C = !R15 & Rdh7;
+			C = !R15 & Rdh(7);
 		}
 
 		/* Logical AND */
@@ -113,34 +114,34 @@ atmel {
 
 		/* Compare */
 		cp opcode="0001 01rd dddd rrrr" Rd, Rr {
-			H = !Rd3 & Rr3+ Rr3 &R3 +R3 &!Rd3;
+			H = !Rd(3) & Rr(3) + Rr(3) &R3 +R3 & !Rd(3);
 			S = N ^ V;
-			V = Rd7 & !Rr7 & !R7 + !Rd7 & Rr7 & R7;
+			V = Rd(7) & !Rr(7) & !R7 + !Rd(7) & Rr(7) & R7;
 			N = R7;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0 & Z;
-			C = !Rd7 & Rr7 + Rr7 & R7 + R7 & !Rd7;
+			C = !Rd(7) & Rr(7) + Rr(7) & R7 + R7 & !Rd(7);
 			PC = PC + 1;
 		}
 
 		/* Compare with Carry */
 		cpc opcode="0000 01rd dddd rrrr" Rd, Rr {
-			H = !Rd3 & Rr3+ Rr3 &R3 +R3 &!Rd3;
+			H = !Rd(3) & Rr(3)+ Rr(3) &R3 +R3 &!Rd(3);
 			S = N ^ V;
-			V = Rd7 & !Rr7 & !R7 + !Rd7 & Rr7 & R7;
+			V = Rd(7) & !Rr(7) & !R7 + !Rd(7) & Rr(7) & R7;
 			N = R7;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0 & Z;
-			C = !Rd7 & Rr7 + Rr7 & R7 + R7 & !Rd7;
+			C = !Rd(7) & Rr(7) + Rr(7) & R7 + R7 & !Rd(7);
 			PC = PC + 1;
 		}
 
 		/* Compare with Immediate */
 		cpi opcode="0011 KKKK dddd KKKK" Rd, K {
-			H = !Rd3 & K3 + K3 & R3 + R3 & Rd3;
+			H = !Rd(3) & K(3) + K(3) & R3 + R3 & Rd(3);
 			S = N ^ V;
-			V = Rd7 & !K7 & !R7 + !Rd7 & K7 & R7;
+			V = Rd(7) & !K(7) & !R7 + !Rd(7) & K(7) & R7;
 			N = R7;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
-			C = !Rd7 & K7 + K7 & R7 + R7 & !Rd7;
+			C = !Rd(7) & K(7) + K(7) & R7 + R7 & !Rd(7);
 			PC = PC + 1;
 		}
 
@@ -177,7 +178,7 @@ atmel {
 			V = N ^ C;
 			N = 0;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
-			C = Rd0;
+			C = Rd(0);
 			PC = PC + 1;
 		}
 
@@ -201,7 +202,7 @@ atmel {
 
 		/* Push Register on Stack */
 		push opcode="1001 001d dddd 1111" Rr {
-			stack = Rr;
+			//stack = Rr;
 			PC = PC + 1;
 
 			/* TODO ADD to stack */
@@ -209,9 +210,10 @@ atmel {
 		}
 
 		/* Pop Register from Stack */
+		/* FIXME: implement me
 		pop opcode="1001 000d dddd 1111" Rd {
 			Rd = stack;
-		}
+		}*/
 
 		/* Return from Subroutine */
 		ret opcode="1001 0101 0000 1000" {
@@ -233,7 +235,7 @@ atmel {
 		/* Rotate Right through Carry */
 		ror opcode="1001 010d dddd 0111" Rd {
 			/* TODO: zie datasheet */
-			C = Rd0;
+			C = Rd(0);
 		}
 
 		/* Subtract Immediate from Word */
@@ -242,10 +244,10 @@ atmel {
 			/* TODO same as adiw */
 			S = N ^ V;
 			PC = PC + 1;
-			V = Rdh7 & !R15;
+			V = Rdh(7) & !R15;
 			N = R15;
 			Z = !R15 & !R14 & !R13 & !R12 & !R11 & !R10 & !R9 & !R8 & !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
-			C = R15 & !Rdh7;
+			C = R15 & !Rdh(7);
 			/* R (Result) equals Rdh:Rdl after the operation (Rdh7-Rdh0 = R15-R8, Rdl7-Rdl0=R7-R0). */
 		}
 

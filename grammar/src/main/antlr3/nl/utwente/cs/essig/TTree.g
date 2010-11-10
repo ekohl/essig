@@ -25,18 +25,31 @@ options {
     package nl.utwente.cs.essig;
 }
 
+@members {
+	private int gprs;
+
+	private List addGPRS(List l) {
+		for(int i=0; i<this.gprs; i++) {
+			StringTemplate attr = new StringTemplate();
+			attr.setAttribute("name", "R" + i);
+			l.add(attr);
+		}
+		return l;
+	}
+}
+
 microcontroller: ^(
 			IDENTIFIER
 			^(PARAMETERS (p+=parameter)+)
 			^(REGISTERS (r+=register)*)
 			^(INSTRUCTIONS (i+=instruction)*)
 		)
-	-> microcontroller(name={$IDENTIFIER},parameters={$p},registers={$r},instructions={$i})
+	-> microcontroller(name={$IDENTIFIER},parameters={$p},registers={addGPRS($r)},instructions={$i})
 	;
 
 parameter:	^(RAM NUMBER)
 	-> ram(ram={$NUMBER})
-	|	^(GPRS NUMBER)
+	|	^(GPRS NUMBER) { gprs = Integer.parseInt($NUMBER.text); }
 	-> gprs(registers={$NUMBER})
 	|	^(SIZE NUMBER)
 	-> template(size={$NUMBER.text}) "// FIXME: size = <size>;"
@@ -83,7 +96,7 @@ expr	:	assignExpr
 	;
 
 assignExpr:	^(ASSIGN IDENTIFIER o=operatorExpr)
-	-> assignExpr(var={$IDENTIFIER},value={$o.st},comment={$IDENTIFIER + " = " + $o.comment})
+	-> assignExpr(var={new Register($IDENTIFIER.text)},value={$o.st},comment={$IDENTIFIER + " = " + $o.comment})
 	;
 
 
@@ -105,9 +118,19 @@ condition:	^(EQUALS l=operatorExpr r=word)
 word returns [String comment = ""]:
 		NUMBER {$comment = $NUMBER.text;}
 	-> template (number={$NUMBER}) "<number>"
-	|	^(i=IDENTIFIER{String temp_not = "";} (NOT{temp_not = "!";})? (IDENTIFIER | NUMBER)?) {$comment = temp_not + $i.text;}
-	-> template (i={Func.convertReg($i.text)},temp_not={temp_not}) "<temp_not>vm_info(state,VM_INFO_REGISTER,<i>,&error)"
+	|	^(
+			i=IDENTIFIER {Register reg = new Register($i.text);}
+			{String temp_not = "";} (NOT{temp_not = "!";})?
+			(IDENTIFIER | n=NUMBER)?
+		)
+		{
+			$comment = temp_not + $i.text;
+			if($n != null)
+				$comment += "(" + $n.text + ")";
+		}
+	-> wordRegister (register={reg},bit={$n.text},type={reg.getType()},not={temp_not})
 	;
 
 operator:	(o=AND | o=OR | o=XOR | o=ADD)
-	-> template(operator={$o}) "<operator>";
+	-> template(operator={$o}) "<operator>"
+	;

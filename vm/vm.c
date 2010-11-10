@@ -441,13 +441,13 @@ vm_register_handler(VMState *state,
 }
 
 OPCODE_TYPE
-vm_info(VMState *state, VMInfoType type, size_t vmaddr, bool *successp)
+vm_info(VMState *state, VMInfoType type, size_t vmaddr, bool *errorp)
 {
     OPCODE_TYPE *dest;
     
     if (!(dest = _get_location(state, type, vmaddr))) {
-        if (successp)
-            *successp = false;
+        if (errorp)
+            *errorp = true;
         
         return 0;
     }
