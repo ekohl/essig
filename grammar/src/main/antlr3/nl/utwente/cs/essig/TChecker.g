@@ -1,29 +1,29 @@
 tree grammar TChecker;
 
 options {
-    // Default but name it anyway
-    //
-    language   = Java;
+	// Default but name it anyway
+	//
+	language   = Java;
 
-    // Use the vocab from the parser (not the lexer)
-    //
-    tokenVocab = TParser;
+	// Use the vocab from the parser (not the lexer)
+	//
+	tokenVocab = TParser;
 
-    // Use ANTLR built-in CommonTree for tree nodes
-    //
-    ASTLabelType = CommonTree;
+	// Use ANTLR built-in CommonTree for tree nodes
+	//
+	ASTLabelType = CommonTree;
 
-    // Output a template
-    //
-    output = template;
+	// Output a template
+	//
+	output = template;
 }
 
 // What package should the generated source exist in?
 //
 @header {
-    package nl.utwente.cs.essig;
-    import java.util.Map;
-    import java.util.HashMap;
+	package nl.utwente.cs.essig;
+	import java.util.Map;
+	import java.util.HashMap;
 }
 
 @members {	
@@ -42,9 +42,9 @@ options {
 		} else
 			super.displayRecognitionError(tokenNames, e);  // standaard ANTLR error handler
 	}
-	
+
 	/* Probeert node toe te voegen aan symbol table. Als id voor symbol table wordt de tekst van
-     * parameter id gebruikt. Wanneer toevoegen niet lukt (id is bijvoorbeeld al gedeclareerd op huidige level),
+	 * parameter id gebruikt. Wanneer toevoegen niet lukt (id is bijvoorbeeld al gedeclareerd op huidige level),
 	 * wordt een error geprint.
 	 * @param id tekst van deze Tree wordt gebruikt als id voor symbol table
 	 * @param node de aan symbol table toe te voegen node
@@ -63,109 +63,109 @@ options {
 }
 
 microcontroller:
-	^(IDENTIFIER ^(PARAMETERS parameter*) ^(REGISTERS {
-														symbolTable.openScope();
-														try {
-															symbolTable.enter("R", new CommonTreeEntry(null));
-															symbolTable.enter("stack", new CommonTreeEntry(null));
-														} catch (SymbolTableException e) {
-															displayRecognitionError(null, new TCheckerException(null, "Can't add R (result): " + e.getMessage()));
-														}
-		                                              }
-													  register*)
-																 ^(INSTRUCTIONS instruction*) {
-																								symbolTable.closeScope();
-																							  }
+	^(IDENTIFIER
+		^(PARAMETERS parameter*)
+		^(REGISTERS {
+			symbolTable.openScope();
+			try {
+				symbolTable.enter("R", new CommonTreeEntry(null));
+				symbolTable.enter("stack", new CommonTreeEntry(null));
+			} catch (SymbolTableException e) {
+				displayRecognitionError(null, new TCheckerException(null, "Can't add R (result): " + e.getMessage()));
+			}
+		}
+		register*)
+		^(INSTRUCTIONS instruction*) {
+			symbolTable.closeScope();
+		}
 	)
 	;
 
 parameter:	
-	^(p=(RAM | GPRS | SIZE | CLOCK) NUMBER) {
-												if(params.contains($p.text))
-													displayRecognitionError(null, new TCheckerException($p, "Duplicate parameter"));
-												else
-													params.add($p.text);
-	                                        }
+		^(p=(RAM | GPRS | SIZE | CLOCK) NUMBER) {
+			if(params.contains($p.text))
+				displayRecognitionError(null, new TCheckerException($p, "Duplicate parameter"));
+			else
+				params.add($p.text);
+		}
 	;
 
 register:
-	id=IDENTIFIER {
-					declare($id, $id);
-	              }
+		IDENTIFIER {
+			declare($IDENTIFIER, $IDENTIFIER);
+		}
 	;
 
-instruction:	^(id=IDENTIFIER {
-									declare($id, $id);
-	                            }
-                                op=OPCODE { 
-											List<Character> opCodeArgs = new ArrayList<Character>();
-											String opCodeText = $op.getText();
-											for (int i=0; i<opCodeText.length(); i++) {
-												char c = opCodeText.charAt(i);
-												if (Character.isLetter(c) && !opCodeArgs.contains(c))
-													opCodeArgs.add(c);
-											}
-											params.clear();
-											symbolTable.openScope();
-		                                  }
-	                                      ^(PARAMS param*) ^(ARGUMENTS argument*) {
-																					for (Character c: opCodeArgs) {
-																						CommonTreeEntry entry = symbolTable.retrieve(c + "");
-																						if (entry == null || entry.getLevel() != 1)
-																							entry = symbolTable.retrieve("R" + c);
-																						if (entry == null || entry.getLevel() != 1)
-																							displayRecognitionError(null, new TCheckerException($op, "Opcode mask element " + c + " not specified as instruction argument"));
-																					}
-																				  }
-																					^(EXPR expr+)) {
-																									symbolTable.closeScope();
-																								   }
+instruction:	^(
+			IDENTIFIER {
+				declare($IDENTIFIER, $IDENTIFIER);
+			}
+			OPCODE {
+				Opcode opcode = new Opcode($OPCODE.text);
+				params.clear();
+				symbolTable.openScope();
+			}
+			^(PARAMS param*)
+			^(ARGUMENTS argument*)
+			{
+				for (Character c : opcode.getArguments().keySet()) {
+					CommonTreeEntry entry = symbolTable.retrieve(c + "");
+					if (entry == null || entry.getLevel() != 1)
+						entry = symbolTable.retrieve("R" + c);
+					if (entry == null || entry.getLevel() != 1)
+						displayRecognitionError(null, new TCheckerException($OPCODE, "Opcode mask element " + c + " not specified as instruction argument"));
+				}
+			}
+			^(EXPR expr+)
+			{
+				symbolTable.closeScope();
+			}
+		)
 	;
 
 param:	
-	^(p=(SIZE | CLOCK) NUMBER) {
-								if(params.contains($p.text))
-									displayRecognitionError(null, new TCheckerException($p, "Duplicate parameter"));
-								else
-									params.add($p.text);
-	                           }
+		^(p=(SIZE | CLOCK) NUMBER) {
+			if(params.contains($p.text))
+				displayRecognitionError(null, new TCheckerException($p, "Duplicate parameter"));
+			else
+				params.add($p.text);
+		}
 	;
 
 argument:		
-	id=IDENTIFIER {
-					declare($id, $id);
-	              }
-	;
+id=IDENTIFIER {
+	declare($id, $id);
+}
+;
 
 expr	:	assignExpr | ifExpr;
 assignExpr:	^(ASSIGN word operatorExpr);
 ifExpr:		^(IF condition expr+ (ELSE expr+)?);
 
 operatorExpr:	word
-	|	^(operator word operatorExpr)
+|	^(operator word operatorExpr)
 	;
 
 condition:	^(EQUALS operatorExpr word)
 	;
 
-word:	
-	NUMBER
+word	:	NUMBER
 	|	^(id=IDENTIFIER {
-							String idText = $id.getText(), nonIndexed = "";
-							int i=0;
-							boolean finished = false;
-							while (!finished && i<idText.length()) {
-								char c = idText.charAt(i);
-								if (Character.isLetter(c) && c != 'h' && c != 'l') {
-									nonIndexed += c;
-									i++;
-								} else
-									finished = true;
-							}
-							if (symbolTable.retrieve(nonIndexed) == null)
-								displayRecognitionError(null, new TCheckerException($id, "Identifier " + nonIndexed + " not declared"));
-					    }
-    	NOT? (IDENTIFIER | NUMBER)?)
+			String idText = $id.getText(), nonIndexed = "";
+			int i=0;
+			boolean finished = false;
+			while (!finished && i<idText.length()) {
+				char c = idText.charAt(i);
+				if (Character.isLetter(c) && c != 'h' && c != 'l') {
+					nonIndexed += c;
+					i++;
+				} else
+					finished = true;
+			}
+			if (symbolTable.retrieve(nonIndexed) == null)
+				displayRecognitionError(null, new TCheckerException($id, "Identifier " + nonIndexed + " not declared"));
+		}
+		NOT? (IDENTIFIER | NUMBER)?)
 	;
 
 operator:	AND | OR | XOR | ADD;
