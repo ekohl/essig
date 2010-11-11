@@ -123,9 +123,12 @@ public class Main {
 			// The file we tried to parse does not exist
 			System.err.println("\n  !!The file " + source
 					+ " does not exist!!\n");
+		} catch (TCheckerException ex) {
+			// Something went wrong in the parser, report this
+			System.err.println("  !!" + ex.getMessage() + "!!");
 		} catch (Exception ex) {
 			// Something went wrong in the parser, report this
-			System.err.println("Parser threw an exception:\n\n");
+			System.err.println("Exception caught:\n\n");
 			ex.printStackTrace();
 		}
 	}
@@ -187,6 +190,10 @@ public class Main {
 		long stop = System.currentTimeMillis();
 		System.out.println("      Checking finished in " + (stop - pStart)
 				+ "ms.");
+
+		if (checker.getNumberOfSyntaxErrors() != 0) {
+			throw new TCheckerException("Checker finished with " + checker.getNumberOfSyntaxErrors() + " errors");
+		}
 	}
 
 	/**
