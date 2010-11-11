@@ -96,7 +96,7 @@ expr	:	assignExpr
 	;
 
 assignExpr:	^(ASSIGN IDENTIFIER o=operatorExpr)
-	-> assignExpr(var={new Register($IDENTIFIER.text)},value={$o.st},comment={$IDENTIFIER + " = " + $o.comment})
+	-> assignExpr(var={new Variable($IDENTIFIER.text)},value={$o.st},comment={$IDENTIFIER + " = " + $o.comment})
 	;
 
 
@@ -119,7 +119,7 @@ word returns [String comment = ""]:
 		NUMBER {$comment = $NUMBER.text;}
 	-> template (number={$NUMBER}) "<number>"
 	|	^(
-			i=IDENTIFIER {Register reg = new Register($i.text);}
+			i=IDENTIFIER {Variable reg = new Variable($i.text);}
 			{String temp_not = "";} (NOT{temp_not = "!";})?
 			(IDENTIFIER | n=NUMBER)?
 		)
