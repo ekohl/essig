@@ -34,13 +34,13 @@ options {
 }
 
 microcontroller:
-	^(IDENTIFIER
-		{ symbolTable.openScope(); }
-		^(PARAMETERS parameter*)
-		^(REGISTERS register*)
-		^(INSTRUCTIONS instruction*)
-		{ symbolTable.closeScope(); }
-	)
+		^(IDENTIFIER
+			{ symbolTable.openScope(); }
+			^(PARAMETERS parameter*)
+			^(REGISTERS register*)
+			^(INSTRUCTIONS instruction*)
+			{ symbolTable.closeScope(); }
+		)
 	;
 
 parameter:	
@@ -71,7 +71,8 @@ register:
 		}
 	;
 
-instruction:	^(
+instruction:
+		^(
 			IDENTIFIER
 			OPCODE {
 				Opcode opcode = new Opcode($OPCODE.text);
@@ -105,18 +106,28 @@ argument:
 		}
 	;
 
-expr	:	assignExpr | ifExpr;
-assignExpr:	^(ASSIGN IDENTIFIER operatorExpr);
-ifExpr:		^(IF condition expr+ (ELSE expr+)?);
+expr:
+		assignExpr | ifExpr
+	;
 
-operatorExpr:	word
+assignExpr:
+		^(ASSIGN IDENTIFIER operatorExpr)
+	;
+ifExpr:
+		^(IF condition expr+ (ELSE expr+)?)
+	;
+
+operatorExpr:
+		word
 	|	^(operator word operatorExpr)
 	;
 
-condition:	^(EQUALS operatorExpr word)
+condition:
+		^(EQUALS operatorExpr word)
 	;
 
-word	:	NUMBER
+word:
+		NUMBER
 	|	^(id=IDENTIFIER NOT? IDENTIFIER? NUMBER?) {
 			symbolTable.getDeclaration(new Variable($id.text).toString(), $id);
 		}
