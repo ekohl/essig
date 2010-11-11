@@ -43,11 +43,6 @@ register() ::= <<
 { "<it.name>", <it.name> }
 >>
 
-
-gprs (registers) ::= <<
-//int nregisters = <registers>;
->>
-
 ram (ram) ::= <<
 size_t ramsize = <ram>;
 >>

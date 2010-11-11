@@ -32,7 +32,7 @@ options {
 		for(int i=0; i<this.gprs; i++) {
 			StringTemplate attr = new StringTemplate();
 			attr.setAttribute("name", "R" + i);
-			l.add(attr);
+			l.add(i, attr);
 		}
 		return l;
 	}
@@ -50,7 +50,6 @@ microcontroller: ^(
 parameter:	^(RAM NUMBER)
 	-> ram(ram={$NUMBER})
 	|	^(GPRS NUMBER) { gprs = Integer.parseInt($NUMBER.text); }
-	-> gprs(registers={$NUMBER})
 	|	^(SIZE NUMBER)
 	-> template(size={$NUMBER.text}) "// FIXME: size = <size>;"
 	|	^(CLOCK NUMBER)
