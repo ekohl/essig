@@ -19,9 +19,9 @@ atmel {
 		S; /* N^V, For signed tests */
 		H; /* Half Carry Flag */
 		T; /* Transfer bit used by BLD and BST instructions */
-		I; /* Global Interrupt Enable/Disable Flag */
 
 		/* -- Rest -- */
+		I; /* Global Interrupt Enable/Disable Flag */
 		PC; /* Program counter */
 		SP; /* Stack Pointer */
 	}
@@ -201,7 +201,7 @@ atmel {
 		}
 
 		/* Push Register on Stack */
-		push opcode="1001 001d dddd 1111" Rr {
+		push opcode="1001 001r rrrr 1111" Rr {
 			//stack = Rr;
 			PC = PC + 1;
 
@@ -210,10 +210,10 @@ atmel {
 		}
 
 		/* Pop Register from Stack */
-		/* FIXME: implement me
 		pop opcode="1001 000d dddd 1111" Rd {
-			Rd = stack;
-		}*/
+			//Rd = stack; TODO
+			PC = PC + 1;
+		}
 
 		/* Return from Subroutine */
 		ret opcode="1001 0101 0000 1000" {
