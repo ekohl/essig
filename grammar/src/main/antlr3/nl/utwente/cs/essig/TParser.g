@@ -85,7 +85,9 @@ condition:		word EQUALS^ word
 	|		LPAREN! operatorExpr RPAREN! EQUALS^ word
 	;
 
-word	:		NOT? IDENTIFIER^ (LPAREN! (IDENTIFIER | NUMBER) RPAREN!)?
+word	:		NOT? IDENTIFIER^
+				(LPAREN! IDENTIFIER RPAREN!)?
+				(LPAREN! NUMBER RPAREN!)?
 	|		NUMBER
 	;
 

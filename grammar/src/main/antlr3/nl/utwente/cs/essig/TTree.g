@@ -117,19 +117,19 @@ condition:	^(EQUALS l=operatorExpr r=word)
 word returns [String comment = ""]:
 		NUMBER {$comment = $NUMBER.text;}
 	-> template (number={$NUMBER}) "<number>"
-	|	^(
-			i=IDENTIFIER {Variable reg = new Variable($i.text);}
-			{String temp_not = "";} (NOT{temp_not = "!";})?
-			(IDENTIFIER | n=NUMBER)?
-		)
+	|	^( v=IDENTIFIER NOT? i=IDENTIFIER? NUMBER? )
 		{
-			$comment = temp_not + $i.text;
-			if($n != null)
-				$comment += "(" + $n.text + ")";
+			Variable var = new Variable($v.text);
+			$comment = (($NOT != null) ? $NOT.text : "") + $v.text;
+			if($i != null)
+				$comment += "(" + $i.text + ")";
+			if($NUMBER != null)
+				$comment += "(" + $NUMBER.text + ")";
 		}
-	-> wordRegister (register={reg},bit={$n.text},type={reg.getType()},not={temp_not})
+	// FIXME: Also handle $i
+	-> wordVariable (variable={var},bit={$NUMBER.text},type={var.getType()},not={$NOT != null})
 	;
 
-operator:	(o=AND | o=OR | o=XOR | o=ADD)
+operator:      (o=AND | o=OR | o=XOR | o=ADD)
 	-> template(operator={$o}) "<operator>"
 	;

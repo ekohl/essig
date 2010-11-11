@@ -13,7 +13,8 @@ microcontroller(name,parameters,registers,instructions) ::= <<
 // Registers
 int nregisters = <length(registers)>;
 Register registers[] = {
-	<registers:register(); separator=",\n">
+	<registers:{\{ "<it.name>", <it.name> \}}; separator=",\n">
+
  };
 // End of registers
 
@@ -37,10 +38,6 @@ OpcodeHandler opcode_handlers[] = {
 	<instructions:opcodehandler(); separator=",\n">
 };
 // End of instructions
->>
-
-register() ::= <<
-{ "<it.name>", <it.name> }
 >>
 
 ram (ram) ::= <<
@@ -95,9 +92,9 @@ bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	<expressions; separator="\n">
 
 	//Update instruction pointer
-	state->pc += 1;
+	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
 
-	return true;
+	return error;
 }
 >>
 
@@ -133,10 +130,10 @@ operatorExpr(word,operator,expression) ::= <<
 <word> <operator> <expression> 
 >>
 
-wordRegister(register, bit, type, not) ::= <<
-<not> <if(bit)>
-GetBit(vm_info(state,VM_INFO_<type>,<register>,&error), <bit>)
+wordVariable(variable, bit, type, not) ::= <<
+<if(not)>!<endif> <if(bit)>
+GetBit(vm_info(state,VM_INFO_<type>,<variable>,&error), <bit>)
 <else>
-vm_info(state,VM_INFO_<type>,<register>,&error)
+vm_info(state,VM_INFO_<type>,<variable>,&error)
 <endif>
 >>
