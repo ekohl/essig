@@ -12,8 +12,12 @@ public class TCheckerError extends RuntimeException {
 	/** Generated UID */
 	private static final long serialVersionUID = 3909731270588233130L;
 
-	public TCheckerError(IntStream input, String message) {
+	public TCheckerError(String message) {
 		super(message);
+	}
+
+	public TCheckerError(IntStream input, String message) {
+		this(message);
 		// FIXME: Do something with the input so you can provide useful error
 		// messages
 	}

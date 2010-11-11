@@ -45,7 +45,7 @@ public abstract class AbstractTChecker extends TreeParser {
 
 	@Override
 	public String getErrorMessage(RecognitionException e, String[] tokenNames) {
-		if (e instanceof TCheckerException) {
+		if (e instanceof TCheckerException || e instanceof SymbolTableException) {
 			return e.getMessage();
 		}
 		return super.getErrorMessage(e, tokenNames);

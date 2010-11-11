@@ -1,98 +1,125 @@
 package nl.utwente.cs.essig;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Stack;
+
+import org.antlr.runtime.tree.CommonTree;
 
 /**
- * Klasse die een symbol table (identification table) implementeert.
- * Gebruikt/ontwikkeld bij VB.
- * @author Danny Bergsma
- * @version 0.1
+ * Symbol table with support for scopes.
+ * <p>
+ * Note that this implementation is not thread safe.
+ *
+ * @author Ewoud Kohl van Wijngaarden
  */
-public class SymbolTable<Entry extends IdEntry> {
-	/* Error berichten */
-	private static final String WRONG_SCOPE_LEVEL = "Wrong scope level",
-	                            ALREADY_DECLARED = "Already declared on current level";
-	
-	/* huidige (scope)level */
-	private int currentLevel;
-	/* een mapping van Strings (identifiers) naar een Stack van Entry's (de diverse declaraties van die identifier) */
-	private Map<String, Stack<Entry>> mapDecl;
-	
-    /** 
-     * Maakt een nieuwe symbol table aan.
-     * @ensure currentLevel() == -1 
-     */
-    public SymbolTable() { 
-    	currentLevel = -1;
-    	mapDecl = new HashMap<String, Stack<Entry>>();
-    }
+public class SymbolTable<Entry extends CommonTree> {
+	/**
+	 * Symbol table. Each entry is a scope. In each entry the key is the
+	 * variable name and the value is the type of that variable.
+	 */
+	private final Stack<Map<String, Entry>> table;
 
-    /** 
-     * Opent een nieuwe scope. 
-     * @ensure this.currentLevel() == old.currentLevel()+1 
-     */
-    public void openScope()  {
-    	this.currentLevel++;
-    }
+	/**
+	 * Constructor. Constructs an empty SymbolTable. For convenience an empty
+	 * scope will be opened.
+	 *
+	 * @ensure this.currentLevel() == -1
+	 */
+	public SymbolTable() {
+		table = new Stack<Map<String, Entry>>();
+	}
 
-    /** 
-     * Sluit de huidige scope. Alle declaraties uit de huidige scope worden verwijderd.
-     * @require old.currentLevel() > -1
-     * @ensure this.currentLevel() == old.currentLevel()-1 
-     */
-    public void closeScope() {
-    	Set<String> ids = mapDecl.keySet();
-        for (String id: ids) { // ga alle ids na (optimalisatie mogelijk: sla per scope alle ids op)
-        	Stack<Entry> stack = mapDecl.get(id); // stack van id      	
-        	if (stack.size() > 0 && stack.peek().getLevel() == currentLevel) // id is gedeclareerd in huidige scope
-        		stack.pop(); // pop bovenste declaratie van stack van id
-        }
-        currentLevel--;
-    }
+	/**
+	 * Closes the current scope.
+	 *
+	 * @return The size of the closed scope
+	 *
+	 * @require getCurrentLevel() &gt;= 0
+	 * @ensure this.currentLevel() == old.currentLevel()-1
+	 */
+	public void closeScope() {
+		table.pop();
+	}
 
-    /** 
-	 * Geeft het huidige scope level terug.
-	 * @return huidige scope level
-     */
-    public int currentLevel() {
-    	return this.currentLevel;        
-    }    
+	/**
+	 * Declares the <code>node</code> with the variable name <code>var</code>.
+	 *
+	 * @param var
+	 *            The name of the variable to set
+	 * @param node
+	 *            The node of the variable that is being declared
+	 * @throws SymbolTableException
+	 *             In case <code>var</code> is already defined on this scope
+	 *
+	 * @return The type of the declared variable
+	 *
+	 * @require var != null
+	 */
+	public void declare(String var, Entry node) throws SymbolTableException {
+		if (table.peek().put(var, node) != null)
+			throw new SymbolTableException(node, "var " + var
+					+ " already defined in current scope.");
+	}
 
-    /** 
-	 * Voegt een id, samen met z'n Entry toe aan deze symbol table, gebruikmaken van huidige scope level.
-	 * Het level van Entry wordt op currentLevel() gezet.
-	 * @param id toe te voegen id
-	 * @param entry toe te voegen entry; leven van deze entry wordt op currentLevel() gezet
-     * @require String != null && String != "" && entry != null
-     * @ensure  this.retrieve(id).getLevel() == currentLevel()
-     * @throws  SymbolTableException wanneer huidige scope level niet geldig is of wanneer id al gedeclareerd
-	 *                               is op huidige level 
-     */
-    public void enter(String id, Entry entry) throws SymbolTableException { 
-        if (this.currentLevel >= 0) {
-        	Stack<Entry> stack = mapDecl.get(id); // vraag stack op van id (mogelijk null)
-        	if (stack == null) { // id nog niet eerder gedeclareerd 
-        		stack = new Stack<Entry>();
-        	    mapDecl.put(id, stack);
-        	} else
-        		if (stack.size() > 0 && stack.peek().getLevel() == currentLevel) // check of al niet gedeclareerd op dit level
-        			throw new SymbolTableException(ALREADY_DECLARED);
-        	entry.setLevel(currentLevel);
-        	stack.push(entry);
-        } else
-        	throw new SymbolTableException(WRONG_SCOPE_LEVEL);
-    }
+	/**
+	 * Returns the current scope level.
+	 *
+	 * The first scope opened has level 0, and for each nested scope the number
+	 * is incremented by 1. If no scope has been defined the level is -1.
+	 *
+	 * @return The current level
+	 *
+	 * @ensure result &gt;= -1
+	 */
+	public int getCurrentLevel() {
+		return table.size() - 1;
+	}
 
-    /** 
-	 * Geeft de Entry met hoogste level terug behorend bij id. Oftewel, geeft Entry terug die als laatst
-	 * voor id is toegevoegd aan de symbol table.
-	 * Kan ook null zijn, wanneer id niet gedeclareerd is op het huidige of lagere niveaus.
-	 * @param id de entry met hoogste level behorend bij deze id moet teruggeven worden
-	 * @return entry met hoogste level behorend bij id, kan ook null zijn
-     * @require id != null
-     */
-    public Entry retrieve(String id) {
-    	Stack<Entry> stack = mapDecl.get(id);
-		return ((stack != null && stack.size() > 0) ? stack.peek() : null);
-    }    
+	/**
+	 * Returns the declaration of <code>var</code>.
+	 *
+	 * @param var
+	 *            The variable to get the declaration of
+	 * @param node
+	 *            The node that declared the variable. Only used in case
+	 *            it's undefined.
+	 *
+	 * @return The declaration of <code>var</code>
+	 *
+	 * @ensure result != null
+	 */
+	public Entry getDeclaration(String var, Entry node) throws SymbolTableException {
+		// Search the stack from top to bottom
+		for (int i = table.size() - 1; i >= 0; i--) {
+			Entry type = table.get(i).get(var);
+			if (type != null)
+				return type;
+		}
+
+		// Apparently it's undeclared which is not good
+		throw new SymbolTableException(node, "var " + var + " is undeclared");
+	}
+
+	/**
+	 * Opens a new scope.
+	 *
+	 * @ensure this.currentLevel() == old.currentLevel()+1
+	 */
+	public void openScope() {
+		table.push(new HashMap<String, Entry>());
+	}
+
+	/**
+	 * Returns a textual representation of this Symbol Table
+	 */
+	@Override
+	public String toString() {
+		StringBuffer sb = new StringBuffer("Symbol table for current level:\n");
+		// FIXME: Print all scopes
+		for (Map.Entry<String, Entry> var : table.peek().entrySet()) {
+			sb.append(var.getKey() + " " + var.getValue() + "\n");
+		}
+		return sb.toString();
+	}
 }

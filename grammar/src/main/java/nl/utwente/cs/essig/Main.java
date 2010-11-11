@@ -123,7 +123,7 @@ public class Main {
 			// The file we tried to parse does not exist
 			System.err.println("\n  !!The file " + source
 					+ " does not exist!!\n");
-		} catch (TCheckerException ex) {
+		} catch (TCheckerError ex) {
 			// Something went wrong in the parser, report this
 			System.err.println("  !!" + ex.getMessage() + "!!");
 		} catch (Exception ex) {
@@ -182,7 +182,7 @@ public class Main {
 	 * @throws RecognitionException
 	 *             In case the tree has an inconsistency
 	 */
-	private static void checkTree(Tree tree) throws RecognitionException {
+	private static void checkTree(Tree tree) throws RecognitionException, TCheckerError {
 		TChecker checker = new TChecker(new CommonTreeNodeStream(tree));
 		System.out.println("    Checker Start\n");
 		long pStart = System.currentTimeMillis();
@@ -192,7 +192,7 @@ public class Main {
 				+ "ms.");
 
 		if (checker.getNumberOfSyntaxErrors() != 0) {
-			throw new TCheckerException("Checker finished with " + checker.getNumberOfSyntaxErrors() + " errors");
+			throw new TCheckerError("Checker finished with " + checker.getNumberOfSyntaxErrors() + " errors");
 		}
 	}
 
