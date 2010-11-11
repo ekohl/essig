@@ -45,3 +45,9 @@
 #define I 40
 #define PC 41
 #define SP 42
+// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)	
+#define RX 26
+#define RY 28
+#define RZ 30
+
+

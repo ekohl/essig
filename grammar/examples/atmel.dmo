@@ -167,10 +167,11 @@ atmel {
 			PC = PC + 1;
 		}
 
-		/* TODO aswell (check datasheet) */
-		/*ldd {
+		/* Load Indirect from Data Space to Register using Index Y+ */
+		lddyplus opcode="10q0 qq0d dddd 1qqq" {
+			//Rd = RAM(RY+q);			
 			PC = PC + 1;
-		}*/
+		}
 
 		/* Logical Shift Right */
 		lsr opcode="1001 010d dddd 0110" Rd {
@@ -186,7 +187,7 @@ atmel {
 		/* TODO: complex
 		lpm opcode="1001 0101 1100 1000" {
 			PC = PC + 1;
-		}*/
+		}
 
 		/* Copy Register */
 		mov opcode="0010 11rd dddd rrrr" Rd, Rr {
@@ -261,16 +262,24 @@ atmel {
 			}
 		}
 
-		/* Store Indirect From Register to Data Space using Index X */
-		/* TODO fixen voor  (X , X+ en -X)
-		st opcode="" X, Rr {
+		/* Store Indirect From Register to Data Space using Index X+ */
+		stxplus opcode="1001 001r rrrr 1101" X, Rr {
+			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)			
+			// TODO Store Rr to Dataspace[X] 
+			//RAM(RX) = Rr;				
+			RX = RX + 1;		
 			PC = PC + 1;
-		}*/
+		}
 
-		/* Store Indirect From Register to Data Space using Index Y */
-		/* TODO multiple choices
-		std {
+		
+		/* Store Indirect From Register to Data Space using Index X+ */
+		stdyplus opcode="1000 001r rrrr 1000" Y, Rr {
+			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)			
+			// TODO Store Rr to Dataspace[RY] 
+			//RAM(RY) = Rr;			
+			RY = RY + 1;		
 			PC = PC + 1;
-		}*/
+		}
+
 	}
 }
