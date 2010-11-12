@@ -55,6 +55,7 @@ public class SymbolTable<Entry extends CommonTree> {
 	 * @return The type of the declared variable
 	 *
 	 * @require var != null
+	 * @ensure declare(name, node) ; getDeclaration(name) == node
 	 */
 	public void declare(String var, Entry node) throws SymbolTableException {
 		if (table.peek().put(var, node) != null)
@@ -81,15 +82,16 @@ public class SymbolTable<Entry extends CommonTree> {
 	 *
 	 * @param var
 	 *            The variable to get the declaration of
-	 * @param node
-	 *            The node that declared the variable. Only used in case
-	 *            it's undefined.
+	 * @param errorNode
+	 *            The node that declared the variable. Only used in case it's
+	 *            undefined.
 	 *
 	 * @return The declaration of <code>var</code>
 	 *
 	 * @ensure result != null
 	 */
-	public Entry getDeclaration(String var, Entry node) throws SymbolTableException {
+	public Entry getDeclaration(String var, Entry errorNode)
+			throws SymbolTableException {
 		// Search the stack from top to bottom
 		for (int i = table.size() - 1; i >= 0; i--) {
 			Entry type = table.get(i).get(var);
@@ -98,7 +100,8 @@ public class SymbolTable<Entry extends CommonTree> {
 		}
 
 		// Apparently it's undeclared which is not good
-		throw new SymbolTableException(node, "var " + var + " is undeclared");
+		throw new SymbolTableException(errorNode, "var " + var
+				+ " is undeclared");
 	}
 
 	/**
