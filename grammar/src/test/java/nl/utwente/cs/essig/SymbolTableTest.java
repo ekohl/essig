@@ -6,6 +6,27 @@ import org.antlr.runtime.tree.CommonTree;
 import org.junit.Test;
 
 public class SymbolTableTest {
+	/**
+	 * Test the symbol table by simulating the following code:
+	 * 
+	 * <pre>
+	 * {
+	 *   bla = node
+	 *   bla == node
+	 *   bla = node // Should fail
+	 * 	 {
+	 * 	   bla = node2
+	 *     bla == node2
+	 *     bla3 = node3
+	 *     bla3 == node3
+	 *   }
+	 *   bla == node
+	 *   bla3 == null // bla3 should no longer exist
+	 * }
+	 * </pre>
+	 * 
+	 * @throws SymbolTableException
+	 */
 	@Test
 	public final void testSymbolTable() throws SymbolTableException {
 		SymbolTable<CommonTree> symbolTable = new SymbolTable<CommonTree>();
@@ -31,11 +52,11 @@ public class SymbolTableTest {
 		symbolTable.openScope();
 		assertEquals(symbolTable.getCurrentLevel(), 1);
 
-		// declare a different node under the same name
-		String name2 = "bla2";
+		// redeclare name with a different node
 		CommonTree node2 = new CommonTree();
-		symbolTable.declare(name2, node2);
-		assertSame(symbolTable.getDeclaration(name2, node2), node2);
+		symbolTable.declare(name, node2);
+		assertSame(symbolTable.getDeclaration(name, node2), node2);
+		assertNotSame(symbolTable.getDeclaration(name, node), node);
 
 		String name3 = "bla3";
 		CommonTree node3 = new CommonTree();
