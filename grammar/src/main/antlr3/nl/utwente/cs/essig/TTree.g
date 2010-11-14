@@ -94,8 +94,8 @@ expr	:	assignExpr
 	-> {$ifExpr.st}
 	;
 
-assignExpr:	^(ASSIGN IDENTIFIER o=operatorExpr)
-	-> assignExpr(var={new Variable($IDENTIFIER.text)},value={$o.st},comment={$IDENTIFIER + " = " + $o.comment})
+assignExpr:	^(ASSIGN IDENTIFIER o=operatorExpr) {Variable var = new Variable($IDENTIFIER.text);}
+	-> assignExpr(var={var},type={var.getType()},value={$o.st},comment={$IDENTIFIER + " = " + $o.comment})
 	;
 
 
