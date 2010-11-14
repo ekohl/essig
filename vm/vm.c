@@ -7,8 +7,8 @@
 #define STRINGIFY(msg) #msg
 #define TOSTRING(msg) STRINGIFY(msg)
 #define LOCATION __FILE__ ":" TOSTRING(__LINE__)
-#ifdef VM_DEBUG
-#   define print_err(x) perror(x)
+#if VM_DEBUG
+#   define print_err(x) puts(x)
 #else
 #   define print_err(x)
 #endif
@@ -41,7 +41,7 @@ __thread int _vm_errno = 0;
 
 /* error functions */
 int 
-vm_errno(void) 
+vm_errno(void)
 {
     int tmp = _vm_errno;
     _vm_errno = VM_NO_ERROR;
@@ -140,7 +140,7 @@ vm_newstate(void *program,
     newstate->interrupts = NULL;
     newstate->break_async = false;
     newstate->breakpoints = NULL;
-
+    
     if (!_read_elf(newstate, program, program_size))
         goto error;
     
@@ -196,10 +196,15 @@ vm_closestate(VMState *state)
 void 
 vm_closediff(VMStateDiff *diff) 
 {
-    if (diff) {
-        _vm_close_iterable((VMIterable *) diff);
-        free(diff);
+    VMStateDiff *tmp;
+    
+    tmp = diff;
+    while (tmp) {
+        _vm_close_iterable((VMIterable *) tmp->singlediff);
+        tmp = (VMStateDiff *) tmp->next;
     }
+    
+    _vm_close_iterable((VMIterable *) diff);
 }
 
 
@@ -420,7 +425,7 @@ vm_interrupt(VMState *state, VMInterruptType type, ...)
                                          state->cycles + cycles);
             break;
         default:
-            _vm_errno = VM_NO_SUCH_INTERRUPT_TYPE_SUUPORT_ERROR;
+            _vm_errno = VM_NO_SUCH_INTERRUPT_TYPE_SUPPORT_ERROR;
             return false;
     }
     if(!item)
@@ -484,23 +489,55 @@ error:
 }
 
 static Opcode *
-disassemble(unsigned int *assembly, size_t assembly_length) 
+disassemble(OPCODE_TYPE *assembly, size_t assembly_length) 
 {
     Opcode *result = NULL;
+    OpcodeHandler *op_handler;
     size_t i, j;
-
+    
+    
     err_malloc(result = malloc(sizeof(Opcode) * assembly_length));
-    // Walk though assembly
     for (i = 0; i < assembly_length; ++i) {
-        // Walk through opcode handlers
-        for (j = 0; j < n_opcode_handlers; ++j) {
-            // If the opcode matches an opcode handlers opcode, we found our handler
-            if ((assembly[i] & opcode_handlers[j].mask) == opcode_handlers[j].opcode) {
-                result->opcode_index = j;
-                result->instruction = assembly[i];
-                break;
+        bool found = false, is_arg = false;
+        char *name;
+        
+        if (is_arg) {
+            /* Not an actual opcode, but an argument to another opcode 
+               (e.g. ld, st) */
+            result[i].opcode_index = 0; /* nop */
+            result[i].instruction = assembly[i];
+            name = "nop";
+        } else {
+            /* Find the right opcode handler for the current instruction and */
+            for (j = 0; j < n_opcode_handlers; ++j) {
+                op_handler = &opcode_handlers[j];
+                if ((assembly[i] & op_handler->mask) == op_handler->opcode) {
+                    result[i].opcode_index = j;
+                    result[i].instruction = assembly[i];
+                    found = true;
+                    name = op_handler->opcode_name;
+                    break;
+                }
             }
         }
+        
+        if (!found && !is_arg) {
+#ifdef VM_DEBUG
+            printf(
+                LOCATION " Cannot handle instruction 0x%x at address "
+                "offset 0x%x.\n",
+                (unsigned int) assembly[i], i * sizeof(OPCODE_TYPE));
+#endif
+            _vm_errno = VM_ILLEGAL_INSTRUCTION;
+            return false;
+        }
+        
+        /* For now, use this. Later, rely on opcode_handler->next_is_arg. */
+        is_arg = (strcmp(name, "ld")   == 0 ||
+                  strcmp(name, "st")   == 0 ||
+                  strcmp(name, "lpm")  == 0 ||
+                  strcmp(name, "elpm") == 0);
+        // is_arg = op_handler->next_is_arg;                  
     }
 
     return result;

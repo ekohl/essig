@@ -1,6 +1,8 @@
 /*! Have the generator overwrite this file and #define OPCODE_TYPE */
 
-# define OPCODE_TYPE unsigned int
+#include <stdint.h>
+
+#define OPCODE_TYPE uint16_t
 
 #define R0 0
 #define R1 1

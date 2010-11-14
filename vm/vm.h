@@ -49,6 +49,7 @@ The generated simulator exposes microcontroller information by storing it in
 predeclared global variables (see \ref VMPrivateAPI "The Private API").
 */
 
+extern __thread int _vm_errno;
 
 /*! \defgroup VMDataStructures Data Structures */
 /* @{ */
@@ -99,13 +100,15 @@ typedef struct {
     OPCODE_TYPE opcode;
     OPCODE_TYPE mask;
     opcode_handler *handler;
+    /*! Indicates whether the next opcode will be an argument of this opcode.*/
+    // bool next_is_arg;
 } OpcodeHandler;
 
 /*! Each Opcode corresponds to an instruction from the binary code. The code is
     disassembled and represented with entries of this type. */
 typedef struct {
     int opcode_index;
-    unsigned int instruction;
+    OPCODE_TYPE instruction;
 } Opcode;
 
 

@@ -16,7 +16,7 @@ def main():
     else:
         source = 'cli.c'
     
-    extra_objects = ['vm.o']
+    extra_objects = ['vm.o', 'generated_simulator.o']
     climodule = Extension(
         'cli', 
         [source], 

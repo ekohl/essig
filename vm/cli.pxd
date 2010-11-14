@@ -52,8 +52,6 @@ cdef extern from "vm.h":
     ctypedef struct Opcode:
         int opcode_index
         unsigned int instruction
-        Opcode *instructions
-        size_t instructions_size
 
     ctypedef struct Register:
         char *name

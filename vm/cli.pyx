@@ -61,7 +61,7 @@ cdef class Simulator(object):
         self.instructions = instructions
         
         self.state = vm_newstate(<char *> self.instructions, 
-                                 len(self.instructions), 
+                                 len(self.instructions),
                                  VM_POLICY_INTERRUPT_NEVER)
         if not self.state:
             raise VMError()
@@ -80,16 +80,10 @@ class SimulatorCLI(cmd.Cmd, object):
     def __init__(self, program):
         super(SimulatorCLI, self).__init__()
         self.program = program
-        self.simulator = Simulator(self.read_instructions())
+        self.simulator = Simulator(open(program).read())
         self.symtab = self.read_symtab()
         self.prompt = '(sim) '
     
-    def read_instructions(self):
-        """
-        Read instructions from the executable
-        """
-        return "foo"
-        
     def read_symtab(self):
         p = subprocess.Popen(['nm', self.program], stdout=subprocess.PIPE)
         symtab = {}
@@ -123,7 +117,7 @@ class SimulatorCLI(cmd.Cmd, object):
     def complete_break(self, text, line, beginidx, endidx):
         return self.complete_from_it(text, self.symtab)
     
-    def do_cont(self):
+    def do_cont(self, args):
         "continue or run the program"
         cdef Simulator sim
         cdef bint hit_bp
@@ -162,16 +156,18 @@ class SimulatorCLI(cmd.Cmd, object):
         options = 'breakpoints', 'ram', 'register', 'pin'
         return self.complete_from_it(text, options)
     
-    def do_disassemble(self):
-        cdef Simulator sim
-        cdef Opcode op
-        cdef OpcodeHandler op_handler
-        
+    def do_disassemble(self, args):
+        cdef:
+            Simulator sim
+            Opcode *op
+            OpcodeHandler *handler
+            size_t i
+            
         sim = self.simulator
-        for i in range(sim.state.instructions_size):
-            op = sim.state.instructions[i]
-            op_handler = opcode_handlers[op.opcode_index]
-            print '%-15s 0x%016x' % (op_handler.name, op.instruction)
+        for i from 0 <= i < sim.state.instructions_size:
+            op = sim.state.instructions + i
+            handler = opcode_handlers + op.opcode_index
+            print '%-15s 0x%016x' % (handler.opcode_name, op.instruction)
             
     def complete_from_it(self, text, it):
         "complete command beginning with text from iterable"
@@ -179,7 +175,8 @@ class SimulatorCLI(cmd.Cmd, object):
     
     def do_EOF(self, _):
         "Exit the simulator"
-        sys.exit("Bye")
+        print "Bye"
+        sys.exit()
     
     do_exit = do_quit = do_EOF
     

@@ -28,8 +28,6 @@ _elf32_read(VMState *state, char *program, size_t program_size)
     
     phdr = (Elf32_Phdr *) (program + ehdr->e_phoff);
     for (i = 0; i < ehdr->e_phnum; i++) {
-        phdr++;
-        
         if (phdr->p_type & PT_LOAD) {
             char *startaddr;
     
@@ -44,9 +42,12 @@ _elf32_read(VMState *state, char *program, size_t program_size)
                     _vm_errno = VM_MULTIPLE_EXECUTABLE_SEGMENTS;
                     return false;
                 }
+                state->instructions_size = (phdr->p_filesz / 
+                                            sizeof(OPCODE_TYPE));
+                
                 state->instructions = disassemble(
-                    (unsigned int *) (program + phdr->p_offset),
-                    phdr->p_filesz);
+                    (OPCODE_TYPE *) (program + phdr->p_offset),
+                    state->instructions_size);
             }
             
             if (startaddr + phdr->p_memsz > ram + ramsize ||
@@ -62,6 +63,11 @@ _elf32_read(VMState *state, char *program, size_t program_size)
             memset(startaddr + phdr->p_filesz, 0, 
                    phdr->p_memsz - phdr->p_filesz);
         }
+        phdr++;
     }
-    return true;
+    
+    if (!_vm_errno && !state->instructions)
+        _vm_errno = VM_NO_EXECUTABLE_SEGMENT;
+    
+    return (bool) state->instructions;
 }

@@ -4,11 +4,14 @@
 // Spec for atmel
 
 // Parameters
-size_t ramsize = 1024;
+size_t ramsize = 0xFFFFFF;
 // FIXME: clock = 1;
 // FIXME: size = 1;
 // End of parameters
 
+int npins = 0;
+size_t pinoffset = 0;
+int nbits_cpu = 16;
 // Registers
 int nregisters = 43;
 Register registers[] = {
@@ -1731,8 +1734,11 @@ bool stdyplus (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	return error;
 }
 
-int n_opcode_handlers = 27;
+bool nop(VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {}
+
+int n_opcode_handlers = 29;
 OpcodeHandler opcode_handlers[] = {
+    { "nop", 0b0000000000000, 0b1111111111111111, (opcode_handler *) nop },
 	{ "adc", 0b1110000000000, 0b1111110000000000, (opcode_handler *) adc },
 	{ "add", 0b110000000000, 0b1111110000000000, (opcode_handler *) add },
 	{ "adiw", 0b1001011000000000, 0b1111111100000000, (opcode_handler *) adiw },
@@ -1759,6 +1765,7 @@ OpcodeHandler opcode_handlers[] = {
 	{ "sbiw", 0b1001011100000000, 0b1111111100000000, (opcode_handler *) sbiw },
 	{ "sbrs", 0b1111111000000000, 0b1111111000001000, (opcode_handler *) sbrs },
 	{ "stxplus", 0b1001001000001101, 0b1111111000001111, (opcode_handler *) stxplus },
-	{ "stdyplus", 0b1000001000001000, 0b1111111000001111, (opcode_handler *) stdyplus }
+	{ "stdyplus", 0b1000001000001000, 0b1111111000001111, (opcode_handler *) stdyplus },
+    { "lpm", 0b1001010111001000, 0xFFFF, (opcode_handler *) nop },
 };
 // End of instructions
