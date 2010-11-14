@@ -64,18 +64,14 @@ if (error)
 
 if(!vm_write(state, diff, VM_INFO_<type>, <var>, result))
 	return false;
-
-
 >>
 
 condition(left,right) ::= <<
 <left> == <right>
 >>
 
-
 instruction(name,params,arguments,expressions) ::= <<
 bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
-
 	// error
 	bool error = false;
 
@@ -94,17 +90,12 @@ bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	return true;}
 >>
 
-opcodehandler() ::= <<
+opcodehandler(it) ::= <<
 { "<it.name>", 0b<it.opcode>, 0b<it.mask>, (opcode_handler *) <it.name> }
->>
-
-parameter(key,value) ::= <<
-//set("<key>", <value>);
 >>
 
 param(name,value) ::=  <<
 <name> = <value>;
-
 >>
 
 register(name) ::= <<
