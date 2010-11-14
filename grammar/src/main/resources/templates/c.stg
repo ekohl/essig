@@ -91,11 +91,7 @@ bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	// Execute expressions
 	<expressions; separator="\n">
 
-	//Update instruction pointer
-	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
-
-	return error;
-}
+	return true;}
 >>
 
 opcodehandler() ::= <<
