@@ -17,36 +17,6 @@ class VMError(Exception):
             
         super(VMError, self).__init__(args)
         
-
-cdef class VMPythonItem(object):
-    cdef VMIterable *item
-
-cdef create_VMPythonItem(VMIterable *item):
-        cdef VMPythonItem result = VMPythonItem()
-        result.item = item
-        return result
-
-
-cdef class VMPythonIterator(object):
-    cdef VMIterable *it
-    
-    def __iter__(self):
-        if not self.it:
-            raise StopIteration()
-            
-        result = create_VMPythonItem(self.it)
-        self.it = self.it.next
-        return result
-
-cdef create_VMPythonIterator(void *it):
-    cdef VMPythonIterator result 
-    if not it:
-        return iter(())
-        
-    result = VMPythonIterator()
-    result.it = <VMIterable *> it
-    return result
-    
     
 cdef class Simulator(object):
     cdef VMState *state
@@ -73,7 +43,7 @@ cdef class Simulator(object):
     def __dealloc__(self):
         vm_closestate(self.state)
         vm_closediff(self.diff)
-    
+
             
 class SimulatorCLI(cmd.Cmd, object):
     
@@ -82,6 +52,7 @@ class SimulatorCLI(cmd.Cmd, object):
         self.program = program
         self.simulator = Simulator(open(program).read())
         self.symtab = self.read_symtab()
+        self.symtab_offset_to_func = {v : k for k, v in self.symtab.items()}
         self.prompt = '(sim) '
     
     def read_symtab(self):
@@ -102,6 +73,8 @@ class SimulatorCLI(cmd.Cmd, object):
         
     def do_break(self, funcname_or_addr):
         "Set a breakpoint for an address or a function"
+        cdef VMState *state = (<Simulator> self.simulator).state
+        
         try:
             # parse the int according to its base
             addr = int(funcname_or_addr, 0)
@@ -110,10 +83,10 @@ class SimulatorCLI(cmd.Cmd, object):
             if addr is None:
                 self.print_err("No such function: %s" % funcname_or_addr)
                 return
-       
-        if vm_break((<Simulator> self.simulator).state, addr) != 0:
+        
+        if not vm_break(state, addr):
             self.print_err()
-    
+        
     def complete_break(self, text, line, beginidx, endidx):
         return self.complete_from_it(text, self.symtab)
     
@@ -125,35 +98,64 @@ class SimulatorCLI(cmd.Cmd, object):
         sim = self.simulator
         
         if not vm_cont(sim.state, NULL, &hit_bp):
-            raise VMError()
-            
+            self.print_err()
+        
         if hit_bp:
-            pc = (<Simulator> self.simulator).state.pc
+            pc = (<Simulator> self.simulator).registers[PC]
             print 'Hit breakpoint at %x' % pc
+    
+    def info_breakpoints(self, Simulator sim, about):
+        cdef VMBreakpoint *bp = sim.state.breakpoints
+        
+        index = 0
+        while bp:
+            if bp.offset in self.symtab_offset_to_func:
+                t = self.symtab_offset_to_func[bp.offset], bp.offset
+                print t
+                breakpoint = '%s at 0x%016x' % t
+            else:
+                breakpoint = '0x%016x' % bp.offset
+                
+            print '%2d   %s' % (index, breakpoint)
+            
+            bp = bp.next
+            index += 1
+    
+    def info_cycles(self, Simulator sim, about):
+        print sim.state.cycles, 'cycles have passed.'
+    
+    def info_registers(self, Simulator sim, about):
+        for i in range(nregisters):
+            val = sim.state.registers[registers[i].offset]
+            print '%-15s 0x%016x' % (registers[i].name, val)
+    
+    def info_symbols(self, Simulator sim, about):
+        for symname, offset in sorted(self.symtab.iteritems()):
+            print '%-30s 0x%016x' % (symname, offset)
     
     def do_info(self, about):
         """
         Show information about stuff:
             breakpoints
             registers
+            symbols
+            cycles
             
             ram address
             register name
             pin name
         """
-        cdef Simulator sim = self.simulator
+        info_type, _, about = about.expandtabs(1).partition(' ')
+        info_func = getattr(self, 'info_' + info_type, None)
         
-        if about == 'breakpoints':
-            it = create_VMPythonIterator(sim.state.breakpoints)
-            for i, bp in enumerate(it):
-                print '%2d   %x' % (i + 1, (<VMBreakpoint *> bp.item).offset)
-        elif about == 'registers':
-            for i in range(nregisters):
-                val = sim.state.registers[registers[i].offset]
-                print '%-15s 0x%016x' % (registers[i].name, val)
+        if info_func is not None:
+            info_func(self.simulator, about)
+        else:
+            print >>sys.stderr, "Invalid info command: %r" % info_type
         
     def complete_info(self, text, line, beginidx, endidx):
-        options = 'breakpoints', 'ram', 'register', 'pin'
+        options = ('breakpoints', 'registers', 'symbols', 'cycles',
+                   'ram', 'register', 'pin')
         return self.complete_from_it(text, options)
     
     def do_disassemble(self, args):

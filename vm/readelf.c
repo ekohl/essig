@@ -19,10 +19,10 @@ _elf32_read(VMState *state, char *program, size_t program_size)
     ram = (char *) state->ram;
     ehdr = (Elf32_Ehdr *) program;
     
-    state->pc = ehdr->e_entry;
+    state->registers[PC] = ehdr->e_entry;
 
     if (!ehdr->e_phoff) {
-        _vm_errno = VM_NO_SEGMENTS;
+        vm_seterrno(VM_NO_SEGMENTS);
         return false;
     }
     
@@ -39,7 +39,7 @@ _elf32_read(VMState *state, char *program, size_t program_size)
                 if (state->instructions) {
                     /* Will there ever be multiple executable segments?
                        Text and data segments may both be executable. */
-                    _vm_errno = VM_MULTIPLE_EXECUTABLE_SEGMENTS;
+                    vm_seterrno(VM_MULTIPLE_EXECUTABLE_SEGMENTS);
                     return false;
                 }
                 state->instructions_size = (phdr->p_filesz / 
@@ -52,7 +52,7 @@ _elf32_read(VMState *state, char *program, size_t program_size)
             
             if (startaddr + phdr->p_memsz > ram + ramsize ||
                 startaddr + phdr->p_memsz < ram) {
-                _vm_errno = VM_ERROR_PROGRAM_TOO_BIG;
+                vm_seterrno(VM_ERROR_PROGRAM_TOO_BIG);
                 return false;
             }
             
@@ -67,7 +67,7 @@ _elf32_read(VMState *state, char *program, size_t program_size)
     }
     
     if (!_vm_errno && !state->instructions)
-        _vm_errno = VM_NO_EXECUTABLE_SEGMENT;
+        vm_seterrno(VM_NO_EXECUTABLE_SEGMENT);
     
     return (bool) state->instructions;
 }

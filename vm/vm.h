@@ -130,26 +130,30 @@ typedef struct VMState {
     VMInterruptPolicy interrupt_policy;
     struct VMInterruptItem *interrupts;
     interrupt_handler *interrupt_handlers[VM_N_INTERRUPT_TYPES];
-#ifdef VM_WITH_THREADS
-    pthread_mutex_t lock;
-#endif
     /*! If true, have the interpreter halt execution as soon as possible */
     volatile sig_atomic_t break_async;
     /*! List of breakpoints */
     struct VMBreakpoint *breakpoints;
+    /*! Keep this as the last member in the struct in case people build their
+        code without VM_WITH_THREADS and vm.so with VM_WITH_THREADS (or vice
+        versa). */
+#ifdef VM_WITH_THREADS
+    pthread_mutex_t lock;
+#endif
+    
 } VMState;
 
 /*! Use this macro as the first attribute of a struct to make it an iterable */
-#define VMIterable_Head struct VMIterable *next
+#define VMIterable_Head(type) struct type *next
 
 /*! A generic iterable type */
 typedef struct VMIterable {
-    VMIterable_Head;
+    VMIterable_Head(VMIterable);
 } VMIterable;
 
 /*! Single difference in the VMState */
 typedef struct VMSingleStateDiff {
-    VMIterable_Head;
+    VMIterable_Head(VMSingleStateDiff);
     size_t oldval;
     size_t newval;
     VMInfoType type;
@@ -159,7 +163,7 @@ typedef struct VMSingleStateDiff {
 /*! Represents a difference in state between two consecutive steps.
     This means it has a list of "single differences" in the state. */
 typedef struct VMStateDiff {
-    VMIterable_Head;
+    VMIterable_Head(VMStateDiff);
     VMSingleStateDiff *singlediff;
     size_t pc;
     unsigned int cycles;
@@ -167,7 +171,7 @@ typedef struct VMStateDiff {
 
 /*! Item in the interrupt queue. */
 typedef struct VMInterruptItem {
-    VMIterable_Head;
+    VMIterable_Head(VMInterruptItem);
     VMInterruptType interrupt_type;
     /*! Specifies how many cycles should have passed (in total) before 
         the interrupt handler should be invoked. */
@@ -176,7 +180,7 @@ typedef struct VMInterruptItem {
 
 /*! Represents a single breakpoint */
 typedef struct VMBreakpoint {
-    VMIterable_Head;
+    VMIterable_Head(VMBreakpoint);
     size_t offset;
 } VMBreakpoint;
 
@@ -269,7 +273,7 @@ vm_register_handler(VMState *state, VMInterruptType type, interrupt_handler);
 OPCODE_TYPE vm_info(VMState *state, VMInfoType type, size_t vmaddr, bool *errorp);
 /*! Write a value to a destination of type 'type' at addr 'destaddr'. 
     This function updates 'state' and 'diff' appropriately. 
-    On error, this function returns 'false' with _vm_errno set 
+    On error, this function returns 'false' with the VM errno set 
     appropriately (opcode handlers can just propagate this error by returning
     'false'). */
 bool vm_write(VMState *state, VMStateDiff *diff, VMInfoType type, 
@@ -283,6 +287,9 @@ int vm_errno(void);
 
 /*! Turns a VM errno into an error message. */
 char *vm_strerror(int err);
+
+/*! Useful to break in when debugging. Sets the VM errno */
+void vm_seterrno(int err);
 
 /* @} */
 

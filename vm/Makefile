@@ -5,8 +5,10 @@ PYTHON=python-dbg
 
 TESTFILE1=../code-samples/factorial
 TESTFILE2=../code-samples/empty
-TESTFILE=$(TESTFILE1)
+TESTFILE=$(TESTFILE2)
 
+# make sure CFLAGS are also passed to python
+export CFLAGS
 
 all: doc cli
 
@@ -19,7 +21,7 @@ run-debug: cli
 # problem if the user has a 64-bit OS but a 32-bit Python
 # We could have distutils do everything, if we care
 cli: $(OBJECTS)
-	$(PYTHON) setup.py build_ext --inplace $(PYTHON_DEBUG)
+	$(PYTHON) setup.py build_ext --inplace #$(PYTHON_DEBUG)
 
 vm.o: vm.c vm.h simulator.h readelf.c vmerrno.h
 generated_simulator.o: generated_simulator.c generated_simulator.h

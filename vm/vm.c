@@ -2,7 +2,8 @@
 #include "vm.h"
 
 #define OPCODE_SIZE (nbits_cpu / 8)
-#define OPCODE(state) (state->instructions + (state->pc / OPCODE_SIZE))
+#define OPCODE(state) (state->instructions + \
+                       (state->registers[PC] / OPCODE_SIZE))
 
 #define STRINGIFY(msg) #msg
 #define TOSTRING(msg) STRINGIFY(msg)
@@ -16,7 +17,7 @@
 #define err(result, msg, errno) \
     if (!(bool) (result)) { \
         print_err(LOCATION " " msg); \
-        _vm_errno = errno; \
+        vm_seterrno(errno); \
         goto error; \
     }
 
@@ -60,6 +61,12 @@ vm_strerror(int err)
     return _vm_error_messages[err];
 }
 
+void
+vm_seterrno(int err)
+{
+    _vm_errno = err;
+}
+
 /* iterable functions */
 
 static void
@@ -68,9 +75,9 @@ _vm_close_iterable(VMIterable *it)
     VMIterable *tmp;
     
     while (it) {
-        tmp = it;
+        tmp = it->next;
         free(it);
-        it = tmp->next;
+        it = tmp;
     }
 }
 
@@ -109,10 +116,16 @@ vm_reversed_it(VMIterable *it)
 bool
 _hit_breakpoint(VMState *state)
 {
-    while (state->breakpoints)
-        if (state->breakpoints->offset == state->pc)
+    VMBreakpoint *bp;
+    
+    bp = state->breakpoints;
+    while (bp) {
+        if (state->breakpoints->offset == state->registers[PC])
             return true;
         
+        bp = bp->next;
+    }
+    
     return false;
 }
 
@@ -201,7 +214,7 @@ vm_closediff(VMStateDiff *diff)
     tmp = diff;
     while (tmp) {
         _vm_close_iterable((VMIterable *) tmp->singlediff);
-        tmp = (VMStateDiff *) tmp->next;
+        tmp = tmp->next;
     }
     
     _vm_close_iterable((VMIterable *) diff);
@@ -215,8 +228,7 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
 {
     Opcode *opcode;
     opcode_handler *handler;
-    VMStateDiff *newdiff;
-    VMIterable *interrupt_item, *previous_interrupt_item = NULL;
+    VMInterruptItem *interrupt_item, *previous_interrupt_item = NULL;
     
     *hit_bp = false;
     while (nsteps > 0) {
@@ -231,24 +243,21 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
         
         if (state->interrupts != NULL) {
             /* interrupt */
-            interrupt_item = (VMIterable *) state->interrupts;
+            interrupt_item = state->interrupts;
             while (interrupt_item) {
-                VMInterruptItem *item; 
-                
-                item = (VMInterruptItem *) interrupt_item; 
-                if (item->cycles == state->cycles) {
+                if (interrupt_item->cycles <= state->cycles) {
                     bool result; 
                     interrupt_handler *handler;
                     
-                    handler = state->interrupt_handlers[item->interrupt_type];
-                    result = handler(state, item->interrupt_type);
+                    handler = state->interrupt_handlers[
+                                            interrupt_item->interrupt_type];
+                    result = handler(state, interrupt_item->interrupt_type);
                     
                     /* delete item from the queue */
                     if (previous_interrupt_item) {
                         previous_interrupt_item->next = interrupt_item->next;
                     } else {
-                        state->interrupts = 
-                            (VMInterruptItem *) interrupt_item->next;
+                        state->interrupts = interrupt_item->next;
                     }
                     free(interrupt_item);
                     interrupt_item = previous_interrupt_item;
@@ -265,13 +274,16 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
             break;
         } else {
             /* Save PC */
-            newdiff = vm_newdiff();
-            if (!newdiff)
-                return false;
-            newdiff->pc = state->pc;
-            newdiff->cycles = state->cycles;
-            diff->next = (VMIterable *) newdiff;
-            diff = newdiff;
+            if (diff) {
+                diff->pc = state->registers[PC];
+                diff->cycles = state->cycles;
+                
+                diff->next = vm_newdiff();
+                if (!diff->next)
+                    return false;
+                
+                diff = diff->next;
+            }
             
             /* Execute instruction */
             opcode = OPCODE(state);
@@ -312,7 +324,7 @@ _get_location(VMState *state, VMInfoType type, size_t addr)
     return location + addr;
 
 error:
-    _vm_errno = VM_OUT_OF_BOUNDS_ERROR;
+    vm_seterrno(VM_OUT_OF_BOUNDS_ERROR);
     return NULL;
 }
 
@@ -326,7 +338,7 @@ vm_rstep(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
     
     while (nsteps--) {
         state->cycles = diff->cycles;
-        state->pc = diff->pc;
+        state->registers[PC] = diff->pc;
         
         singlediff = diff->singlediff;
         
@@ -337,11 +349,11 @@ vm_rstep(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
                                      singlediff->location);
             *location = singlediff->oldval;
             
-            singlediff = (VMSingleStateDiff *) singlediff->next;
+            singlediff = singlediff->next;
         }
         /* unwind the diff list */
         _vm_close_iterable((VMIterable *) diff->singlediff);
-        next = (VMStateDiff *) diff->next;
+        next = diff->next;
         free(diff);
         diff = next;
     }
@@ -380,8 +392,9 @@ vm_break(VMState *state, size_t code_offset)
 {
     VMBreakpoint *bp = NULL;
     err_malloc(bp = calloc(1, sizeof(VMBreakpoint)));
+    
     /* prepend breakpoint */
-    bp->next = (VMIterable *) state->breakpoints;
+    bp->next = state->breakpoints;
     bp->offset = code_offset;
     state->breakpoints = bp;
     return true;
@@ -425,13 +438,13 @@ vm_interrupt(VMState *state, VMInterruptType type, ...)
                                          state->cycles + cycles);
             break;
         default:
-            _vm_errno = VM_NO_SUCH_INTERRUPT_TYPE_SUPPORT_ERROR;
+            vm_seterrno(VM_NO_SUCH_INTERRUPT_TYPE_SUPPORT_ERROR);
             return false;
     }
     if(!item)
         return false;
     
-    item->next = (VMIterable *) state->interrupts;
+    item->next = state->interrupts;
     state->interrupts = item;
     va_end(args);
     return true;
@@ -461,7 +474,7 @@ vm_info(VMState *state, VMInfoType type, size_t vmaddr, bool *errorp)
 }
 
 bool
-vm_write(VMState *state, VMStateDiff *diff, VMInfoType type, 
+vm_write(VMState *state, VMStateDiff *diff, VMInfoType type,
          size_t destaddr, OPCODE_TYPE value)
 {
     OPCODE_TYPE *dest; 
@@ -470,15 +483,17 @@ vm_write(VMState *state, VMStateDiff *diff, VMInfoType type,
     if (!(dest =_get_location(state, type, destaddr)))
         goto error;
     
-    /* update our diffs */
-    err_malloc((singlediff = malloc(sizeof(VMSingleStateDiff))));
-    singlediff->oldval = *dest;
-    singlediff->newval = value;
-    singlediff->type = type;
-    singlediff->location = destaddr;
-    
-    singlediff->next = (VMIterable *) diff->singlediff;
-    diff->singlediff = singlediff;
+    if (diff) {
+        /* update our diffs */
+        err_malloc((singlediff = malloc(sizeof(VMSingleStateDiff))));
+        singlediff->oldval = *dest;
+        singlediff->newval = value;
+        singlediff->type = type;
+        singlediff->location = destaddr;
+        
+        singlediff->next = diff->singlediff;
+        diff->singlediff = singlediff;
+    }
     
     /* finally, write the value */
     *dest = value;
@@ -502,7 +517,7 @@ disassemble(OPCODE_TYPE *assembly, size_t assembly_length)
         char *name;
         
         if (is_arg) {
-            /* Not an actual opcode, but an argument to another opcode 
+            /* Not an actual opcode, but an argument to another opcode
                (e.g. ld, st) */
             result[i].opcode_index = 0; /* nop */
             result[i].instruction = assembly[i];
@@ -528,7 +543,7 @@ disassemble(OPCODE_TYPE *assembly, size_t assembly_length)
                 "offset 0x%x.\n",
                 (unsigned int) assembly[i], i * sizeof(OPCODE_TYPE));
 #endif
-            _vm_errno = VM_ILLEGAL_INSTRUCTION;
+            vm_seterrno(VM_ILLEGAL_INSTRUCTION);
             return false;
         }
         
@@ -537,7 +552,7 @@ disassemble(OPCODE_TYPE *assembly, size_t assembly_length)
                   strcmp(name, "st")   == 0 ||
                   strcmp(name, "lpm")  == 0 ||
                   strcmp(name, "elpm") == 0);
-        // is_arg = op_handler->next_is_arg;                  
+        // is_arg = op_handler->next_is_arg;
     }
 
     return result;
@@ -578,7 +593,7 @@ _read_elf(VMState *state, char *program, size_t program_size)
         else
             return _elf64_read(state, program, program_size);
     } else {
-        _vm_errno = VM_NOT_ELF;
+        vm_seterrno(VM_NOT_ELF);
         return false;
     }
 }

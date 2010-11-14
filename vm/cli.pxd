@@ -5,6 +5,7 @@ cdef extern from "vm.h":
         false
 
     ctypedef int OPCODE_TYPE
+    cdef extern OPCODE_TYPE PC
     
     ctypedef enum VMInterruptPolicy:
         VM_POLICY_INTERRUPT_NEVER
@@ -26,23 +27,23 @@ cdef extern from "vm.h":
         VMIterable *next
     
     ctypedef struct VMInterruptItem:
-        VMIterable *next
+        VMInterruptItem *next
         VMInterruptType interrupt_type
         void *extra_arg
     
     ctypedef struct VMSingleStateDiff:
-        VMIterable *next
+        VMSingleStateDiff *next
         size_t oldval
         size_t newval
         VMInfoType type
         size_t location
 
     ctypedef struct VMStateDiff:
-        VMIterable *next
+        VMStateDiff *next
         VMSingleStateDiff *singlediff
         
     ctypedef struct VMBreakpoint:
-        VMIterable *next
+        VMBreakpoint *next
         size_t offset
     
     ctypedef struct OpcodeHandler:
@@ -61,7 +62,6 @@ cdef extern from "vm.h":
         Opcode *instructions
         size_t instructions_size
         VMBreakpoint *breakpoints
-        size_t pc    
         unsigned int cycles
         OPCODE_TYPE *ram
         OPCODE_TYPE *registers

@@ -65,7 +65,7 @@ Register registers[] = {
 // helper functions (should be in VM I Think)
 bool GetBit(int b, int pos)
 {
-	return ((b & (char)(1 << pos)) != 0);
+	return ((b & (1 << pos)) != 0);
 }
 
 void AddBit(int *val, int source, int pos)
@@ -1738,34 +1738,34 @@ bool nop(VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {}
 
 int n_opcode_handlers = 29;
 OpcodeHandler opcode_handlers[] = {
-    { "nop", 0b0000000000000, 0b1111111111111111, (opcode_handler *) nop },
-	{ "adc", 0b1110000000000, 0b1111110000000000, (opcode_handler *) adc },
-	{ "add", 0b110000000000, 0b1111110000000000, (opcode_handler *) add },
-	{ "adiw", 0b1001011000000000, 0b1111111100000000, (opcode_handler *) adiw },
-	{ "and", 0b10000000000000, 0b1111110000000000, (opcode_handler *) and },
-	{ "breq", 0b1111000000000001, 0b1111110000000111, (opcode_handler *) breq },
-	{ "brge", 0b111101000000100, 0b111111000000111, (opcode_handler *) brge },
-	{ "brne", 0b111100000000001, 0b111111000000111, (opcode_handler *) brne },
-	{ "cli", 0b1001010011111000, 0b1111111111111111, (opcode_handler *) cli },
-	{ "cp", 0b1010000000000, 0b1111110000000000, (opcode_handler *) cp },
-	{ "cpc", 0b10000000000, 0b1111110000000000, (opcode_handler *) cpc },
-	{ "cpi", 0b11000000000000, 0b1111000000000000, (opcode_handler *) cpi },
-	{ "eor", 0b10010000000000, 0b1111110000000000, (opcode_handler *) eor },
-	{ "in", 0b1011000000000000, 0b1111100000000000, (opcode_handler *) in },
-	{ "ldi", 0b1110000000000000, 0b1111000000000000, (opcode_handler *) ldi },
+    { "nop",      0b0000000000000,    0b1111111111111111, (opcode_handler *) nop },
+	{ "adc",      0b1110000000000,    0b1111110000000000, (opcode_handler *) adc },
+	{ "add",      0b110000000000,     0b1111110000000000, (opcode_handler *) add },
+	{ "adiw",     0b1001011000000000, 0b1111111100000000, (opcode_handler *) adiw },
+	{ "and",      0b10000000000000,   0b1111110000000000, (opcode_handler *) and },
+	{ "breq",     0b1111000000000001, 0b1111110000000111, (opcode_handler *) breq },
+	{ "brge",     0b111101000000100,  0b111111000000111, (opcode_handler *) brge },
+	{ "brne",     0b1111010000000001, 0b1111110000000111, (opcode_handler *) brne },
+	{ "cli",      0b1001010011111000, 0b1111111111111111, (opcode_handler *) cli },
+	{ "cp",       0b1010000000000,    0b1111110000000000, (opcode_handler *) cp },
+	{ "cpc",      0b10000000000,      0b1111110000000000, (opcode_handler *) cpc },
+	{ "cpi",      0b11000000000000,   0b1111000000000000, (opcode_handler *) cpi },
+	{ "eor",      0b10010000000000,   0b1111110000000000, (opcode_handler *) eor },
+	{ "in",       0b1011000000000000, 0b1111100000000000, (opcode_handler *) in },
+	{ "ldi",      0b1110000000000000, 0b1111000000000000, (opcode_handler *) ldi },
 	{ "lddyplus", 0b1000000000001000, 0b1101001000001000, (opcode_handler *) lddyplus },
-	{ "lsr", 0b1001010000000110, 0b1111111000001111, (opcode_handler *) lsr },
-	{ "mov", 0b10110000000000, 0b1111110000000000, (opcode_handler *) mov },
-	{ "out", 0b1011100000000000, 0b1111100000000000, (opcode_handler *) out },
-	{ "push", 0b1001001000001111, 0b1111111000001111, (opcode_handler *) push },
-	{ "ret", 0b1001010100001000, 0b1111111111111111, (opcode_handler *) ret },
-	{ "rcall", 0b1101000000000000, 0b1111000000000000, (opcode_handler *) rcall },
-	{ "rjmp", 0b1100000000000000, 0b1111000000000000, (opcode_handler *) rjmp },
-	{ "ror", 0b1001010000000111, 0b1111111000001111, (opcode_handler *) ror },
-	{ "sbiw", 0b1001011100000000, 0b1111111100000000, (opcode_handler *) sbiw },
-	{ "sbrs", 0b1111111000000000, 0b1111111000001000, (opcode_handler *) sbrs },
-	{ "stxplus", 0b1001001000001101, 0b1111111000001111, (opcode_handler *) stxplus },
+	{ "lsr",      0b1001010000000110, 0b1111111000001111, (opcode_handler *) lsr },
+	{ "mov",      0b10110000000000,   0b1111110000000000, (opcode_handler *) mov },
+	{ "out",      0b1011100000000000, 0b1111100000000000, (opcode_handler *) out },
+	{ "push",     0b1001001000001111, 0b1111111000001111, (opcode_handler *) push },
+	{ "ret",      0b1001010100001000, 0b1111111111111111, (opcode_handler *) ret },
+	{ "rcall",    0b1101000000000000, 0b1111000000000000, (opcode_handler *) rcall },
+	{ "rjmp",     0b1100000000000000, 0b1111000000000000, (opcode_handler *) rjmp },
+	{ "ror",      0b1001010000000111, 0b1111111000001111, (opcode_handler *) ror },
+	{ "sbiw",     0b1001011100000000, 0b1111111100000000, (opcode_handler *) sbiw },
+	{ "sbrs",     0b1111111000000000, 0b1111111000001000, (opcode_handler *) sbrs },
+	{ "stxplus",  0b1001001000001101, 0b1111111000001111, (opcode_handler *) stxplus },
 	{ "stdyplus", 0b1000001000001000, 0b1111111000001111, (opcode_handler *) stdyplus },
-    { "lpm", 0b1001010111001000, 0xFFFF, (opcode_handler *) nop },
+    { "lpm",      0b1001010111001000, 0xFFFF, (opcode_handler *) nop },
 };
 // End of instructions
