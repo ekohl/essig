@@ -185,7 +185,7 @@ bool adc (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Update instruction pointer
 	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
 
-	return error;
+	return !error;
 }
 bool add (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
@@ -295,7 +295,7 @@ bool add (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Update instruction pointer
 	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
 
-	return error;
+	return !error;
 }
 bool adiw (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
@@ -383,7 +383,7 @@ bool adiw (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Update instruction pointer
 	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
 
-	return error;
+	return !error;
 }
 bool and (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
@@ -471,7 +471,7 @@ bool and (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Update instruction pointer
 	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
 
-	return error;
+	return !error;
 }
 bool breq (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
@@ -518,7 +518,7 @@ bool breq (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Update instruction pointer
 	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
 
-	return error;
+	return !error;
 }
 bool brge (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
@@ -565,7 +565,7 @@ bool brge (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Update instruction pointer
 	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
 
-	return error;
+	return !error;
 }
 bool brne (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
@@ -612,7 +612,7 @@ bool brne (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Update instruction pointer
 	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
 
-	return error;
+	return !error;
 }
 bool cli (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
@@ -653,7 +653,7 @@ bool cli (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Update instruction pointer
 	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
 
-	return error;
+	return !error;
 }
 bool cp (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
@@ -752,7 +752,7 @@ bool cp (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Update instruction pointer
 	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
 
-	return error;
+	return !error;
 }
 bool cpc (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
@@ -851,7 +851,7 @@ bool cpc (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Update instruction pointer
 	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
 
-	return error;
+	return !error;
 }
 bool cpi (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
@@ -950,7 +950,7 @@ bool cpi (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Update instruction pointer
 	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
 
-	return error;
+	return !error;
 }
 bool eor (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
@@ -1038,7 +1038,7 @@ bool eor (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Update instruction pointer
 	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
 
-	return error;
+	return !error;
 }
 bool in (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
@@ -1082,7 +1082,7 @@ bool in (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Update instruction pointer
 	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
 
-	return error;
+	return !error;
 }
 bool ldi (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
@@ -1126,7 +1126,7 @@ bool ldi (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Update instruction pointer
 	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
 
-	return error;
+	return !error;
 }
 bool lddyplus (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
@@ -1164,7 +1164,7 @@ bool lddyplus (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Update instruction pointer
 	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
 
-	return error;
+	return !error;
 }
 bool lsr (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
@@ -1251,7 +1251,7 @@ bool lsr (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Update instruction pointer
 	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
 
-	return error;
+	return !error;
 }
 bool mov (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
@@ -1295,7 +1295,7 @@ bool mov (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Update instruction pointer
 	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
 
-	return error;
+	return !error;
 }
 bool out (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
@@ -1339,7 +1339,7 @@ bool out (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Update instruction pointer
 	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
 
-	return error;
+	return !error;
 }
 bool push (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
@@ -1371,7 +1371,7 @@ bool push (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Update instruction pointer
 	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
 
-	return error;
+	return !error;
 }
 bool ret (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
@@ -1401,7 +1401,7 @@ bool ret (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Update instruction pointer
 	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
 
-	return error;
+	return !error;
 }
 bool rcall (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
@@ -1433,7 +1433,7 @@ bool rcall (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Update instruction pointer
 	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
 
-	return error;
+	return !error;
 }
 bool rjmp (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
@@ -1465,7 +1465,7 @@ bool rjmp (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Update instruction pointer
 	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
 
-	return error;
+	return !error;
 }
 bool ror (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
@@ -1497,7 +1497,7 @@ bool ror (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Update instruction pointer
 	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
 
-	return error;
+	return !error;
 }
 bool sbiw (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
@@ -1585,7 +1585,7 @@ bool sbiw (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Update instruction pointer
 	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
 
-	return error;
+	return !error;
 }
 bool sbrs (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
@@ -1633,7 +1633,7 @@ bool sbrs (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Update instruction pointer
 	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
 
-	return error;
+	return !error;
 }
 bool stxplus (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
@@ -1682,7 +1682,7 @@ bool stxplus (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Update instruction pointer
 	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
 
-	return error;
+	return !error;
 }
 bool stdyplus (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
@@ -1731,7 +1731,7 @@ bool stdyplus (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	//Update instruction pointer
 	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
 
-	return error;
+	return !error;
 }
 
 bool nop(VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {}

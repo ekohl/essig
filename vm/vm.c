@@ -231,6 +231,7 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
     VMInterruptItem *interrupt_item, *previous_interrupt_item = NULL;
     
     *hit_bp = false;
+    printf("%-20s %-20s %-20s\n", "Opcode", "Program Counter", "Instruction");
     while (nsteps > 0) {
         /* acquire and release for every step. This allows for some nice 
            contention! */
@@ -288,6 +289,11 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
             /* Execute instruction */
             opcode = OPCODE(state);
             handler = opcode_handlers[opcode->opcode_index].handler;
+            printf("%-20s 0x%-18u 0x%-18u\n", 
+                   opcode_handlers[opcode->opcode_index].opcode_name,
+                   state->registers[PC],
+                   opcode->instruction);
+            
             if (!handler(state, diff, opcode->instruction))
                 return false;
         }
