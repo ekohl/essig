@@ -21,7 +21,7 @@ Register registers[] = {
 // helper functions (should be in VM I Think)
 bool GetBit(int b, int pos)
 {
-	return ((b & (char)(1 \<\< pos)) != 0);
+	return ((b & (1 \<\< pos)) != 0);
 }
 
 void AddBit(int *val, int source, int pos)
