@@ -6,6 +6,7 @@ cdef extern from "vm.h":
 
     ctypedef int OPCODE_TYPE
     cdef extern OPCODE_TYPE PC
+    cdef extern size_t ramsize
     
     ctypedef enum VMInterruptPolicy:
         VM_POLICY_INTERRUPT_NEVER

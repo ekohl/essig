@@ -124,14 +124,46 @@ class SimulatorCLI(cmd.Cmd, object):
     def info_cycles(self, Simulator sim, about):
         print sim.state.cycles, 'cycles have passed.'
     
-    def info_registers(self, Simulator sim, about):
+    def info_registers(self, Simulator sim, about, register=None):
         for i in range(nregisters):
-            val = sim.state.registers[registers[i].offset]
-            print '%-15s 0x%016x' % (registers[i].name, val)
+            if register is None or registers[i].name == register:
+                val = sim.state.registers[registers[i].offset]
+                print '%-15s 0x%016x' % (registers[i].name, val)
+                if register is not None:
+                    break
+        else:
+            if register is not None:
+                print 'No such register: %r' % register
     
     def info_symbols(self, Simulator sim, about):
         for symname, offset in sorted(self.symtab.iteritems()):
             print '%-30s 0x%016x' % (symname, offset)
+    
+    def info_ram(self, Simulator sim, about):
+        cdef bint error = False
+        cdef OPCODE_TYPE value
+        
+        if not about:
+            print 'Ramsize: 0x%x' % ramsize
+        else:
+            try:
+                address = int(about, 0)
+                if address < 0:
+                    raise ValueError("Address must be positive.")
+            except ValueError, e:
+                print e
+            else:
+                value = vm_info(sim.state, VM_INFO_RAM, address, &error)
+                if error:
+                    self.print_err()
+                else:
+                    print value
+    
+    def info_register(self, Simulator sim, about):
+        if about:
+            self.info_registers(sim, about, register=about)
+        else:
+            print 'Provide the name of a register.'
     
     def do_info(self, about):
         """

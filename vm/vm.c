@@ -312,17 +312,17 @@ _get_location(VMState *state, VMInfoType type, size_t addr)
     switch (type) {
         case VM_INFO_REGISTER:
             location = state->registers;
-            if (addr > nregisters)
+            if (addr >= nregisters)
                 goto error;
             break;
         case VM_INFO_RAM:
             location = state->ram;
-            if (addr > ramsize)
+            if (addr >= ramsize)
                 goto error;
             break;
         case VM_INFO_PIN:
             location = state->ram + pinoffset;
-            if (addr > npins)
+            if (addr >= npins)
                 goto error;
             break;
     }
