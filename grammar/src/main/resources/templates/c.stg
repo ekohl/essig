@@ -54,7 +54,7 @@ instruction_return_size (size) ::= <<
 int instruction_return_size = <size>;
 >>
 
-assignExpr(var,type,value,comment) ::= <<
+assignExpr(var,type,value,comment,is_result) ::= <<
 // <comment>
 // Calculate expressions for the result var
 result = <value>;
@@ -62,8 +62,10 @@ result = <value>;
 if (error)
 	return false;
 
+<if(!is_result)>
 if(!vm_write(state, diff, VM_INFO_<type>, <var>, result))
 	return false;
+<endif>
 >>
 
 condition(left,right) ::= <<
@@ -85,7 +87,8 @@ bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	<opcodeparsed>
 
 	// Execute expressions
-	<expressions; separator="\n">
+	<first(expressions):resultExpr()>
+	<rest(expressions); separator="\n">
 
 	return true;}
 >>
@@ -111,6 +114,11 @@ else {
 	<elseExpr; separator="\n">
 }
 <endif>
+>>
+
+resultExpr(expression) ::= <<
+<expression>
+int R = result;
 >>
 
 operatorExpr(word,operator,expression) ::= <<
