@@ -4,7 +4,7 @@
 // Spec for atmel
 
 // Parameters
-size_t ramsize = 0xFFFFFF;
+size_t ramsize = 0xFFFF;
 // FIXME: clock = 1;
 // FIXME: size = 1;
 // End of parameters

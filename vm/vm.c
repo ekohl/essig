@@ -2,9 +2,7 @@
 #include "vm.h"
 
 #define GETPC(state) state->registers[PC]
-#define OPCODE(state) (((char *) state->instructions) - \
-                       state->pc_offset + \
-                       GETPC(state))
+#define OPCODE(state) (state->instructions + GETPC(state))
 
 #define STRINGIFY(msg) #msg
 #define TOSTRING(msg) STRINGIFY(msg)
@@ -288,7 +286,10 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
                 
                 if (pc < pc_offset || pc >= state->instructions_size) {
                     _vm_errno = VM_PC_OUT_OF_BOUNDS;
-                    printf("%lu %lu %lu\n", pc, pc_offset, instruction_end);
+#ifdef VM_DEBUG
+                    printf(LOCATION " %lu %lu %lu\n", pc, pc_offset, 
+                           instruction_end);
+#endif
                     return false;
                 }
             }

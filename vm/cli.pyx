@@ -153,7 +153,7 @@ class SimulatorCLI(cmd.Cmd, object):
             except ValueError, e:
                 print e
             else:
-                value = vm_info(sim.state, VM_INFO_RAM, address, &error)
+                value = vm_info(sim.state, VM_INFO_RAM, address, <bool *> &error)
                 if error:
                     self.print_err()
                 else:
@@ -170,6 +170,7 @@ class SimulatorCLI(cmd.Cmd, object):
         Show information about stuff:
             breakpoints
             registers
+            ram
             symbols
             cycles
             
@@ -183,7 +184,7 @@ class SimulatorCLI(cmd.Cmd, object):
         if info_func is not None:
             info_func(self.simulator, about)
         else:
-            print >>sys.stderr, "Invalid info command: %r" % info_type
+            sys.stderr.write("Invalid info command: %r\n" % info_type)
         
     def complete_info(self, text, line, beginidx, endidx):
         options = ('breakpoints', 'registers', 'symbols', 'cycles',
@@ -201,7 +202,9 @@ class SimulatorCLI(cmd.Cmd, object):
         for i from 0 <= i < sim.state.instructions_size:
             op = sim.state.instructions + i
             handler = opcode_handlers + op.opcode_index
-            print '%-15s 0x%016x' % (handler.opcode_name, op.instruction)
+            print '%-15s 0x%0*x' % (handler.opcode_name, 
+                                    sizeof(OPCODE_TYPE) * 2,
+                                    op.instruction)
             
     def complete_from_it(self, text, it):
         "complete command beginning with text from iterable"

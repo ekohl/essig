@@ -87,6 +87,6 @@ cdef extern from "vm.h":
     void vm_break_async_from_thread(VMState *state)
     bint vm_interrupt(VMState *state, VMInterruptType type, ...)
     OPCODE_TYPE vm_info(VMState *state, VMInfoType type, size_t vmaddr, 
-                        bint *result)
+                        bool *result)
     int vm_errno()
     char *vm_strerror(int vm_errno)

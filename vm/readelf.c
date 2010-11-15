@@ -50,6 +50,9 @@ _elf32_read(VMState *state, char *program, size_t program_size)
                     state->instructions_size);
                 
                 state->pc_offset = phdr->p_vaddr;
+                
+                /* we loaded the ROM, skip the RAM */
+                continue;
             }
             
             if (startaddr + phdr->p_memsz > ram + ramsize ||
