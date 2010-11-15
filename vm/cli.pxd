@@ -62,10 +62,12 @@ cdef extern from "vm.h":
     ctypedef struct VMState:
         Opcode *instructions
         size_t instructions_size
+        size_t executable_segment_offset
         VMBreakpoint *breakpoints
         unsigned int cycles
         OPCODE_TYPE *ram
         OPCODE_TYPE *registers
+        OPCODE_TYPE *pins
     
     cdef extern OpcodeHandler opcode_handlers[]
     cdef extern Register registers[]

@@ -84,5 +84,8 @@ extern int n_opcode_handlers;
 /*! Holds the register names and offsets */
 extern Register registers[];
 
+/*! Indicates the endianness of the MCU */
+extern bool is_big_endian;
+
 /* @} */
 #endif /* simulator.h */

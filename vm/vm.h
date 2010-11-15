@@ -124,11 +124,12 @@ typedef struct VMState {
     /*! Program counter (this attribute is obsoleted by state->registers[PC])*/
     size_t pc;
     /*! Offset of the executable segment (in bytes) */
-    size_t pc_offset;
+    size_t executable_segment_offset;
     /*! Number of executed cycles */
     unsigned int cycles;
     OPCODE_TYPE *ram;
     OPCODE_TYPE *registers;
+    OPCODE_TYPE *pins;
     VMInterruptPolicy interrupt_policy;
     struct VMInterruptItem *interrupts;
     interrupt_handler *interrupt_handlers[VM_N_INTERRUPT_TYPES];
@@ -297,6 +298,13 @@ void vm_seterrno(int err);
 
 /*! Return a reversed version of an iterable. Mutates inplace. */
 VMIterable *vm_reversed_it(VMIterable *it);
+
+/*! Convert value from the MCU's architecture to the host architecture.
+    Modifies in-place. */
+void vm_convert_to_host_endianness(char *value, size_t length);
+
+/*! Convert unsigned two-complement's value of nbits to signed. */
+long long vm_convert_to_signed(unsigned long long value, int nbits);
 
 /* include the private API specification */
 #include "simulator.h"

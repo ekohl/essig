@@ -147,7 +147,8 @@ vm_newstate(void *program,
 #endif
     
     // We make all registers ints
-    err_malloc(newstate->registers = calloc(nregisters, sizeof(int)));
+    err_malloc(newstate->registers = calloc(nregisters, sizeof(OPCODE_TYPE)));
+    err_malloc(newstate->pins = calloc(npins, sizeof(OPCODE_TYPE)));
     newstate->interrupt_policy = interrupt_policy;
     newstate->interrupts = NULL;
     newstate->break_async = false;
@@ -277,18 +278,16 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
             /* PC error checking */
             {
                 /* offsets in bytes */
-                size_t pc, pc_offset, instruction_end;
+                size_t pc;
                 
                 pc = GETPC(state);
-                pc_offset = state->pc_offset;
-                instruction_end = pc_offset + (state->instructions_size *
-                                               sizeof(OPCODE_TYPE));
                 
-                if (pc < pc_offset || pc >= state->instructions_size) {
-                    _vm_errno = VM_PC_OUT_OF_BOUNDS;
+                if (pc < state->executable_segment_offset || 
+                    pc >= state->instructions_size) {
+                    vm_seterrno(VM_PC_OUT_OF_BOUNDS);
 #ifdef VM_DEBUG
-                    printf(LOCATION " %lu %lu %lu\n", pc, pc_offset, 
-                           instruction_end);
+                    printf(LOCATION " pc: %lu max pc: %lu\n", 
+                           pc, state->instructions_size - 1);
 #endif
                     return false;
                 }
@@ -341,7 +340,7 @@ _get_location(VMState *state, VMInfoType type, size_t addr)
                 goto error;
             break;
         case VM_INFO_PIN:
-            location = state->ram + pinoffset;
+            location = state->pins + pinoffset;
             if (addr >= npins)
                 goto error;
             break;
@@ -529,6 +528,55 @@ error:
     return false;
 }
 
+static void
+swap_bytes(char *value, size_t length)
+{
+    int i;
+    char temp;
+    
+    for (i = 0; i < length / 2; ++i) {
+        temp = value[i];
+        value[i] = value[length - 1 - i];
+        value[length - 1 - i] = temp;
+    }
+}
+
+void 
+vm_convert_to_host_endianness(char *value, size_t length)
+{
+    int val;
+    char *valp;
+    
+    val = 1;
+    valp = (char *) &val;
+    if (valp[0] == 0) {
+        /* Host is big endian */
+        if (!is_big_endian)
+            swap_bytes(value, length);
+    } else {
+        /* Host is little endian */
+        if (is_big_endian)
+            swap_bytes(value, length);
+    }
+}
+
+long long
+vm_convert_to_signed(unsigned long long value, int nbits)
+{
+    unsigned long long firstbit = (1 << (nbits - 1));
+    
+    if (value & firstbit) {
+        /* first bit is set, convert to signed */
+        /* remove the first bit */
+        value = value & ~firstbit;
+        /* compute: lowest_value + remaining_value */
+        return -firstbit + value; 
+    } else {
+        /* no need to do conversion, the first bit is not set */
+        return (long long) value;
+    }
+}
+
 static Opcode *
 disassemble(OPCODE_TYPE *assembly, size_t assembly_length) 
 {
@@ -541,6 +589,9 @@ disassemble(OPCODE_TYPE *assembly, size_t assembly_length)
     for (i = 0; i < assembly_length; ++i) {
         bool found = false, is_arg = false;
         char *name;
+        OPCODE_TYPE instruction = assembly[i];
+        
+        vm_convert_to_host_endianness(&instruction, sizeof(instruction));
         
         if (is_arg) {
             /* Not an actual opcode, but an argument to another opcode

@@ -9,11 +9,14 @@ size_t ramsize = 0xFFFF;
 // FIXME: size = 1;
 // End of parameters
 
-int npins = 0;
+int npins = 64;
 size_t pinoffset = 0;
 int nbits_cpu = 16;
 // Registers
 int nregisters = 43;
+
+bool is_big_endian = false;
+
 Register registers[] = {
 	{ "R0", R0 },
 	{ "R1", R1 },
@@ -491,7 +494,7 @@ bool breq (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	if ( vm_info(state,VM_INFO_REGISTER,Z,&error) == 1) {
 		// PC = PC + k + 1  
 		// Calculate expressions for the result var
-		result =  vm_info(state,VM_INFO_REGISTER,PC,&error) +  vm_info(state,VM_INFO_REGISTER,k,&error) + 1  ;
+		result =  vm_info(state,VM_INFO_REGISTER,PC,&error) +  k + 1  ;
 		// Check if there was an error in the calculation of the result
 		if (error)
 			return false;
@@ -538,7 +541,7 @@ bool brge (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	if ( vm_info(state,VM_INFO_REGISTER,N,&error) ^  vm_info(state,VM_INFO_REGISTER,V,&error)  == 0) {
 		// PC = PC + k + 1  
 		// Calculate expressions for the result var
-		result =  vm_info(state,VM_INFO_REGISTER,PC,&error) +  vm_info(state,VM_INFO_REGISTER,k,&error) + 1  ;
+		result =  vm_info(state,VM_INFO_REGISTER,PC,&error) +  k + 1  ;
 		// Check if there was an error in the calculation of the result
 		if (error)
 			return false;
@@ -585,7 +588,7 @@ bool brne (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	if ( vm_info(state,VM_INFO_REGISTER,Z,&error) == 0) {
 		// PC = PC + k + 1  
 		// Calculate expressions for the result var
-		result =  vm_info(state,VM_INFO_REGISTER,PC,&error) +  vm_info(state,VM_INFO_REGISTER,k,&error) + 1  ;
+		result =  vm_info(state,VM_INFO_REGISTER,PC,&error) +  k + 1  ;
 		// Check if there was an error in the calculation of the result
 		if (error)
 			return false;
@@ -871,7 +874,7 @@ bool cpi (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	// Execute expressions
 	// H = !Rd(3) & K(3) + K(3) & R3 + R3 & Rd(3)     
 	// Calculate expressions for the result var
-	result = ! GetBit(vm_info(state,VM_INFO_REGISTER,d,&error), 3) &  GetBit(vm_info(state,VM_INFO_REGISTER,K,&error), 3) +  GetBit(vm_info(state,VM_INFO_REGISTER,K,&error), 3) &  vm_info(state,VM_INFO_REGISTER,R3,&error) +  vm_info(state,VM_INFO_REGISTER,R3,&error) &  GetBit(vm_info(state,VM_INFO_REGISTER,d,&error), 3)     ;
+	result = ! GetBit(vm_info(state,VM_INFO_REGISTER,d,&error), 3) &  GetBit(K, 3) +  GetBit(K, 3) &  vm_info(state,VM_INFO_REGISTER,R3,&error) +  vm_info(state,VM_INFO_REGISTER,R3,&error) &  GetBit(vm_info(state,VM_INFO_REGISTER,d,&error), 3)     ;
 	// Check if there was an error in the calculation of the result
 	if (error)
 		return false;
@@ -893,7 +896,7 @@ bool cpi (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
 	// V = Rd(7) & !K(7) & !R7 + !Rd(7) & K(7) & R7     
 	// Calculate expressions for the result var
-	result =  GetBit(vm_info(state,VM_INFO_REGISTER,d,&error), 7) & ! GetBit(vm_info(state,VM_INFO_REGISTER,K,&error), 7) & ! vm_info(state,VM_INFO_REGISTER,R7,&error) + ! GetBit(vm_info(state,VM_INFO_REGISTER,d,&error), 7) &  GetBit(vm_info(state,VM_INFO_REGISTER,K,&error), 7) &  vm_info(state,VM_INFO_REGISTER,R7,&error)     ;
+	result =  GetBit(vm_info(state,VM_INFO_REGISTER,d,&error), 7) & ! GetBit(K, 7) & ! vm_info(state,VM_INFO_REGISTER,R7,&error) + ! GetBit(vm_info(state,VM_INFO_REGISTER,d,&error), 7) &  GetBit(K, 7) &  vm_info(state,VM_INFO_REGISTER,R7,&error)     ;
 	// Check if there was an error in the calculation of the result
 	if (error)
 		return false;
@@ -926,7 +929,7 @@ bool cpi (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
 	// C = !Rd(7) & K(7) + K(7) & R7 + R7 & !Rd(7)     
 	// Calculate expressions for the result var
-	result = ! GetBit(vm_info(state,VM_INFO_REGISTER,d,&error), 7) &  GetBit(vm_info(state,VM_INFO_REGISTER,K,&error), 7) +  GetBit(vm_info(state,VM_INFO_REGISTER,K,&error), 7) &  vm_info(state,VM_INFO_REGISTER,R7,&error) +  vm_info(state,VM_INFO_REGISTER,R7,&error) & ! GetBit(vm_info(state,VM_INFO_REGISTER,d,&error), 7)     ;
+	result = ! GetBit(vm_info(state,VM_INFO_REGISTER,d,&error), 7) &  GetBit(K, 7) +  GetBit(K, 7) &  vm_info(state,VM_INFO_REGISTER,R7,&error) +  vm_info(state,VM_INFO_REGISTER,R7,&error) & ! GetBit(vm_info(state,VM_INFO_REGISTER,d,&error), 7)     ;
 	// Check if there was an error in the calculation of the result
 	if (error)
 		return false;
@@ -1102,12 +1105,12 @@ bool ldi (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	// Execute expressions
 	// Rd = K
 	// Calculate expressions for the result var
-	result =  vm_info(state,VM_INFO_REGISTER,K,&error);
+// 	result =  vm_info(state,VM_INFO_REGISTER,K,&error);
 	// Check if there was an error in the calculation of the result
-	if (error)
-		return false;
+// 	if (error)
+// 		return false;
 
-	if(!vm_write(state, diff, VM_INFO_REGISTER, d, result))
+	if(!vm_write(state, diff, VM_INFO_REGISTER, d, K))
 		return false;
 
 
@@ -1320,7 +1323,7 @@ bool out (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	if (error)
 		return false;
 
-	if(!vm_write(state, diff, VM_INFO_REGISTER, A, result))
+	if(!vm_write(state, diff, VM_INFO_PIN, A, result))
 		return false;
 
 
@@ -1420,7 +1423,7 @@ bool rcall (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	// Execute expressions
 	// PC = PC + k + 1  
 	// Calculate expressions for the result var
-	result =  vm_info(state,VM_INFO_REGISTER,PC,&error) +  vm_info(state,VM_INFO_REGISTER,k,&error) + 1  ;
+	result =  vm_info(state,VM_INFO_REGISTER,PC,&error) +  k + 1  ;
 	// Check if there was an error in the calculation of the result
 	if (error)
 		return false;
@@ -1452,7 +1455,7 @@ bool rjmp (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	// Execute expressions
 	// PC = PC + k + 1  
 	// Calculate expressions for the result var
-	result =  vm_info(state,VM_INFO_REGISTER,PC,&error) +  vm_info(state,VM_INFO_REGISTER,k,&error) + 1  ;
+	result =  vm_info(state,VM_INFO_REGISTER,PC,&error) +  k + 1  ;
 	// Check if there was an error in the calculation of the result
 	if (error)
 		return false;
@@ -1734,7 +1737,10 @@ bool stdyplus (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	return !error;
 }
 
-bool nop(VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {}
+bool nop(VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
+    state->registers[PC] += 1;
+    return true;
+}
 
 int n_opcode_handlers = 29;
 OpcodeHandler opcode_handlers[] = {

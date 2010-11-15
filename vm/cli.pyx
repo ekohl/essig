@@ -111,7 +111,6 @@ class SimulatorCLI(cmd.Cmd, object):
         while bp:
             if bp.offset in self.symtab_offset_to_func:
                 t = self.symtab_offset_to_func[bp.offset], bp.offset
-                print t
                 breakpoint = '%s at 0x%016x' % t
             else:
                 breakpoint = '0x%016x' % bp.offset
@@ -196,15 +195,21 @@ class SimulatorCLI(cmd.Cmd, object):
             Simulator sim
             Opcode *op
             OpcodeHandler *handler
-            size_t i
+            size_t i, address
             
         sim = self.simulator
+        print '%-10s     %-5s %-15s %-15s' % ('Address', 'PC', 'Opcode', 'Instruction')
+        offset = sim.state.executable_segment_offset
         for i from 0 <= i < sim.state.instructions_size:
             op = sim.state.instructions + i
             handler = opcode_handlers + op.opcode_index
-            print '%-15s 0x%0*x' % (handler.opcode_name, 
-                                    sizeof(OPCODE_TYPE) * 2,
-                                    op.instruction)
+            address =  offset + i * sizeof(OPCODE_TYPE)
+            print '%6x     %6x     %-15s 0x%0*x' % (
+                address,
+                address / sizeof(OPCODE_TYPE),
+                handler.opcode_name, 
+                sizeof(OPCODE_TYPE) * 2,
+                op.instruction)
             
     def complete_from_it(self, text, it):
         "complete command beginning with text from iterable"
