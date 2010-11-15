@@ -18,4 +18,5 @@ __vm_errno__(VM_NO_SUCH_INTERRUPT_TYPE_SUPPORT_ERROR,
              "Interrupt type is not supported.")
 __vm_errno__(VM_ILLEGAL_INSTRUCTION, 
              "An instruction that could not be handled was encountered")
-             
+__vm_errno__(VM_PC_OUT_OF_BOUNDS,
+             "Program counter points outside the executable segment.")

@@ -1,7 +1,7 @@
 CFLAGS=-g -Wall -fPIC -DVM_DEBUG=1 -DVM_WITH_THREADS=1
 OBJECTS=vm.o generated_simulator.o
 PYTHON_DEBUG=`cython 2>&1 | grep -q '\--debug' && echo --pyrex-debug`
-PYTHON=python-dbg
+PYTHON=`which python-dbg || which python`
 
 TESTFILE1=../code-samples/factorial
 TESTFILE2=../code-samples/empty

@@ -48,6 +48,8 @@ _elf32_read(VMState *state, char *program, size_t program_size)
                 state->instructions = disassemble(
                     (OPCODE_TYPE *) (program + phdr->p_offset),
                     state->instructions_size);
+                
+                state->pc_offset = phdr->p_vaddr;
             }
             
             if (startaddr + phdr->p_memsz > ram + ramsize ||

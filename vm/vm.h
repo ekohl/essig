@@ -121,8 +121,10 @@ typedef struct VMState {
     Opcode *instructions;
     /*! Size of the instructions array */
     size_t instructions_size;
-    /*! Program counter */
+    /*! Program counter (this attribute is obsoleted by state->registers[PC])*/
     size_t pc;
+    /*! Offset of the executable segment (in bytes) */
+    size_t pc_offset;
     /*! Number of executed cycles */
     unsigned int cycles;
     OPCODE_TYPE *ram;

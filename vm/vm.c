@@ -1,9 +1,10 @@
 #include <elf.h>
 #include "vm.h"
 
-#define OPCODE_SIZE (nbits_cpu / 8)
-#define OPCODE(state) (state->instructions + \
-                       (state->registers[PC] / OPCODE_SIZE))
+#define GETPC(state) state->registers[PC]
+#define OPCODE(state) (((char *) state->instructions) - \
+                       state->pc_offset + \
+                       GETPC(state))
 
 #define STRINGIFY(msg) #msg
 #define TOSTRING(msg) STRINGIFY(msg)
@@ -274,7 +275,25 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
              RELEASE_STATE(state);
             break;
         } else {
-            /* Save PC */
+            
+            /* PC error checking */
+            {
+                /* offsets in bytes */
+                size_t pc, pc_offset, instruction_end;
+                
+                pc = GETPC(state);
+                pc_offset = state->pc_offset;
+                instruction_end = pc_offset + (state->instructions_size *
+                                               sizeof(OPCODE_TYPE));
+                
+                if (pc < pc_offset || pc >= state->instructions_size) {
+                    _vm_errno = VM_PC_OUT_OF_BOUNDS;
+                    printf("%lu %lu %lu\n", pc, pc_offset, instruction_end);
+                    return false;
+                }
+            }
+            
+            /* Save changes in diff */
             if (diff) {
                 diff->pc = state->registers[PC];
                 diff->cycles = state->cycles;
@@ -287,7 +306,7 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
             }
             
             /* Execute instruction */
-            opcode = OPCODE(state);
+            opcode = (Opcode *) OPCODE(state);
             handler = opcode_handlers[opcode->opcode_index].handler;
             printf("%-20s 0x%-18u 0x%-18u\n", 
                    opcode_handlers[opcode->opcode_index].opcode_name,
@@ -547,7 +566,8 @@ disassemble(OPCODE_TYPE *assembly, size_t assembly_length)
             printf(
                 LOCATION " Cannot handle instruction 0x%x at address "
                 "offset 0x%x.\n",
-                (unsigned int) assembly[i], i * sizeof(OPCODE_TYPE));
+                (unsigned int) assembly[i], 
+                (unsigned int) (i * sizeof(OPCODE_TYPE)));
 #endif
             vm_seterrno(VM_ILLEGAL_INSTRUCTION);
             return false;
