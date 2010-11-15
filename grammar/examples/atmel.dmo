@@ -1,7 +1,7 @@
 atmel {
 	parameters {
 		gprs 32;
-		ram 1024;
+		ram 65536;
 
 		/* Standard Values */
 		clock 1; /* 1 clock_cycle */
@@ -59,7 +59,7 @@ atmel {
 
 		/* Add Immediate to Word  TODO: solve: ADIW Rd+1:Rd,K*/
 		adiw opcode="1001 0110 KKdd KKKK" Rd, K {
-			/* Rd+1:Rd ? Rd+1:Rd + K; */
+			// Rd+1:Rd ? Rd+1:Rd + K; TODO
 			S = N ^ V;
 			PC = PC + 1;
 			V = !Rd7(h) & R15;
@@ -98,7 +98,7 @@ atmel {
 		}
 
 		/* Branch if Not Equal */
-		brne opcode="1111 010k kkkk k001" k {
+		brne opcode="1111 01kk kkkk k001" k {
 			if Z == 0 {
 				PC = PC + k + 1;
 			} else {
@@ -172,8 +172,34 @@ atmel {
 
 		/* Load Indirect from Data Space to Register using Index Y+ */
 		lddyplus opcode="10q0 qq0d dddd 1qqq" Rd, q {
-			//Rd = RAM(RY+q);		
+			//Rd = RAM(RY+q); TODO
 			PC = PC + 1;
+		}
+
+		/* Load Indirect from Data Space to Register using Index -Z */
+		lddzmin opcode="1001 000d dddd 0010" Rd {
+			//Z = Z - 1;
+			//Rd = RAM(RZ); TODO
+			PC = PC + 1;
+		}
+
+		/* Load Indirect from Data Space to Register using Index Z+ */
+		lddzplus opcode="1001 000d dddd 0001" Rd {
+			//Rd = RAM(RZ); TODO
+			//Z = Z + 1;
+			PC = PC + 1;
+		}
+
+		/* Load Indirect from Data Space to Register using Index Z+q */
+		lddzq opcode="10q0 qq0d dddd 0qqq" Rd, q {
+			//Rd = RAM(RZ+q); TODO
+			PC = PC + 1;
+		}
+
+		/* Load Direct from Data Space */
+		lds opcode="1001 000d dddd 0000 kkkk kkkk kkkk kkkk" Rd, k{
+			//Rd = RAM(k); TODO
+			PC = PC + 2;
 		}
 
 		/* Logical Shift Right */
@@ -187,8 +213,9 @@ atmel {
 		}
 
 		/* Load Program Memory */
-		/* TODO: complex
 		lpm opcode="1001 0101 1100 1000" {
+			// TODO
+			//R0 = R30;
 			PC = PC + 1;
 		}
 
@@ -267,22 +294,51 @@ atmel {
 
 		/* Store Indirect From Register to Data Space using Index X+ */
 		stxplus opcode="1001 001r rrrr 1101" X, Rr {
-			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)			
-			// TODO Store Rr to Dataspace[X] 
-			//RAM(RX) = Rr;				
+			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
+			// TODO Store Rr to Dataspace[X]
+			//RAM(RX) = Rr;
 			//RX = RX + 1; TODO
 			PC = PC + 1;
 		}
 
-		
+
 		/* Store Indirect From Register to Data Space using Index X+ */
-		stdyplus opcode="1000 001r rrrr 1000" Y, Rr {
-			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)			
-			// TODO Store Rr to Dataspace[RY] 
-			//RAM(RY) = Rr;			
+		stdyplus opcode="1000 001r rrrr 1000" Rr {
+			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
+			// TODO Store Rr to Dataspace[RY]
+			//RAM(RY) = Rr;
 			//RY = RY + 1; TODO
 			PC = PC + 1;
 		}
 
+		/* Store Indirect From Register to Data Space using Index X+ */
+		stdzplus opcode="10q0 qq1r rrrr 0qqq" q, Rr {
+			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
+			// TODO Store Rr to Dataspace[RZ]
+			//RAM(RZ + q) = Rr; TODO
+			PC = PC + 1;
+		}
+
+		subi opcode="0101 KKKK dddd KKKK" Rd, K {
+			Rd = Rd - K;
+
+			H = !Rd3 & K3 + K3 & R3 + R3 & Rd3;
+			S = N ^ V;
+			V = Rd7 & !K7 & R7 + Rd7 & K7 & R7;
+			N = R7;
+			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
+			C = !Rd7 & K7 + K7 & R7 + R7 & !Rd7;
+		}
+
+		sbci opcode="0100 KKKK dddd KKKK" Rd, K {
+			Rd = Rd - K - C;
+
+			H = !Rd3 & K3 + K3 & R3 + R3 & Rd3;
+			S = N ^ V;
+			V = Rd7 & !K7 & R7 + Rd7 & K7 & R7;
+			N = R7;
+			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0 & Z;
+			C = !Rd7 & K7 + K7 & R7 + R7 & !Rd7;
+		}
 	}
 }

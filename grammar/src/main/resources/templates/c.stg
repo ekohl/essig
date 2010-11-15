@@ -10,6 +10,11 @@ microcontroller(name,parameters,registers,instructions) ::= <<
 <parameters; separator="\n">
 // End of parameters
 
+// FIXME: Hardcoded parameters
+int npins = 0;
+size_t pinoffset = 0;
+int nbits_cpu = 16;
+
 // Registers
 int nregisters = <length(registers)>;
 Register registers[] = {
@@ -90,7 +95,8 @@ bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	<first(expressions):resultExpr()>
 	<rest(expressions); separator="\n">
 
-	return true;}
+	return true;
+}
 >>
 
 opcodehandler(it) ::= <<
