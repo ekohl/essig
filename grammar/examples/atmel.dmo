@@ -98,7 +98,7 @@ atmel {
 		}
 
 		/* Branch if Not Equal */
-		brne opcode="1111 00kk kkk k001" k {
+		brne opcode="1111 010k kkkk k001" k {
 			if Z == 0 {
 				PC = PC + k + 1;
 			} else {

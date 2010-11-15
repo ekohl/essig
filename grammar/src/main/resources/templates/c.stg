@@ -54,7 +54,7 @@ instruction_return_size (size) ::= <<
 int instruction_return_size = <size>;
 >>
 
-assignExpr(var,value,comment) ::= <<
+assignExpr(var,type,value,comment) ::= <<
 // <comment>
 // Calculate expressions for the result var
 result = <value>;
@@ -62,20 +62,16 @@ result = <value>;
 if (error)
 	return false;
 
-if(!vm_write(state, diff, VM_INFO_REGISTER, <var>, result))
+if(!vm_write(state, diff, VM_INFO_<type>, <var>, result))
 	return false;
-
-
 >>
 
 condition(left,right) ::= <<
 <left> == <right>
 >>
 
-
 instruction(name,params,arguments,expressions) ::= <<
 bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
-
 	// error
 	bool error = false;
 
@@ -91,24 +87,15 @@ bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	// Execute expressions
 	<expressions; separator="\n">
 
-	//Update instruction pointer
-	state->pc = vm_info(state,VM_INFO_REGISTER,PC,&error);
-
-	return error;
-}
+	return true;}
 >>
 
-opcodehandler() ::= <<
+opcodehandler(it) ::= <<
 { "<it.name>", 0b<it.opcode>, 0b<it.mask>, (opcode_handler *) <it.name> }
->>
-
-parameter(key,value) ::= <<
-//set("<key>", <value>);
 >>
 
 param(name,value) ::=  <<
 <name> = <value>;
-
 >>
 
 register(name) ::= <<
