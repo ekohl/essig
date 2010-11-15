@@ -86,7 +86,9 @@ instruction:
 					symbolTable.getDeclaration(c + "", $OPCODE);
 				}
 			}
-			^(EXPR expr+)
+			^(EXPR expr {
+				symbolTable.declare("R", $EXPR);
+			} expr* )
 			{ symbolTable.closeScope(); }
 		)
 	;
@@ -102,7 +104,7 @@ param:
 
 argument:		
 		IDENTIFIER {
-			symbolTable.declare(new Variable($IDENTIFIER.text).toString(), $IDENTIFIER);
+			symbolTable.declare(new Variable($IDENTIFIER.text).getName(), $IDENTIFIER);
 		}
 	;
 
@@ -128,9 +130,9 @@ condition:
 
 word:
 		NUMBER
-	|	^(id=IDENTIFIER NOT? IDENTIFIER? NUMBER?) {
-			symbolTable.getDeclaration(new Variable($id.text).toString(), $id);
+	|	^(id=IDENTIFIER NOT? IDENTIFIER?) {
+			symbolTable.getDeclaration(new Variable($id.text).getName(), $id);
 		}
 	;
 
-operator:	AND | OR | XOR | ADD;
+operator:	AND | OR | XOR | ADD | MINUS;

@@ -95,7 +95,7 @@ expr	:	assignExpr
 	;
 
 assignExpr:	^(ASSIGN IDENTIFIER o=operatorExpr) {Variable var = new Variable($IDENTIFIER.text);}
-	-> assignExpr(var={var},type={var.getType()},value={$o.st},comment={$IDENTIFIER + " = " + $o.comment})
+	-> assignExpr(var={var},type={var.getType()},value={$o.st},comment={$IDENTIFIER + " = " + $o.comment}, is_result={var.getName().equals("R")})
 	;
 
 
@@ -117,19 +117,17 @@ condition:	^(EQUALS l=operatorExpr r=word)
 word returns [String comment = ""]:
 		NUMBER {$comment = $NUMBER.text;}
 	-> template (number={$NUMBER}) "<number>"
-	|	^( v=IDENTIFIER NOT? i=IDENTIFIER? NUMBER? )
+	|	^( v=IDENTIFIER NOT? i=IDENTIFIER? )
 		{
 			Variable var = new Variable($v.text);
 			$comment = (($NOT != null) ? $NOT.text : "") + $v.text;
 			if($i != null)
 				$comment += "(" + $i.text + ")";
-			if($NUMBER != null)
-				$comment += "(" + $NUMBER.text + ")";
 		}
 	// FIXME: Also handle $i
-	-> wordVariable (variable={var},bit={$NUMBER.text},type={var.getType()},not={$NOT != null})
+	-> wordVariable (variable={var.getName()},bit={var.getNumber()},type={var.getType()},not={$NOT != null})
 	;
 
-operator:      (o=AND | o=OR | o=XOR | o=ADD)
+operator:      (o=AND | o=OR | o=XOR | o=ADD | o=MINUS)
 	-> template(operator={$o}) "<operator>"
 	;

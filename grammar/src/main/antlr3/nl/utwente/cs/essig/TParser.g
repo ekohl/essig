@@ -87,8 +87,7 @@ condition:		word EQUALS^ word
 
 word	:		NOT? IDENTIFIER^
 				(LPAREN! IDENTIFIER RPAREN!)?
-				(LPAREN! NUMBER RPAREN!)?
 	|		NUMBER
 	;
 
-operator:		AND | OR | XOR | ADD;
+operator:		AND | OR | XOR | ADD | MINUS;

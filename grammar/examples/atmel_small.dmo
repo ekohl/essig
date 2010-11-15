@@ -31,12 +31,12 @@ atmel {
 		adc opcode="0001 11rd dddd rrrr" [clock=1,  size=1] Rd, Rr {
 			Rd = Rd + Rr + C;
 
-			H = Rd(3) & Rr(3) + Rr(3) & !R3 + !R3 & Rd(3);
+			H = Rd3 & Rr3 + Rr3 & !R3 + !R3 & Rd3;
 			S = N ^ V;
-			V = Rd(7) & Rr(7) &  !R7 + !Rd(7) & !Rr(7) & R7;
+			V = Rd7 & Rr7 &  !R7 + !Rd7 & !Rr7 & R7;
 			N = R7;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
-			C = Rd(7) & Rr(7) + Rr(7) & !R7 + !R7 & Rd(7);
+			C = Rd7 & Rr7 + Rr7 & !R7 + !R7 & Rd7;
 
 			PC = PC + 1;
 
@@ -46,12 +46,12 @@ atmel {
 		add opcode="0000 11rd dddd rrrr" [clock=1] Rd, Rr {
 			Rd = Rd + Rr;
 
-			H = Rd(3) & Rr(3) + Rr(3) & !R3 + !R3 & Rd(3);
+			H = Rd3 & Rr3 + Rr3 & !R3 + !R3 & Rd3;
 			S = N ^ V;
-			V = Rd(7) & Rr(7) &  !R7 + !Rd(7) & !Rr(7) & R7;
+			V = Rd7 & Rr7 &  !R7 + !Rd7 & !Rr7 & R7;
 			N = R7;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
-			C = Rd(7) & Rr(7) + Rr(7) & !R7 + !R7 & Rd(7);
+			C = Rd7 & Rr7 + Rr7 & !R7 + !R7 & Rd7;
 
 			PC = PC + 1;
 		}
