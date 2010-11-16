@@ -80,7 +80,7 @@ atmel {
 		}
 
 		/* Branch if Equal */
-		breq opcode="1111 00kk kkkk k001" k {
+		breq opcode="1111 00kk kkkk k001" ~k {
 			if Z == 1 {
 				PC = PC + k + 1;
 			} else {
@@ -89,7 +89,7 @@ atmel {
 		}
 
 		/* Branch if Greater or Equal (Signed) */
-		brge opcode="1111 01kk kkk k100" k {
+		brge opcode="1111 01kk kkk k100" ~k {
 			if (N ^ V) == 0 {
 				PC = PC + k + 1;
 			} else {
@@ -98,7 +98,7 @@ atmel {
 		}
 
 		/* Branch if Not Equal */
-		brne opcode="1111 01kk kkkk k001" k {
+		brne opcode="1111 01kk kkkk k001" ~k {
 			if Z == 0 {
 				PC = PC + k + 1;
 			} else {
@@ -253,13 +253,13 @@ atmel {
 		}
 
 		/* Relative Call to Subroutine */
-		rcall opcode="1101 kkkk kkkk kkkk" k {
+		rcall opcode="1101 kkkk kkkk kkkk" ~k {
 			/* TODO, this is about a 'WORD' and not a single byte */
 			PC = PC + k + 1;
 		}
 
 		/* Relative Jump */
-		rjmp opcode="1100 kkkk kkkk kkkk" k {
+		rjmp opcode="1100 kkkk kkkk kkkk" ~k {
 			PC = PC + k + 1;
 		}
 

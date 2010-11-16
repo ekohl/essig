@@ -563,7 +563,7 @@ vm_convert_to_host_endianness(char *value, size_t length)
 long long
 vm_convert_to_signed(unsigned long long value, int nbits)
 {
-    unsigned long long firstbit = (1 << (nbits - 1));
+    unsigned long long firstbit = 1 << (nbits - 1);
     
     if (value & firstbit) {
         /* first bit is set, convert to signed */
