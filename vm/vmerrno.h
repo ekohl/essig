@@ -20,3 +20,5 @@ __vm_errno__(VM_ILLEGAL_INSTRUCTION,
              "An instruction that could not be handled was encountered")
 __vm_errno__(VM_PC_OUT_OF_BOUNDS,
              "Program counter points outside the executable segment.")
+__vm_errno__(VM_INTERRUPT_CALLABLE_ERROR,
+             "An error occurred in an interrupt callable.")

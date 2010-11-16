@@ -4,8 +4,11 @@
 Command Line Interface for the simulator
 """
 
+import os
 import sys
 import cmd
+import glob
+import traceback
 import subprocess
 
 
@@ -40,10 +43,24 @@ cdef class Simulator(object):
         if not self.diff:
             raise VMError()
     
+    def load_plugins(self):
+        # Don't use __import__, but exec. This way every simulator can have
+        # it's separate plugins! We could also use __import__ + a metaclass
+        # to register subclasses and instantiate them with the simulator as
+        # argument.
+        path = os.path.join(os.path.dirname('__file__'), 'plugins', '*.py')
+        for modulename in glob.glob(path):
+            d = {'simulator': self}
+            exec open(modulename).read() in d, d
+    
     def __dealloc__(self):
         vm_closestate(self.state)
         vm_closediff(self.diff)
 
+    property cycles:
+        def __get__(self):
+            return self.state.cycles
+    
             
 class SimulatorCLI(cmd.Cmd, object):
     
@@ -191,6 +208,9 @@ class SimulatorCLI(cmd.Cmd, object):
         return self.complete_from_it(text, options)
     
     def do_disassemble(self, args):
+        """
+        Disassemble the program that's to be simulated.
+        """
         cdef:
             Simulator sim
             Opcode *op
@@ -226,3 +246,27 @@ class SimulatorCLI(cmd.Cmd, object):
         if msg is None:
             msg = vm_strerror(-1)
         sys.stderr.write(msg + "\n")
+
+
+cdef bool python_callback(VMState *state, void *argument):
+    cdef object python_callable = <object> argument
+    
+    try:
+        python_callable()
+        return true
+    except:
+        traceback.print_exc()
+        sys.exc_clear()
+        return false
+
+def register_callback(Simulator sim, callback):
+    Py_INCREF(callback)
+    if not vm_register_interrupt_callable(sim.state, <void *> &python_callback, 
+                                          <void *> callback):
+        raise VMError()
+
+
+INTERRUPT_TIMER = VM_INTERRUPT_TIMER
+
+def specify_vm_interrupt(Simulator sim, interrupt_type, argument):
+    vm_interrupt(sim.state, interrupt_type, <unsigned int> argument)

@@ -90,5 +90,11 @@ cdef extern from "vm.h":
     bint vm_interrupt(VMState *state, VMInterruptType type, ...)
     OPCODE_TYPE vm_info(VMState *state, VMInfoType type, size_t vmaddr, 
                         bool *result)
+    
+    void Py_INCREF(object obj)
+    bool vm_register_interrupt_callable(VMState *state, void *func, 
+                                        void *argument)
+    
+    
     int vm_errno()
     char *vm_strerror(int vm_errno)

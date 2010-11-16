@@ -150,9 +150,7 @@ vm_newstate(void *program,
     err_malloc(newstate->registers = calloc(nregisters, sizeof(OPCODE_TYPE)));
     err_malloc(newstate->pins = calloc(npins, sizeof(OPCODE_TYPE)));
     newstate->interrupt_policy = interrupt_policy;
-    newstate->interrupts = NULL;
     newstate->break_async = false;
-    newstate->breakpoints = NULL;
     
     if (!_read_elf(newstate, program, program_size))
         goto error;
@@ -202,6 +200,7 @@ vm_closestate(VMState *state)
 #endif
         _vm_close_iterable((VMIterable *) state->breakpoints);
         _vm_close_iterable((VMIterable *) state->interrupts);
+        _vm_close_iterable((VMIterable *) state->interrupt_callables);
         free(state);
     }
 }
@@ -228,10 +227,13 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
 {
     Opcode *opcode;
     opcode_handler *handler;
+    VMInterruptCallable *callable;
     VMInterruptItem *interrupt_item, *previous_interrupt_item = NULL;
     
     *hit_bp = false;
+#ifdef VM_DEBUG
     printf("%-20s %-20s %-20s\n", "Opcode", "Program Counter", "Instruction");
+#endif
     while (nsteps > 0) {
         /* acquire and release for every step. This allows for some nice 
            contention! */
@@ -242,32 +244,42 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
             break;
         }
         
-        if (state->interrupts != NULL) {
-            /* interrupt */
-            interrupt_item = state->interrupts;
-            while (interrupt_item) {
-                if (interrupt_item->cycles <= state->cycles) {
-                    bool result; 
-                    interrupt_handler *handler;
-                    
-                    handler = state->interrupt_handlers[
-                                            interrupt_item->interrupt_type];
-                    result = handler(state, interrupt_item->interrupt_type);
-                    
-                    /* delete item from the queue */
-                    if (previous_interrupt_item) {
-                        previous_interrupt_item->next = interrupt_item->next;
-                    } else {
-                        state->interrupts = interrupt_item->next;
-                    }
-                    free(interrupt_item);
-                    interrupt_item = previous_interrupt_item;
-                    
-                    if (!result)
-                        return false;
-                }
-                interrupt_item = interrupt_item->next;
+        callable = state->interrupt_callables;
+        while (callable) {
+            if (!callable->func(state, callable->argument)) {
+                vm_seterrno(VM_INTERRUPT_CALLABLE_ERROR);
+                return false;
             }
+            callable = callable->next;
+        }
+        
+        if (false || state->interrupts != NULL) {
+            // /* interrupt */
+            // interrupt_item = state->interrupts;
+            // while (interrupt_item) {
+                // if (interrupt_item->cycles <= state->cycles) {
+                    // bool result; 
+                    // interrupt_handler *handler;
+                    // 
+                    // handler = state->interrupt_handlers[
+                                            // interrupt_item->interrupt_type];
+                    // result = handler(state, interrupt_item->interrupt_type);
+                    // 
+                    // /* delete item from the queue */
+                    // if (previous_interrupt_item) {
+                        // previous_interrupt_item->next = interrupt_item->next;
+                    // } else {
+                        // state->interrupts = interrupt_item->next;
+                    // }
+                    // free(interrupt_item);
+                    // interrupt_item = previous_interrupt_item;
+                    // 
+                    // if (!result)
+                        // return false;
+                // }
+                // interrupt_item = interrupt_item->next;
+                // 
+            // }
         } else if (_hit_breakpoint(state)) {
             /* breakpoint */
             *hit_bp = true;
@@ -308,11 +320,12 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
             /* Execute instruction */
             opcode = (Opcode *) OPCODE(state);
             handler = opcode_handlers[opcode->opcode_index].handler;
+#ifdef VM_DEBUG
             printf("%-20s 0x%-18u 0x%-18u\n", 
                    opcode_handlers[opcode->opcode_index].opcode_name,
                    state->registers[PC],
                    opcode->instruction);
-            
+#endif
             if (!handler(state, diff, opcode->instruction))
                 return false;
         }
@@ -475,12 +488,22 @@ vm_interrupt(VMState *state, VMInterruptType type, ...)
     return true;
 }
 
-void
-vm_register_handler(VMState *state, 
-                    VMInterruptType type, 
-                    interrupt_handler *handler)
+bool
+vm_register_interrupt_callable(VMState *state, interrupt_callable *func, 
+                               void *argument)
 {
-    state->interrupt_handlers[type] = handler;
+    VMInterruptCallable *callable;
+    
+    err_malloc(callable = calloc(1, sizeof(VMInterruptCallable)));
+    callable->func = func;
+    callable->argument = argument;
+    /* prepend our struct in the linked list */
+    callable->next = state->interrupt_callables;
+    state->interrupt_callables = callable;
+    return true;
+error:
+    free(callable);
+    return false;
 }
 
 OPCODE_TYPE
@@ -591,7 +614,7 @@ disassemble(OPCODE_TYPE *assembly, size_t assembly_length)
         char *name;
         OPCODE_TYPE instruction = assembly[i];
         
-        vm_convert_to_host_endianness(&instruction, sizeof(instruction));
+        vm_convert_to_host_endianness((char *) &instruction, sizeof(instruction));
         
         if (is_arg) {
             /* Not an actual opcode, but an argument to another opcode
