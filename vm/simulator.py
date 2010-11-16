@@ -14,4 +14,6 @@ if __name__ == '__main__':
     if len(sys.argv) != 2:
         sys.stderr.write("Usage: %s program\n" % sys.argv[0])
     else:
-        cli.SimulatorCLI(sys.argv[1]).cmdloop(banner)
+        simulator_cli = cli.SimulatorCLI(sys.argv[1])
+        simulator_cli.simulator.load_plugins()
+        simulator_cli.cmdloop(banner)

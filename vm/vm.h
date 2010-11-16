@@ -86,13 +86,14 @@ struct VMState;
 struct VMStateDiff;
 struct VMInterruptItem;
 struct VMBreakpoint;
+struct VMInterruptCallable;
 
 /*! Signature of opcode handlers. */
 typedef bool opcode_handler(struct VMState *, 
                             struct VMStateDiff *, 
                             OPCODE_TYPE);
 
-typedef bool interrupt_handler(struct VMState *, VMInterruptType);
+typedef bool interrupt_callable(struct VMState *, void *argument);
                             
 /*! Each OpcodeHandler corresponds with one instruction handler. */
 typedef struct {
@@ -132,7 +133,7 @@ typedef struct VMState {
     OPCODE_TYPE *pins;
     VMInterruptPolicy interrupt_policy;
     struct VMInterruptItem *interrupts;
-    interrupt_handler *interrupt_handlers[VM_N_INTERRUPT_TYPES];
+    struct VMInterruptCallable *interrupt_callables;
     /*! If true, have the interpreter halt execution as soon as possible */
     volatile sig_atomic_t break_async;
     /*! List of breakpoints */
@@ -187,12 +188,19 @@ typedef struct VMBreakpoint {
     size_t offset;
 } VMBreakpoint;
 
+typedef struct VMInterruptCallable {
+    VMIterable_Head(VMInterruptCallable);
+    interrupt_callable *func;
+    void *argument;
+} VMInterruptCallable;
+
 /*! Represents a single register holding the name of the register and the 
     offset in the register file */
 typedef struct {
    char *name;
    size_t offset;
 } Register;
+
 
 /* @} */
 
@@ -265,9 +273,8 @@ Interrupt the microcontroller
 */
 bool vm_interrupt(VMState *state, VMInterruptType type, ...);
 
-/*! Register an interrupt handler */
-void
-vm_register_handler(VMState *state, VMInterruptType type, interrupt_handler);
+/*! Register an interrupt handler in a VMState with an extra argument */
+bool vm_register_interrupt_callable(VMState *, interrupt_callable *, void *);
 /* @} */
 
 /*! Query the VM for information. 
