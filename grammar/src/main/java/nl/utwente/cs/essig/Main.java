@@ -102,8 +102,8 @@ public class Main {
 			Tree t = parseTokens(tokens);
 
 			// Run checker
-			checkTree(t);
-
+			//checkTree(t);
+			System.out.println("Checker currently disabled");
 			// Now walk it with the tree walker, which generates the C file
 			try {
 				StringTemplate output = generateCode(t);
