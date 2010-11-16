@@ -64,6 +64,7 @@ QUOTE		:	'"';
 
 // Logical operators
 NOT		:	'!';
+SIGNED		:	'~';
 AND		:	'&';
 OR		:	'|';
 XOR		:	'^';

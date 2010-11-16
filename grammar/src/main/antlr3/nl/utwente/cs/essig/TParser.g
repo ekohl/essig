@@ -69,13 +69,13 @@ param	:		SIZE^ ASSIGN! NUMBER
 arguments:		argument (ARG_SEPERATOR argument)*
 		-> argument+;
 
-argument :		IDENTIFIER;
+argument :		(SIGNED)? IDENTIFIER;
 
 expr	:		assignExpr LINE_SEPERATOR!
 	|		ifExpr
 	;
 
-assignExpr:		IDENTIFIER ASSIGN^ operatorExpr;
+assignExpr:		(IDENTIFIER | (RAM LPAREN! operatorExpr RPAREN!)) ASSIGN^ operatorExpr;
 
 ifExpr:			IF^ condition LBRACK! expr+ RBRACK! (ELSE LBRACK! expr+ RBRACK!)?;
 
@@ -88,6 +88,7 @@ condition:		word EQUALS^ word
 word	:		NOT? IDENTIFIER^
 				(LPAREN! IDENTIFIER RPAREN!)?
 	|		NUMBER
+	|		RAM^ LPAREN! operatorExpr RPAREN!
 	;
 
 operator:		AND | OR | XOR | ADD | MINUS;

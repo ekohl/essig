@@ -84,8 +84,8 @@ param	: ^(i=word  v=word)
 	-> template(v={$NUMBER.text}) "// FIXME size = <v>;"
 	;
 
-argument:	IDENTIFIER
-	-> template(name={$IDENTIFIER}) "<name>"
+argument:  {int signed=0;} (SIGNED{signed=0;})? IDENTIFIER
+		-> template(name={$IDENTIFIER},signed={($SIGNED!=null)}) "<if(signed)> <name> = (int) vm_convert_to_signed(<name>,<name>_bits); <endif>"
 	;
 
 expr	:	assignExpr
@@ -126,6 +126,7 @@ word returns [String comment = ""]:
 		}
 	// FIXME: Also handle $i
 	-> wordVariable (variable={var.getName()},bit={var.getNumber()},type={var.getType()},not={$NOT != null})
+	|		RAM operatorExpr
 	;
 
 operator:      (o=AND | o=OR | o=XOR | o=ADD | o=MINUS)

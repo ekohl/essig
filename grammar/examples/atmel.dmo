@@ -296,7 +296,7 @@ atmel {
 		stxplus opcode="1001 001r rrrr 1101" X, Rr {
 			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
 			// TODO Store Rr to Dataspace[X]
-			//RAM(RX) = Rr;
+			//ram(r) = Rr;
 			//RX = RX + 1; TODO
 			PC = PC + 1;
 		}

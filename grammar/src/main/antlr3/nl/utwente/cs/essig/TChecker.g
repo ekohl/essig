@@ -113,7 +113,7 @@ expr:
 	;
 
 assignExpr:
-		^(ASSIGN IDENTIFIER operatorExpr)
+		^(ASSIGN (IDENTIFIER | (RAM operatorExpr)) operatorExpr)
 	;
 ifExpr:
 		^(IF condition expr+ (ELSE expr+)?)
@@ -133,6 +133,7 @@ word:
 	|	^(id=IDENTIFIER NOT? IDENTIFIER?) {
 			symbolTable.getDeclaration(new Variable($id.text).getName(), $id);
 		}
+	| (RAM operatorExpr)
 	;
 
 operator:	AND | OR | XOR | ADD | MINUS;
