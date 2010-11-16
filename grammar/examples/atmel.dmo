@@ -296,7 +296,7 @@ atmel {
 		stxplus opcode="1001 001r rrrr 1101" X, Rr {
 			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
 			// TODO Store Rr to Dataspace[X]
-			//ram(r) = Rr;
+			ram(R(26)) = Rr; //TODO this are not just single bytes, but TWO registers
 			//RX = RX + 1; TODO
 			PC = PC + 1;
 		}
@@ -306,7 +306,7 @@ atmel {
 		stdyplus opcode="1000 001r rrrr 1000" Rr {
 			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
 			// TODO Store Rr to Dataspace[RY]
-			//RAM(RY) = Rr;
+			ram(R(28)) = Rr; //TODO this are not just single bytes, but TWO registers
 			//RY = RY + 1; TODO
 			PC = PC + 1;
 		}
@@ -315,7 +315,7 @@ atmel {
 		stdzplus opcode="10q0 qq1r rrrr 0qqq" q, Rr {
 			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
 			// TODO Store Rr to Dataspace[RZ]
-			//RAM(RZ + q) = Rr; TODO
+			ram(R(30) + q) = Rr; //TODO this are not just single bytes, but TWO registers
 			PC = PC + 1;
 		}
 

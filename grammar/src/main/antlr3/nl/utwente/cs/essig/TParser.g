@@ -86,9 +86,9 @@ condition:		word EQUALS^ word
 	;
 
 word	:		NOT? IDENTIFIER^
-				(LPAREN! IDENTIFIER RPAREN!)?
+				(LPAREN! (IDENTIFIER|NUMBER) RPAREN!)?
 	|		NUMBER
 	|		RAM^ LPAREN! operatorExpr RPAREN!
 	;
 
-operator:		AND | OR | XOR | ADD | MINUS;
+operator:		AND | OR | XOR | ADD | MINUS | MULT;
