@@ -229,6 +229,8 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
     opcode_handler *handler;
     VMInterruptCallable *callable;
     VMInterruptItem *interrupt_item, *previous_interrupt_item = NULL;
+
+#define RETURN(x) do { RELEASE_STATE(state); return (x); } while(0)
     
     *hit_bp = false;
 #ifdef VM_DEBUG
@@ -239,16 +241,14 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
            contention! */
         ACQUIRE_STATE(state);
         if (state->break_async) {
-            *hit_bp = true;
-            RELEASE_STATE(state); 
-            break;
+            RETURN(true);
         }
         
         callable = state->interrupt_callables;
         while (callable) {
             if (!callable->func(state, callable->argument)) {
                 vm_seterrno(VM_INTERRUPT_CALLABLE_ERROR);
-                return false;
+                RETURN(false);
             }
             callable = callable->next;
         }
@@ -283,8 +283,7 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
         } else if (_hit_breakpoint(state)) {
             /* breakpoint */
             *hit_bp = true;
-             RELEASE_STATE(state);
-            break;
+            RETURN(true);
         } else {
             
             /* PC error checking */
@@ -301,7 +300,7 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
                     printf(LOCATION " pc: %lu max pc: %lu\n", 
                            pc, state->instructions_size - 1);
 #endif
-                    return false;
+                    RETURN(false);
                 }
             }
             
@@ -312,7 +311,7 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
                 
                 diff->next = vm_newdiff();
                 if (!diff->next)
-                    return false;
+                    RETURN(false);
                 
                 diff = diff->next;
             }
@@ -321,19 +320,21 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
             opcode = (Opcode *) OPCODE(state);
             handler = opcode_handlers[opcode->opcode_index].handler;
 #ifdef VM_DEBUG
-            printf("%-20s 0x%-18u 0x%-18u\n", 
+            printf("%-20s 0x%-18x 0x%-18x\n", 
                    opcode_handlers[opcode->opcode_index].opcode_name,
                    state->registers[PC],
                    opcode->instruction);
 #endif
-            if (!handler(state, diff, opcode->instruction))
-                return false;
+            if (!handler(state, diff, opcode->instruction)) {
+                RETURN(state->stopped_running);
+            }
         }
         nsteps--;
         
         RELEASE_STATE(state);
     }
-    return true;
+
+#undef RETURN
 }
 
 static OPCODE_TYPE *
@@ -404,7 +405,7 @@ vm_cont(VMState *state, VMStateDiff *diff, bool *hit_bp)
     while (true) {
         if (!vm_step(state, 1000, diff, hit_bp))
             return false;
-        if (*hit_bp)
+        if (*hit_bp || state->stopped_running)
             break;
     }
     return true;
@@ -614,7 +615,7 @@ disassemble(OPCODE_TYPE *assembly, size_t assembly_length)
         char *name;
         OPCODE_TYPE instruction = assembly[i];
         
-        vm_convert_to_host_endianness((char *) &instruction, sizeof(instruction));
+        // vm_convert_to_host_endianness((char *) &instruction, sizeof(instruction));
         
         if (is_arg) {
             /* Not an actual opcode, but an argument to another opcode

@@ -116,8 +116,10 @@ class SimulatorCLI(cmd.Cmd, object):
         
         if not vm_cont(sim.state, NULL, &hit_bp):
             self.print_err()
-        
-        if hit_bp:
+
+        if sim.state.stopped_running:
+            print 'Stopped running.'
+        elif hit_bp:
             pc = (<Simulator> self.simulator).registers[PC]
             print 'Hit breakpoint at %x' % pc
     

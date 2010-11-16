@@ -68,6 +68,7 @@ cdef extern from "vm.h":
         OPCODE_TYPE *ram
         OPCODE_TYPE *registers
         OPCODE_TYPE *pins
+        bool stopped_running
     
     cdef extern OpcodeHandler opcode_handlers[]
     cdef extern Register registers[]

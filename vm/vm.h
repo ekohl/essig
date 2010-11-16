@@ -138,6 +138,8 @@ typedef struct VMState {
     volatile sig_atomic_t break_async;
     /*! List of breakpoints */
     struct VMBreakpoint *breakpoints;
+    /*! Indicates whether the program stopped running (i.e. terminated) */
+    bool stopped_running;
     /*! Keep this as the last member in the struct in case people build their
         code without VM_WITH_THREADS and vm.so with VM_WITH_THREADS (or vice
         versa). */
