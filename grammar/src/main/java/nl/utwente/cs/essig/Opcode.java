@@ -78,10 +78,11 @@ public class Opcode {
 
 			// Build a string that looks like:
 			// int ADDR = 0; AddBit(&ADDR,opcode,INDEX); \n
-			builder.append("int ").append(addr).append(" = 0; int ").append(addr).append("_bits = 0; ");
+			builder.append("int ").append(addr).append(" = 0;\nint ").append(addr)
+				.append("_bits = ").append(entry.getValue().size()).append(";\n");
 			for (Integer index : entry.getValue()) {
 				builder.append("AddBit(&").append(addr).append(",opcode,")
-						.append(index).append("); ").append(addr).append("_bits++; ");
+						.append(index).append(");\n");
 			}
 			builder.append("\n");
 		}
