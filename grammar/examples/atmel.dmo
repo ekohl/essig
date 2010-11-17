@@ -198,7 +198,7 @@ atmel {
 
 		/* Load Direct from Data Space */
 		lds opcode="1001 000d dddd 0000 kkkk kkkk kkkk kkkk" Rd, k{
-			//Rd = RAM(k); TODO
+			Rd = ram(k); //TODO
 			PC = PC + 2;
 		}
 
@@ -307,6 +307,14 @@ atmel {
 			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
 			// TODO Store Rr to Dataspace[RY]
 			ram(R(28)) = Rr; //TODO this are not just single bytes, but TWO registers
+			//RY = RY + 1; TODO
+			PC = PC + 1;
+		}
+
+		stdyplusq opcode="10q0 qq1r rrrr 1qqq" Rr,q {
+			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
+			// TODO Store Rr to Dataspace[RY]
+			ram(R(28) + q) = Rr; //TODO this are not just single bytes, but TWO registers
 			//RY = RY + 1; TODO
 			PC = PC + 1;
 		}
