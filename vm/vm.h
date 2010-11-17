@@ -9,6 +9,7 @@
 #include <signal.h>
 #include <stdarg.h>
 
+#include "vmerrno.h"
 #include "generated_simulator.h"
 
 #ifdef VM_WITH_THREADS

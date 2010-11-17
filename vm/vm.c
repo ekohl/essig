@@ -24,13 +24,6 @@
 
 static bool _read_elf(VMState *state, char *program, size_t program_size);
 
-enum _vmerrno {
-#   define __vm_errno__(a,b) a,
-#   include "vmerrno.h"
-#   undef __vm_errno__
-    VM_ERROR_NUM
-};
-
 static char *_vm_error_messages[] = { 
 #   define __vm_errno__(a,b) b,
 #   include "vmerrno.h"

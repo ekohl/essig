@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "simulator.h"
+#include "vmerrno.h"
 
 // Spec for atmel
 
@@ -1160,28 +1161,39 @@ bool lds (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	// result
 	int result = 0;
 
-	
-
 	// Decode the opcode
-	int d = 0; int d_bits = 0; AddBit(&d,opcode,24); d_bits++; AddBit(&d,opcode,23); d_bits++; AddBit(&d,opcode,22); d_bits++; AddBit(&d,opcode,21); d_bits++; AddBit(&d,opcode,20); d_bits++; 
-	int k = 0; int k_bits = 0; AddBit(&k,opcode,15); k_bits++; AddBit(&k,opcode,14); k_bits++; AddBit(&k,opcode,13); k_bits++; AddBit(&k,opcode,12); k_bits++; AddBit(&k,opcode,11); k_bits++; AddBit(&k,opcode,10); k_bits++; AddBit(&k,opcode,9); k_bits++; AddBit(&k,opcode,8); k_bits++; AddBit(&k,opcode,7); k_bits++; AddBit(&k,opcode,6); k_bits++; AddBit(&k,opcode,5); k_bits++; AddBit(&k,opcode,4); k_bits++; AddBit(&k,opcode,3); k_bits++; AddBit(&k,opcode,2); k_bits++; AddBit(&k,opcode,1); k_bits++; AddBit(&k,opcode,0); k_bits++; 
+	int d = 0; 
+    int d_bits = 5;
+
+    AddBit(&d,opcode,8);
+    AddBit(&d,opcode,7); 
+    AddBit(&d,opcode,6); 
+    AddBit(&d,opcode,5);
+    AddBit(&d,opcode,4); 
 
 
-	//Arguments (cast if signed)
-
-
-
-	// Execute expressions
+    // Execute expressions
 	//  = PC + 2 
 	// Calculate expressions for the result var
-	result =  vm_info(state,VM_INFO_REGISTER,PC,&error) + 2 ;
+	result =  vm_info(state,VM_INFO_REGISTER,PC,&error);
 	// Check if there was an error in the calculation of the result
 	if (error)
 		return false;
-
+    
+    if (result < 0 || result + 1 >= state->instructions_size) {
+        vm_seterrno(VM_PC_OUT_OF_BOUNDS);
+        return false;
+    }
+    
+    OPCODE_TYPE k = state->instructions[result + 1].instruction;
+    
+    result += 2;
+    
 	if(!vm_write(state, diff, VM_INFO_REGISTER, PC, result))
 		return false;
-	int R = result;
+	
+    if (!vm_write(state, diff, VM_INFO_REGISTER, d, k))
+        return false;
 
 	return true;
 }
@@ -1747,6 +1759,23 @@ bool stdyplus (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
 	return true;
 }
+
+bool stdyplusq(VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
+	bool error = false;
+    
+    // TODO: FIX THIS INSTRUCTION
+    
+    OPCODE_TYPE result =  vm_info(state,VM_INFO_REGISTER,PC,&error) + 1 ;
+	// Check if there was an error in the calculation of the result
+	if (error)
+		return false;
+
+	if(!vm_write(state, diff, VM_INFO_REGISTER, PC, result))
+		return false;
+
+	return true;
+}
+
 bool stdzplus (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	// error
 	bool error = false;
@@ -1981,6 +2010,7 @@ OpcodeHandler opcode_handlers[] = {
 	{ "lddzmin", 0b1001000000000010, 0b1111111000001111, (opcode_handler *) lddzmin },
 	{ "lddzplus", 0b1001000000000001, 0b1111111000001111, (opcode_handler *) lddzplus },
 	{ "lddzq", 0b1000000000000000, 0b1101001000001000, (opcode_handler *) lddzq },
+    {"lds",  0b1001000000000000,   0b1111111000001111, (opcode_handler *) lds },
 // 	{ "lds", 0b10010000000000000000000000000000, 0b11111110000011110000000000000000, (opcode_handler *) lds },
 	{ "lsr", 0b1001010000000110, 0b1111111000001111, (opcode_handler *) lsr },
 	{ "lpm", 0b1001010111001000, 0b1111111111111111, (opcode_handler *) lpm },
@@ -1997,6 +2027,7 @@ OpcodeHandler opcode_handlers[] = {
 	{ "stxplus", 0b1001001000001101, 0b1111111000001111, (opcode_handler *) stxplus },
 	{ "stdyplus", 0b1000001000001000, 0b1111111000001111, (opcode_handler *) stdyplus },
 	{ "stdzplus", 0b1000001000000000, 0b1101001000001000, (opcode_handler *) stdzplus },
+    { "stdyplusq", 0b1000001000001000, 0b1101001000001000, (opcode_handler *) stdyplusq },
 	{ "subi", 0b101000000000000, 0b1111000000000000, (opcode_handler *) subi },
 	{ "sbci", 0b100000000000000, 0b1111000000000000, (opcode_handler *) sbci }
 };
