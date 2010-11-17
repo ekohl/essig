@@ -45,6 +45,22 @@ OpcodeHandler opcode_handlers[] = {
 // End of instructions
 >>
 
+opcodehandler(it) ::= <<
+{ "<it.name>", 0b<it.opcode>, 0b<it.mask>, (opcode_handler *) <it.name> }
+>>
+
+param(name,value) ::= <<
+<name> = <value>;
+>>
+
+cycles(cycles) ::= <<
+state->cycles += <cycles>;
+>>
+
+register(name) ::= <<
+"<name>"
+>>
+
 ram (ram) ::= <<
 size_t ramsize = <ram>;
 >>
@@ -57,24 +73,6 @@ int standard_clock = <clock>;
 instruction_return_size (size) ::= <<
 // Standard size (words) of 1 instruction return value;
 int instruction_return_size = <size>;
->>
-
-assignExpr(var,type,value,comment,is_result) ::= <<
-// <comment>
-// Calculate expressions for the result var
-result = <value>;
-// Check if there was an error in the calculation of the result
-if (error)
-	return false;
-
-<if(!is_result)>
-if(!vm_write(state, diff, VM_INFO_<type>, <var>, result))
-	return false;
-<endif>
->>
-
-condition(left,right) ::= <<
-<left> == <right>
 >>
 
 instruction(name,params,arguments,expressions) ::= <<
@@ -102,16 +100,13 @@ bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 }
 >>
 
-opcodehandler(it) ::= <<
-{ "<it.name>", 0b<it.opcode>, 0b<it.mask>, (opcode_handler *) <it.name> }
+argument(name, signed) ::= <<
+<if(signed)> <name> = (int) vm_convert_to_signed(<name>,<name>_bits); <endif>
 >>
 
-param(name,value) ::=  <<
-<name> = <value>;
->>
-
-register(name) ::= <<
-"<name>"
+resultExpr(expression) ::= <<
+<expression>
+int R = result;
 >>
 
 ifExpr(conditio,ifExpr,elseExpr) ::= <<
@@ -125,19 +120,28 @@ else {
 <endif>
 >>
 
-resultExpr(expression) ::= <<
-<expression>
-int R = result;
->>
-
 operatorExpr(word,operator,expression) ::= <<
 <word> <operator> <expression> 
 >>
 
-wordVariable(variable, bit, type, not) ::= <<
-<if(not)>!<endif> <if(bit)>
-GetBit(vm_info(state,VM_INFO_<type>,<variable>,&error), <bit>)
-<else>
-vm_info(state,VM_INFO_<type>,<variable>,&error)
+assignExpr(var,type,value,comment,is_result) ::= <<
+// <comment>
+// Calculate expressions for the result var
+result = <value>;
+// Check if there was an error in the calculation of the result
+if (error)
+	return false;
+
+<if(!is_result)>
+if(!vm_write(state, diff, VM_INFO_<type>, <var>, result))
+	return false;
 <endif>
+>>
+
+condition(left,right) ::= <<
+<left> == <right>
+>>
+
+wordVariable(variable, bit, type, not) ::= <<
+<if(not)>!<endif> <if(bit)>GetBit(<endif>vm_info(state,VM_INFO_<type>,<variable>,&error)<if(bit)>, <bit>)<endif>
 >>
