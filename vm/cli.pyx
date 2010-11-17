@@ -263,8 +263,8 @@ cdef bool python_callback(VMState *state, void *argument):
 
 def register_callback(Simulator sim, callback):
     Py_INCREF(callback)
-    if not vm_register_interrupt_callable(sim.state, <void *> &python_callback, 
-                                          <void *> callback):
+    if not <int> vm_register_interrupt_callable(
+                    sim.state, <void *> &python_callback, <void *> callback):
         raise VMError()
 
 
