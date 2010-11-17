@@ -112,7 +112,7 @@ _hit_breakpoint(VMState *state)
     
     bp = state->breakpoints;
     while (bp) {
-        if (state->breakpoints->offset == state->registers[PC])
+        if (bp->offset == state->registers[PC])
             return true;
         
         bp = bp->next;
@@ -215,8 +215,8 @@ vm_closediff(VMStateDiff *diff)
 
 /* control functions */
 
-bool 
-vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
+static bool 
+_vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp, bool first)
 {
     Opcode *opcode;
     opcode_handler *handler;
@@ -273,7 +273,7 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
                 // interrupt_item = interrupt_item->next;
                 // 
             // }
-        } else if (_hit_breakpoint(state)) {
+        } else if (!first && _hit_breakpoint(state)) {
             /* breakpoint */
             *hit_bp = true;
             RETURN(true);
@@ -326,11 +326,18 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
             }
         }
         nsteps--;
-        
+        first = false;
         RELEASE_STATE(state);
     }
-
+    
+    return true;
 #undef RETURN
+}
+
+bool 
+vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
+{
+    return _vm_step(state, nsteps, diff, hit_bp, true);
 }
 
 static OPCODE_TYPE *
@@ -395,17 +402,35 @@ vm_rstep(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
     return diff;
 }
 
-bool
-vm_cont(VMState *state, VMStateDiff *diff, bool *hit_bp)
+
+static bool
+_vm_cont(VMState *state, VMStateDiff *diff, bool *hit_bp, bool first)
 {
     while (true) {
-        if (!vm_step(state, 1000, diff, hit_bp))
+        if (!_vm_step(state, 1000, diff, hit_bp, first))
             return false;
         if (*hit_bp || state->stopped_running)
             break;
+        
+        first = false;
     }
     return true;
 }
+
+
+bool
+vm_cont(VMState *state, VMStateDiff *diff, bool *hit_bp)
+{
+    return _vm_cont(state, diff, hit_bp, true);
+}
+
+
+bool
+vm_run(VMState *state, VMStateDiff *diff, bool *hit_bp)
+{
+    return _vm_cont(state, diff, hit_bp, false);
+}
+
 
 VMStateDiff *
 vm_rcont(VMState *state, VMStateDiff *diff, bool *hit_bp)

@@ -18,6 +18,11 @@ run: cli
 run-debug: cli
 	cygdb . --args $(PYTHON) simulator.py $(TESTFILE)
 
+run-pdb: cli
+	$(PYTHON) -m pdb simulator.py $(TESTFILE)
+
+
+
 # problem if the user has a 64-bit OS but a 32-bit Python
 # We could have distutils do everything, if we care
 cli: $(OBJECTS)

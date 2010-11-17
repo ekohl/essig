@@ -59,6 +59,9 @@ cdef extern from "vm.h":
         char *name
         size_t offset
 
+    ctypedef struct VMInterruptCallable:
+        pass
+
     ctypedef struct VMState:
         Opcode *instructions
         size_t instructions_size
@@ -69,6 +72,7 @@ cdef extern from "vm.h":
         OPCODE_TYPE *registers
         OPCODE_TYPE *pins
         bool stopped_running
+        VMInterruptCallable *interrupt_callables
     
     cdef extern OpcodeHandler opcode_handlers[]
     cdef extern Register registers[]
@@ -81,9 +85,10 @@ cdef extern from "vm.h":
     void vm_closestate(VMState *)
     void vm_closediff(VMStateDiff *)
     bint vm_break(VMState *state, size_t code_offset)
-    bint vm_cont(VMState *state, VMStateDiff *diffs, bint *hit_bp)
+    bint vm_cont(VMState *state, VMStateDiff *diffs, bool *hit_bp)
     VMStateDiff *vm_rcont(VMState *state, VMStateDiff *diffs, bint *hit_bp)
     bint vm_step(VMState *state, int nsteps, VMStateDiff *diffs, bint *hit_bp)
+    bint vm_run(VMState *state, VMStateDiff *diff, bint *hit_bp)
     VMStateDiff *vm_rstep(VMState *state, int nsteps, VMStateDiff *diffs, 
                           bint *hit_bp)
     void vm_break_async_from_signal(VMState *state)

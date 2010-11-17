@@ -8,22 +8,61 @@ import os
 import sys
 import cmd
 import glob
+import functools
 import traceback
 import subprocess
 
 
-class VMError(Exception):
-    "raised for any error originating in the simulator"
+class CLIError(Exception):
+    
     def __init__(self, *args):
         if not args:
             args = vm_strerror(-1),
             
-        super(VMError, self).__init__(args)
-        
+        super(CLIError, self).__init__(*args)
+
+class VMError(CLIError):
+    "raised for any error originating in the simulator"
+
+class ErrorMessage(CLIError):
+    "raised to print error messages"
+
+
+class CreateClosure(object):
+    "Helper class because Cython can't deal with closures."
     
+    def __init__(self, func):
+        self.func = func
+        self.obj = None
+    
+    def __call__(self, *args, **kwargs):
+        cdef Simulator sim = self.obj.simulator
+        
+        if sim.state.stopped_running:
+            raise ErrorMessage('The program has stopped running.')
+        elif not sim.running:
+            raise ErrorMessage("The program is not running. Use the 'run' "
+                               "command to start it.")
+        
+        self.obj.check_hit_breakpoint(self.func(self.obj, *args, **kwargs))
+        
+        if sim.state.stopped_running:
+            raise ErrorMessage('The program has stopped running.')
+        
+    def __get__(self, obj, type=None):
+        "Implement a non-data/non-overriding descriptor to bind the method."
+        self.obj = obj
+        return self
+
+
+def resume_execution_decorator(func):
+    return functools.wraps(func)(CreateClosure(func))
+
+
 cdef class Simulator(object):
     cdef VMState *state
     cdef VMStateDiff *diff
+    cdef public bint running
     cdef instructions
     
     def __init__(self, instructions):
@@ -32,12 +71,40 @@ cdef class Simulator(object):
         """
         # ensure a reference to self.instructions
         self.instructions = instructions
+        self.state = NULL
+        self.load_state()
+        
+    
+    def load_state(self):
+        """
+        Load the underlying VMState. If a previous state was set, deallocate 
+        it. We need this to implement the 'run' command.
+        """
+        cdef VMBreakpoint *breakpoints = NULL
+        cdef VMInterruptCallable *interrupt_callables = NULL
+        
+        if self.state:
+            # copy breakpoints and interrupt_callables (i.e., ensure they don't
+            # get deallocated and save a pointer
+            breakpoints = self.state.breakpoints
+            interrupt_callables = self.state.interrupt_callables
+            
+            self.state.breakpoints = NULL
+            self.state.interrupt_callables = NULL
+            
+            vm_closestate(self.state)
+            vm_closediff(self.diff)
+        
+        self.running = False
         
         self.state = vm_newstate(<char *> self.instructions, 
                                  len(self.instructions),
                                  VM_POLICY_INTERRUPT_NEVER)
         if not self.state:
             raise VMError()
+        
+        self.state.breakpoints = breakpoints
+        self.state.interrupt_callables = interrupt_callables
         
         self.diff = vm_newdiff()
         if not self.diff:
@@ -60,7 +127,7 @@ cdef class Simulator(object):
     property cycles:
         def __get__(self):
             return self.state.cycles
-    
+
             
 class SimulatorCLI(cmd.Cmd, object):
     
@@ -71,6 +138,10 @@ class SimulatorCLI(cmd.Cmd, object):
         self.symtab = self.read_symtab()
         self.symtab_offset_to_func = {v : k for k, v in self.symtab.items()}
         self.prompt = '(sim) '
+        
+        # indicates whether the 'run' command has been called. If it has been
+        # called before, have Simulator allocate a new VMState
+        self.firstrun = True
     
     def read_symtab(self):
         p = subprocess.Popen(['nm', self.program], stdout=subprocess.PIPE)
@@ -107,21 +178,53 @@ class SimulatorCLI(cmd.Cmd, object):
     def complete_break(self, text, line, beginidx, endidx):
         return self.complete_from_it(text, self.symtab)
     
-    def do_cont(self, args):
-        "continue or run the program"
-        cdef Simulator sim
+    def do_run(self, args):
+        "Start the program."
+        cdef Simulator sim = self.simulator
         cdef bint hit_bp
         
-        sim = self.simulator
+        if not self.firstrun:
+            self.simulator.load_state()
+        
+        self.firstrun = False
+    
+        self.simulator.running = True
+        if not vm_run(sim.state, NULL, &hit_bp):
+            raise ErrorMessage()
+
+        self.check_hit_breakpoint(hit_bp)
+    
+    @resume_execution_decorator
+    def do_cont(self, args):
+        "continue or run the program"
+        cdef Simulator sim = self.simulator
+        cdef bool hit_bp
         
         if not vm_cont(sim.state, NULL, &hit_bp):
-            self.print_err()
+            raise ErrorMessage()
 
-        if <int> sim.state.stopped_running:
-            print 'Stopped running.'
-        elif hit_bp:
-            pc = (<Simulator> self.simulator).registers[PC]
-            print 'Hit breakpoint at %x' % pc
+        return hit_bp
+    
+    @resume_execution_decorator
+    def do_step(self, nsteps_str):
+        "Make a single step to the next instruction."
+        cdef Simulator sim = self.simulator
+        cdef bint hit_bp
+        
+        if nsteps_str:
+            try:
+                nsteps = int(nsteps_str)
+                if nsteps <= 0:
+                    raise ValueError
+            except ValueError:
+                return self.print_err('Invalid number of steps: %r' % nsteps_str)
+        else:
+            nsteps = 1
+        
+        if not vm_step(sim.state, nsteps, sim.diff, &hit_bp):
+            raise VMError()
+        
+        return hit_bp
     
     def info_breakpoints(self, Simulator sim, about):
         cdef VMBreakpoint *bp = sim.state.breakpoints
@@ -143,10 +246,15 @@ class SimulatorCLI(cmd.Cmd, object):
         print sim.state.cycles, 'cycles have passed.'
     
     def info_registers(self, Simulator sim, about, register=None):
+        if register is None:
+            fmt = '%-15s 0x%-*x'
+        else:
+            fmt = '%s 0x%-*x'
+    
         for i in range(nregisters):
             if register is None or registers[i].name == register:
                 val = sim.state.registers[registers[i].offset]
-                print '%-15s 0x%016x' % (registers[i].name, val)
+                print fmt % (registers[i].name, sizeof(OPCODE_TYPE) * 2, val)
                 if register is not None:
                     break
         else:
@@ -244,10 +352,24 @@ class SimulatorCLI(cmd.Cmd, object):
     
     do_exit = do_quit = do_EOF
     
+    def cmdloop(self, banner):
+        while True:
+            try:
+                super(SimulatorCLI, self).cmdloop(banner)
+            except ErrorMessage, e:
+                sys.stderr.write(str(e) + '\n')
+            
+            banner = ''
+    
+    def check_hit_breakpoint(self, hit_bp):
+        if hit_bp:
+            print 'We hit a breakpoint:',
+            self.info_register(self.simulator, 'PC')
+    
     def print_err(self, msg=None):
         if msg is None:
             msg = vm_strerror(-1)
-        sys.stderr.write(msg + "\n")
+        raise ErrorMessage(msg + "\n")
 
 
 cdef bool python_callback(VMState *state, void *argument):

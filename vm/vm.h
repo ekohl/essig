@@ -147,7 +147,6 @@ typedef struct VMState {
 #ifdef VM_WITH_THREADS
     pthread_mutex_t lock;
 #endif
-    
 } VMState;
 
 /*! Use this macro as the first attribute of a struct to make it an iterable */
@@ -232,12 +231,16 @@ void vm_closediff(VMStateDiff *);
     \return zero if successfull, nonzero otherwise, with a VM errno set
 */
 bool vm_break(VMState *state, size_t code_offset);
-/*! Resume execution until a breakpoint is met
+/*! Resume execution until a breakpoint is met.
     \param state The state of the VM
     \param[out] diff If not NULL, keep track of differences in the VMState
 */
-
 bool vm_cont(VMState *state, VMStateDiff *diff, bool *hit_bp);
+/*! Start executing a program. This is like vm_cont, except that it doesn't
+    run an instruction before checking for breakpoints. vm_cont() does run an
+    instruction first, otherwise it would never pass any breakpoint it hit. */
+bool vm_run(VMState *state, VMStateDiff *diff, bool *hit_bp);
+
 /*! Resume execution in reverse order (could also do snapshots if we want)
     \param state The state of the VM
     \param[in] diff Each step applies one diff until we reach the beginning
