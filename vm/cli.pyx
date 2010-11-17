@@ -116,8 +116,10 @@ class SimulatorCLI(cmd.Cmd, object):
         
         if not vm_cont(sim.state, NULL, &hit_bp):
             self.print_err()
-        
-        if hit_bp:
+
+        if <int> sim.state.stopped_running:
+            print 'Stopped running.'
+        elif hit_bp:
             pc = (<Simulator> self.simulator).registers[PC]
             print 'Hit breakpoint at %x' % pc
     
@@ -261,8 +263,8 @@ cdef bool python_callback(VMState *state, void *argument):
 
 def register_callback(Simulator sim, callback):
     Py_INCREF(callback)
-    if not vm_register_interrupt_callable(sim.state, <void *> &python_callback, 
-                                          <void *> callback):
+    if not <int> vm_register_interrupt_callable(
+                    sim.state, <void *> &python_callback, <void *> callback):
         raise VMError()
 
 

@@ -75,11 +75,9 @@ extern size_t pinoffset;
 /*! Size of RAM available in the microcontroller */
 extern size_t ramsize;         
 
-/*! Function that executes a single instruction */
+/*! NULL-terminated list of opcode handlers. */
 extern OpcodeHandler opcode_handlers[];
 
-/*! Amount of opcode handlers in the microcontroller */
-extern int n_opcode_handlers;
 
 /*! Holds the register names and offsets */
 extern Register registers[];

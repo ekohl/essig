@@ -79,13 +79,13 @@ instruction:	^(
 param	: ^(i=word  v=word)
 	-> param(name={$i.st},value={$v.comment},comment={$i.st + "=" + $v.comment})
 	|	^(CLOCK NUMBER)
-	-> template(cycles={$NUMBER.text}) "state->cycles += <cycles>;"
+	-> cycles(cycles={$NUMBER.text})
 	|	^(SIZE NUMBER)
 	-> template(v={$NUMBER.text}) "// FIXME size = <v>;"
 	;
 
-argument:  {int signed=0;} (SIGNED{signed=0;})? IDENTIFIER
-		-> template(name={$IDENTIFIER},signed={($SIGNED!=null)}) "<if(signed)> <name> = (int) vm_convert_to_signed(<name>,<name>_bits); <endif>"
+argument:	SIGNED? IDENTIFIER
+	-> argument(name={$IDENTIFIER},signed={$SIGNED})
 	;
 
 expr	:	assignExpr
@@ -94,8 +94,17 @@ expr	:	assignExpr
 	-> {$ifExpr.st}
 	;
 
-assignExpr:	^(ASSIGN {Variable var = new Variable("A");} (IDENTIFIER{var = new Variable($IDENTIFIER.text);}  | RAM op2=operatorExpr {var = new Variable(""+$op2.st,Variable.VariableType.RAM);} ) o=operatorExpr)
-	-> assignExpr(var={var},type={var.getType()},value={$o.st},comment={" = " + $o.comment}, is_result={var.getName().equals("R")})
+assignExpr:	^(
+			ASSIGN { Variable var = new Variable("A"); }
+			(
+				IDENTIFIER
+					{ var = new Variable($IDENTIFIER.text); }
+				| RAM op2=operatorExpr
+					{ var = new Variable($op2.st.toString(),Variable.VariableType.RAM); }
+			)
+			o=operatorExpr
+		)
+	-> assignExpr(var={var},type={var.getType()},value={$o.st},comment={var + " = " + $o.comment}, is_result={var.getName().equals("R")})
 	;
 
 
@@ -120,7 +129,7 @@ word returns [String comment = ""]:
 	|	^( v=IDENTIFIER NOT? (IDENTIFIER|NUMBER)? )
 		{
 			Variable var = new Variable($v.text);
-			if ($NUMBER!=null) var = new Variable($NUMBER.text,Variable.VariableType.REGISTER);			
+			if ($NUMBER!=null) var = new Variable($NUMBER.text,Variable.VariableType.REGISTER);
 			$comment = (($NOT != null) ? $NOT.text : "") + $v.text;
 			
 		}
