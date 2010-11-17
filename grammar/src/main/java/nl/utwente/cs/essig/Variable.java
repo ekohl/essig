@@ -67,6 +67,13 @@ public class Variable {
 		}
 	}
 
+	public Variable(String name, VariableType type) {
+		this.name = name;
+		this.type = type;
+		this.number = null;	
+		
+	}
+
 	/**
 	 * Returns the variable name
 	 * 

@@ -136,4 +136,4 @@ word:
 	| (RAM operatorExpr)
 	;
 
-operator:	AND | OR | XOR | ADD | MINUS;
+operator:	AND | OR | XOR | ADD | MINUS | MULT;
