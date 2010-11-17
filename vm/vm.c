@@ -313,10 +313,13 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
             opcode = (Opcode *) OPCODE(state);
             handler = opcode_handlers[opcode->opcode_index].handler;
 #ifdef VM_DEBUG
+            
             printf("%-20s 0x%-18x 0x%-18x\n", 
                    opcode_handlers[opcode->opcode_index].opcode_name,
                    state->registers[PC],
                    opcode->instruction);
+            /*printf("0x%x\r", GETPC(state));
+            fflush(stdout);*/
 #endif
             if (!handler(state, diff, opcode->instruction)) {
                 RETURN(state->stopped_running);
@@ -602,36 +605,34 @@ disassemble(OPCODE_TYPE *assembly, size_t assembly_length)
     size_t i, j;
     bool some_error = false;
     
-    
     err_malloc(result = malloc(sizeof(Opcode) * assembly_length));
     for (i = 0; i < assembly_length; ++i) {
         bool found = false, is_arg = false;
         char *name;
         OPCODE_TYPE instruction = assembly[i];
         
-        // vm_convert_to_host_endianness((char *) &instruction, sizeof(instruction));
+        vm_convert_to_host_endianness((char *) &instruction, sizeof(instruction));
         
-        if (is_arg) {
-            /* Not an actual opcode, but an argument to another opcode
-               (e.g. ld, st) */
-            result[i].opcode_index = 0; /* nop */
-            result[i].instruction = assembly[i];
-            name = "nop";
-        } else {
-            /* Find the right opcode handler for the current instruction and */
-            for (j = 0; opcode_handlers[j].opcode_name; ++j) {
-                op_handler = &opcode_handlers[j];
-                if ((assembly[i] & op_handler->mask) == op_handler->opcode) {
-                    result[i].opcode_index = j;
-                    result[i].instruction = assembly[i];
-                    found = true;
-                    name = op_handler->opcode_name;
-                    break;
-                }
+        for (j = 0; opcode_handlers[j].opcode_name; ++j) {
+            op_handler = &opcode_handlers[j];
+            if ((assembly[i] & op_handler->mask) == op_handler->opcode) {
+                result[i].opcode_index = j;
+                result[i].instruction = assembly[i];
+                found = true;
+                name = op_handler->opcode_name;
+                break;
             }
         }
         
-        if (!found && !is_arg) {
+        if (is_arg && !found) {
+            /* This is another (16-bits) argument to an instruction. Apparently
+               no instruction handler could be found for the argument. We try
+               to find a handler in any case to allow simulation of code that
+               (incorrectly or maliciously) jumps to an argument. */
+            result[i].opcode_index = 0; /* nop */
+            result[i].instruction = assembly[i];
+            name = "nop";
+        } else if (is_arg && !found) {
 #ifdef VM_DEBUG
             printf(
                 LOCATION " Cannot handle instruction 0x%x at address "

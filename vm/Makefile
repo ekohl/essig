@@ -5,7 +5,7 @@ PYTHON=`which python-dbg || which python`
 
 TESTFILE1=../code-samples/factorial
 TESTFILE2=../code-samples/empty
-TESTFILE=$(TESTFILE1)
+TESTFILE=$(TESTFILE2)
 
 # make sure CFLAGS are also passed to python
 export CFLAGS
