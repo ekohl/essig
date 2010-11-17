@@ -14,6 +14,7 @@ microcontroller(name,parameters,registers,instructions) ::= <<
 int npins = 0;
 size_t pinoffset = 0;
 int nbits_cpu = 16;
+bool is_big_endian = false;
 
 // Registers
 int nregisters = <length(registers)>;
@@ -38,9 +39,9 @@ void AddBit(int *val, int source, int pos)
 // Instructions
 <instructions; separator="\n">
 
-int n_opcode_handlers = <length(instructions)>;
 OpcodeHandler opcode_handlers[] = {
-	<instructions:opcodehandler(); separator=",\n">
+	<instructions:opcodehandler(); separator=",\n">,
+	0
 };
 // End of instructions
 >>

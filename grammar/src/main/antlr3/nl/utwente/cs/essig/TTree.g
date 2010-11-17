@@ -128,14 +128,19 @@ word returns [String comment = ""]:
 	-> template (number={$NUMBER}) "<number>"
 	|	^( v=IDENTIFIER NOT? (IDENTIFIER|NUMBER)? )
 		{
-			Variable var = new Variable($v.text);
-			if ($NUMBER!=null) var = new Variable($NUMBER.text,Variable.VariableType.REGISTER);
+			Variable var;
+			if ($NUMBER == null ) {
+				var = new Variable($v.text);
+			} else {
+				var = new Variable($v.text + $NUMBER.text,Variable.VariableType.REGISTER);
+			}
 			$comment = (($NOT != null) ? $NOT.text : "") + $v.text;
-			
 		}
 	// FIXME: Also handle $i
 	-> wordVariable (variable={var.getName()},bit={var.getNumber()},type={var.getType()},not={$NOT != null})
-	|		RAM operatorExpr
+	|	^(RAM operatorExpr)
+		{ $comment = $RAM + "(" + $operatorExpr.comment + ")"; }
+	-> wordVariable(variable={$operatorExpr.st}, type={"RAM"})
 	;
 
 operator:      (o=AND | o=OR | o=XOR | o=ADD | o=MINUS | o=MULT)
