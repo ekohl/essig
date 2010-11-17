@@ -809,7 +809,7 @@ bool cpi (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	int R = result;
 	//  = !Rd3 & K3 + K3 & R3 + R3 & Rd3     
 	// Calculate expressions for the result var
-	result = ! GetBit(vm_info(state,VM_INFO_REGISTER,d,&error), 3) &  GetBit(K, 3) +  GetBit(K, 3) &  GetBit(vm_info(state,VM_INFO_REGISTER,R,&error), 3) +  GetBit(vm_info(state,VM_INFO_REGISTER,R,&error), 3) &  GetBit(vm_info(state,VM_INFO_REGISTER,d,&error), 3)     ;
+	result = (! GetBit(vm_info(state,VM_INFO_REGISTER,d,&error), 3)) &  GetBit(K, 3) +  GetBit(K, 3) &  GetBit(R, 3) +  GetBit(R, 3) &  GetBit(vm_info(state,VM_INFO_REGISTER,d,&error), 3)     ;
 	// Check if there was an error in the calculation of the result
 	if (error)
 		return false;
@@ -1990,6 +1990,161 @@ bool sbci (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	return true;
 }
 
+bool sbrc (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
+    // error
+    bool error = false;
+
+    // result
+    int result = 0;
+
+    
+
+    // Decode the opcode
+    int b = 0;
+    int b_bits = 3;
+    AddBit(&b,opcode,2);
+    AddBit(&b,opcode,1);
+    AddBit(&b,opcode,0);
+
+    int r = 0;
+    int r_bits = 5;
+    AddBit(&r,opcode,8);
+    AddBit(&r,opcode,7);
+    AddBit(&r,opcode,6);
+    AddBit(&r,opcode,5);
+    AddBit(&r,opcode,4);
+
+
+
+    //Arguments (cast if signed)
+
+
+
+    // Execute expressions
+    if ( vm_info(state,VM_INFO_REGISTER,r,&error) == 0) {
+        // PC = PC + 2 
+        // Calculate expressions for the result var
+        result =  vm_info(state,VM_INFO_REGISTER,PC,&error) + 2 ;
+        // Check if there was an error in the calculation of the result
+        if (error)
+            return false;
+
+        if(!vm_write(state, diff, VM_INFO_REGISTER, PC, result))
+            return false;
+    }
+    else {
+        // PC = PC + 1 
+        // Calculate expressions for the result var
+        result =  vm_info(state,VM_INFO_REGISTER,PC,&error) + 1 ;
+        // Check if there was an error in the calculation of the result
+        if (error)
+            return false;
+
+        if(!vm_write(state, diff, VM_INFO_REGISTER, PC, result))
+            return false;
+    }
+    int R = result;
+
+    return true;
+}
+
+bool com (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
+    // error
+    bool error = false;
+
+    // result
+    int result = 0;
+    
+    // TEMP cycles add
+    state->cycles += 1;
+    
+
+    // Decode the opcode
+    int d = 0;
+    int d_bits = 5;
+    AddBit(&d,opcode,8);
+    AddBit(&d,opcode,7);
+    AddBit(&d,opcode,6);
+    AddBit(&d,opcode,5);
+    AddBit(&d,opcode,4);
+
+
+
+    //Arguments (cast if signed)
+
+
+
+    // Execute expressions
+    // d = 255 - Rd 
+    // Calculate expressions for the result var
+    result = 255 -  vm_info(state,VM_INFO_REGISTER,d,&error) ;
+    // Check if there was an error in the calculation of the result
+    if (error)
+        return false;
+
+    if(!vm_write(state, diff, VM_INFO_REGISTER, d, result))
+        return false;
+    int R = result;
+    // S = N ^ V 
+    // Calculate expressions for the result var
+    result =  vm_info(state,VM_INFO_REGISTER,N,&error) ^  vm_info(state,VM_INFO_REGISTER,V,&error) ;
+    // Check if there was an error in the calculation of the result
+    if (error)
+        return false;
+
+    if(!vm_write(state, diff, VM_INFO_REGISTER, S, result))
+        return false;
+    // V = 0
+    // Calculate expressions for the result var
+    result = 0;
+    // Check if there was an error in the calculation of the result
+    if (error)
+        return false;
+
+    if(!vm_write(state, diff, VM_INFO_REGISTER, V, result))
+        return false;
+    // N = R7
+    // Calculate expressions for the result var
+    result =  GetBit(vm_info(state,VM_INFO_REGISTER,R,&error), 7);
+    // Check if there was an error in the calculation of the result
+    if (error)
+        return false;
+
+    if(!vm_write(state, diff, VM_INFO_REGISTER, N, result))
+        return false;
+    // Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0       
+    // Calculate expressions for the result var
+    result = ! GetBit(vm_info(state,VM_INFO_REGISTER,R,&error), 7) & ! GetBit(vm_info(state,VM_INFO_REGISTER,R,&error), 6) & ! GetBit(vm_info(state,VM_INFO_REGISTER,R,&error), 5) & ! GetBit(vm_info(state,VM_INFO_REGISTER,R,&error), 4) & ! GetBit(vm_info(state,VM_INFO_REGISTER,R,&error), 3) & ! GetBit(vm_info(state,VM_INFO_REGISTER,R,&error), 2) & ! GetBit(vm_info(state,VM_INFO_REGISTER,R,&error), 1) & ! GetBit(vm_info(state,VM_INFO_REGISTER,R,&error), 0)       ;
+    // Check if there was an error in the calculation of the result
+    if (error)
+        return false;
+
+    if(!vm_write(state, diff, VM_INFO_REGISTER, Z, result))
+        return false;
+    // C = 1
+    // Calculate expressions for the result var
+    result = 1;
+    // Check if there was an error in the calculation of the result
+    if (error)
+        return false;
+
+    if(!vm_write(state, diff, VM_INFO_REGISTER, C, result))
+        return false;
+    // PC = PC + 1 
+    // Calculate expressions for the result var
+    result =  vm_info(state,VM_INFO_REGISTER,PC,&error) + 1 ;
+    // Check if there was an error in the calculation of the result
+    if (error)
+        return false;
+
+    if(!vm_write(state, diff, VM_INFO_REGISTER, PC, result))
+        return false;
+
+    return true;
+}
+
+
+
 int n_opcode_handlers = 35;
 OpcodeHandler opcode_handlers[] = {
 	{ "adc", 0b1110000000000, 0b1111110000000000, (opcode_handler *) adc },
@@ -1997,7 +2152,7 @@ OpcodeHandler opcode_handlers[] = {
 	{ "adiw", 0b1001011000000000, 0b1111111100000000, (opcode_handler *) adiw },
 	{ "and", 0b10000000000000, 0b1111110000000000, (opcode_handler *) and },
 	{ "breq", 0b1111000000000001, 0b1111110000000111, (opcode_handler *) breq },
-	{ "brge", 0b111101000000100, 0b111111000000111, (opcode_handler *) brge },
+	{ "brge", 0b1111010000000100, 0b1111110000000111, (opcode_handler *) brge },
 	{ "brne", 0b1111010000000001, 0b1111110000000111, (opcode_handler *) brne },
 	{ "cli", 0b1001010011111000, 0b1111111111111111, (opcode_handler *) cli },
 	{ "cp", 0b1010000000000, 0b1111110000000000, (opcode_handler *) cp },
@@ -2029,6 +2184,9 @@ OpcodeHandler opcode_handlers[] = {
 	{ "stdzplus", 0b1000001000000000, 0b1101001000001000, (opcode_handler *) stdzplus },
     { "stdyplusq", 0b1000001000001000, 0b1101001000001000, (opcode_handler *) stdyplusq },
 	{ "subi", 0b101000000000000, 0b1111000000000000, (opcode_handler *) subi },
-	{ "sbci", 0b100000000000000, 0b1111000000000000, (opcode_handler *) sbci }
+	{ "sbci", 0b100000000000000, 0b1111000000000000, (opcode_handler *) sbci },
+    { "sbrc", 0b1111110000000000, 0b1111111000001000, (opcode_handler *) sbrc },
+    { "com", 0b1001010000000000, 0b1111111000001111, (opcode_handler *) com },
+    0,
 };
 // End of instructions

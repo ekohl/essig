@@ -26,7 +26,7 @@ static bool _read_elf(VMState *state, char *program, size_t program_size);
 
 static char *_vm_error_messages[] = { 
 #   define __vm_errno__(a,b) b,
-#   include "vmerrno.h"
+#   include "vmerrors.h"
 #   undef __vm_errno__
 };
 
@@ -600,6 +600,7 @@ disassemble(OPCODE_TYPE *assembly, size_t assembly_length)
     Opcode *result = NULL;
     OpcodeHandler *op_handler;
     size_t i, j;
+    bool some_error = false;
     
     
     err_malloc(result = malloc(sizeof(Opcode) * assembly_length));
@@ -618,7 +619,7 @@ disassemble(OPCODE_TYPE *assembly, size_t assembly_length)
             name = "nop";
         } else {
             /* Find the right opcode handler for the current instruction and */
-            for (j = 0; j < n_opcode_handlers; ++j) {
+            for (j = 0; opcode_handlers[j].opcode_name; ++j) {
                 op_handler = &opcode_handlers[j];
                 if ((assembly[i] & op_handler->mask) == op_handler->opcode) {
                     result[i].opcode_index = j;
@@ -639,7 +640,7 @@ disassemble(OPCODE_TYPE *assembly, size_t assembly_length)
                 (unsigned int) (i * sizeof(OPCODE_TYPE)));
 #endif
             vm_seterrno(VM_ILLEGAL_INSTRUCTION);
-            return false;
+            some_error = true;
         }
         
         /* For now, use this. Later, rely on opcode_handler->next_is_arg. */
@@ -649,6 +650,9 @@ disassemble(OPCODE_TYPE *assembly, size_t assembly_length)
                   strcmp(name, "elpm") == 0);
         // is_arg = op_handler->next_is_arg;
     }
+
+    if (some_error)
+        goto error;
 
     return result;
 error:
