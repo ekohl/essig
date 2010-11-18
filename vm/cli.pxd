@@ -71,7 +71,7 @@ cdef extern from "vm.h":
         OPCODE_TYPE *ram
         OPCODE_TYPE *registers
         OPCODE_TYPE *pins
-        bool stopped_running
+        bint stopped_running
         VMInterruptCallable *interrupt_callables
     
     cdef extern OpcodeHandler opcode_handlers[]
