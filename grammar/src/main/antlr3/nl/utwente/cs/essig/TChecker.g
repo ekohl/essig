@@ -103,7 +103,7 @@ param:
 	;
 
 argument:		
-		IDENTIFIER {
+		SIGNED? IDENTIFIER {
 			symbolTable.declare(new Variable($IDENTIFIER.text).getName(), $IDENTIFIER);
 		}
 	;
@@ -130,10 +130,17 @@ condition:
 
 word:
 		NUMBER
-	|	^(id=IDENTIFIER NOT? IDENTIFIER?) {
-			symbolTable.getDeclaration(new Variable($id.text).getName(), $id);
+	|	^(id=IDENTIFIER NOT? (IDENTIFIER|n=NUMBER)? )
+		{
+			Variable var;
+			if ($n == null ) {
+				var = new Variable($id.text);
+			} else {
+				var = new Variable($id.text + $n.text,Variable.VariableType.REGISTER);
+			}
+			symbolTable.getDeclaration(var.getName(), $id);
 		}
-	| (RAM operatorExpr)
+	|	^(RAM operatorExpr)
 	;
 
 operator:	AND | OR | XOR | ADD | MINUS | MULT;
