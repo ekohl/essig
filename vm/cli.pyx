@@ -29,39 +29,96 @@ class ErrorMessage(CLIError):
 
 
 class CreateClosure(object):
-    "Helper class because Cython can't deal with closures."
+    """
+    Helper class because Cython can't deal with closures. 
+    It takes the original function and the wrapper function as arguments.
     
-    def __init__(self, func):
+    Don't use functools.wraps() with this class, as it replaces __dict__.
+    """
+    
+    def __init__(self, wrapper, func):
+        self.wrapper = wrapper
         self.func = func
-        self.obj = None
     
     def __call__(self, *args, **kwargs):
-        cdef Simulator sim = self.obj.simulator
-        
-        if sim.state.stopped_running:
-            raise ErrorMessage('The program has stopped running.')
-        elif not sim.running:
-            raise ErrorMessage("The program is not running. Use the 'run' "
-                               "command to start it.")
-        
-        self.obj.check_hit_breakpoint(self.func(self.obj, *args, **kwargs))
-        
-        if sim.state.stopped_running:
-            raise ErrorMessage('The program has stopped running.')
-        
+        "This is used as a function decorator"
+        return self.wrapper(self.func, *args, **kwargs)
+    
+    def __getattribute__(self, attr):
+        if attr in ('__doc__', '__module__', '__name__'):
+            return getattr(self.func, attr)
+        return super(CreateClosure, self).__getattribute__(attr)
+    
     def __get__(self, obj, type=None):
         "Implement a non-data/non-overriding descriptor to bind the method."
-        self.obj = obj
-        return self
+        return BoundMethodClosure(self.wrapper, self.func, obj, type)
 
+
+class BoundMethodClosure(CreateClosure):
+    """
+    Simulate bound and unbound methods. We could implement __call__ on 
+    CreateClosure, but it would mean e.g.
+        
+        obj = Class()
+        obj.m()
+        Class.m()
+   
+    would be valid, because 'm' would still be bound. Besides, it's not
+    thread-safe (i.e., subject to race conditions).
+    """
+    
+    def __init__(self, wrapper, func, obj, type):
+        super(BoundMethodClosure, self).__init__(wrapper, func)
+        self.obj = obj
+        self.type = type
+    
+    def __call__(self, *args, **kwargs):
+        "Used as a method decorator"
+        if self.obj is None:
+            if args and isinstance(args[0], self.type):
+                return self.wrapper(self.func, self.obj, *args, **kwargs)
+            
+            raise TypeError("'self' not provided or not an instance of this "
+                            "class")
+        else:
+            return self.wrapper(self.func, self.obj, *args, **kwargs)
+
+
+def resume_execution_wrapper(wrapped_func, self, *args, **kwargs):
+    cdef Simulator sim = self.simulator
+    
+    if not sim.running:
+        raise ErrorMessage("The program is not running. Use the 'run' "
+                            "command to start it.")
+    
+    self.check_hit_breakpoint(wrapped_func(self, *args, **kwargs))
+    
+    if sim.state.stopped_running:
+        raise ErrorMessage('The program has stopped running.')
 
 def resume_execution_decorator(func):
-    return functools.wraps(func)(CreateClosure(func))
+    return CreateClosure(resume_execution_wrapper, func)
 
+def parse_nsteps_wrapper(wrapped_func, self, nsteps_str, *args, **kwargs):
+    if nsteps_str:
+        try:
+            nsteps = int(nsteps_str)
+            if nsteps <= 0:
+                raise ValueError
+        except ValueError:
+            raise ErrorMessage('Invalid number of steps: %r' % nsteps_str)
+    else:
+        nsteps = 1
+    
+    return wrapped_func(self, nsteps, *args, **kwargs)
+
+def parse_nsteps_decorator(func):
+    return CreateClosure(parse_nsteps_wrapper, func)
+    
 
 cdef class Simulator(object):
     cdef VMState *state
-    cdef VMStateDiff *diff
+    cdef VMStateDiff *diff, *firstdiff
     cdef public bint running
     cdef instructions
     
@@ -106,7 +163,7 @@ cdef class Simulator(object):
         self.state.breakpoints = breakpoints
         self.state.interrupt_callables = interrupt_callables
         
-        self.diff = vm_newdiff()
+        self.firstdiff = self.diff = vm_newdiff()
         if not self.diff:
             raise VMError()
     
@@ -189,41 +246,68 @@ class SimulatorCLI(cmd.Cmd, object):
         self.firstrun = False
     
         self.simulator.running = True
-        if not vm_run(sim.state, NULL, &hit_bp):
+        if not vm_run(sim.state, &sim.diff, &hit_bp):
             raise ErrorMessage()
 
         self.check_hit_breakpoint(hit_bp)
-    
+        
+        if sim.state.stopped_running:
+            raise ErrorMessage('The program has stopped running.')
+        
     @resume_execution_decorator
     def do_cont(self, args):
         "continue or run the program"
         cdef Simulator sim = self.simulator
-        cdef bool hit_bp
+        cdef bint hit_bp
         
-        if not vm_cont(sim.state, NULL, &hit_bp):
+        if not vm_cont(sim.state, &sim.diff, &hit_bp):
             raise ErrorMessage()
 
         return hit_bp
     
     @resume_execution_decorator
-    def do_step(self, nsteps_str):
+    def do_rcont(self, args):
+        "continue or run the program"
+        cdef Simulator sim = self.simulator
+        cdef bint hit_bp
+        
+        # if not sim.running:
+            # raise ErrorMessage("The program is not running. Use the 'run' "
+                               # "command to start it.")
+        
+        vm_rcont(sim.state, &sim.diff, &hit_bp)
+        return hit_bp
+    
+    @resume_execution_decorator
+    @parse_nsteps_decorator
+    def do_step(self, nsteps):
         "Make a single step to the next instruction."
         cdef Simulator sim = self.simulator
         cdef bint hit_bp
         
-        if nsteps_str:
-            try:
-                nsteps = int(nsteps_str)
-                if nsteps <= 0:
-                    raise ValueError
-            except ValueError:
-                return self.print_err('Invalid number of steps: %r' % nsteps_str)
-        else:
-            nsteps = 1
-        
-        if not vm_step(sim.state, nsteps, sim.diff, &hit_bp):
+        if not vm_step(sim.state, nsteps, &sim.diff, &hit_bp):
             raise VMError()
         
+        if not hit_bp:
+            self.info_instruction(self.simulator, '')        
+
+        return hit_bp
+    
+    @resume_execution_decorator
+    @parse_nsteps_decorator
+    def do_rstep(self, nsteps):
+        "Make a single reversed step to the previous instruction."
+        cdef Simulator sim = self.simulator
+        cdef bint hit_bp
+        
+        if sim.diff == sim.firstdiff:
+            raise ErrorMessage("We're at the beginning of the program.")
+        
+        vm_rstep(sim.state, nsteps, &sim.diff, &hit_bp)
+        
+        if not hit_bp:
+            self.info_instruction(self.simulator, '')
+
         return hit_bp
     
     def info_breakpoints(self, Simulator sim, about):
@@ -291,12 +375,27 @@ class SimulatorCLI(cmd.Cmd, object):
         else:
             print 'Provide the name of a register.'
     
+    def info_instruction(self, Simulator sim, about, pc=None):
+        cdef Opcode *op
+        
+        if pc is None:
+            pc = sim.state.registers[PC]
+        
+        if not 0 <= pc < sim.state.instructions_size:
+            raise ErrorMessage('PC out of bounds: %r' % (pc,))
+        
+        op = &sim.state.instructions[pc]
+        print '%10s 0x%-*x' % (opcode_handlers[op.opcode_index].opcode_name,
+                               sizeof(OPCODE_TYPE) * 2,
+                               op.instruction)
+    
     def do_info(self, about):
         """
         Show information about stuff:
             breakpoints
             registers
             ram
+            instruction
             symbols
             cycles
             
@@ -364,7 +463,8 @@ class SimulatorCLI(cmd.Cmd, object):
     def check_hit_breakpoint(self, hit_bp):
         if hit_bp:
             print 'We hit a breakpoint:',
-            self.info_register(self.simulator, 'PC')
+            self.info_instruction(self.simulator, '')
+            # self.info_register(self.simulator, 'PC')
     
     def print_err(self, msg=None):
         if msg is None:
