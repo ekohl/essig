@@ -79,19 +79,29 @@ atmel {
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
 		}
 
+  		/* Logical AND with Immediate */
+                andi opcode="0111 KKKK dddd KKKK" Rd, K {
+                        /* 16 <= d <= 31, 0 <= K <= 255 */
+                        Rd = Rd & $K;
+                        PC = PC + 1;
+                        S = N ^ V;
+                        V = 0;
+                        N = R7;
+                        Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
+                }
 		/* Branch if Equal */
 		breq opcode="1111 00kk kkkk k001" ~k {
 			if Z == 1 {
-				PC = PC + k + 1;
+				PC = PC + $k + 1;
 			} else {
 				PC = PC + 1;
 			}
 		}
 
 		/* Branch if Greater or Equal (Signed) */
-		brge opcode="1111 01kk kkk k100" ~k {
+		brge opcode="1111 01kk kkkk k100" ~k {
 			if (N ^ V) == 0 {
-				PC = PC + k + 1;
+				PC = PC + $k + 1;
 			} else {
 				PC = PC + 1;
 			}
@@ -100,7 +110,7 @@ atmel {
 		/* Branch if Not Equal */
 		brne opcode="1111 01kk kkkk k001" ~k {
 			if Z == 0 {
-				PC = PC + k + 1;
+				PC = PC + $k + 1;
 			} else {
 				PC = PC + 1;
 			}
@@ -138,13 +148,25 @@ atmel {
 
 		/* Compare with Immediate */
 		cpi opcode="0011 KKKK dddd KKKK" Rd, K {
-			R = Rd - K;
-			H = !Rd3 & K3 + K3 & R3 + R3 & Rd3;
+			R = Rd - $K;
+			H = !Rd3 & !$K3 + K3 & R3 + R3 & Rd3;
 			S = N ^ V;
 			V = Rd7 & !K7 & !R7 + !Rd7 & K7 & R7;
 			N = R7;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
 			C = !Rd7 & K7 + K7 & R7 + R7 & !Rd7;
+			PC = PC + 1;
+		}
+
+		/* Compare with Immediate */
+		com opcode="1001 010d dddd 0000" Rd, K {
+			Rd = 255 - Rd;
+			
+			S = N ^ V;
+			V = 0;
+			N = R7;
+			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
+			C = 1;
 			PC = PC + 1;
 		}
 
@@ -198,7 +220,7 @@ atmel {
 
 		/* Load Direct from Data Space */
 		lds opcode="1001 000d dddd 0000 kkkk kkkk kkkk kkkk" Rd, k{
-			Rd = ram(k); //TODO
+			//Rd = ram(k); //TODO
 			PC = PC + 2;
 		}
 
@@ -255,12 +277,14 @@ atmel {
 		/* Relative Call to Subroutine */
 		rcall opcode="1101 kkkk kkkk kkkk" ~k {
 			/* TODO, this is about a 'WORD' and not a single byte */
-			PC = PC + k + 1;
+			PC = PC + $k + 1;
 		}
 
 		/* Relative Jump */
 		rjmp opcode="1100 kkkk kkkk kkkk" ~k {
-			PC = PC + k + 1;
+			if $k == -1 { HALT; }
+			else { PC = PC + $k + 1; }
+			
 		}
 
 		/* Rotate Right through Carry */
@@ -315,7 +339,6 @@ atmel {
 			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
 			// TODO Store Rr to Dataspace[RY]
 			ram(R(28) + q) = Rr; //TODO this are not just single bytes, but TWO registers
-			//RY = RY + 1; TODO
 			PC = PC + 1;
 		}
 
@@ -348,5 +371,14 @@ atmel {
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0 & Z;
 			C = !Rd7 & K7 + K7 & R7 + R7 & !Rd7;
 		}
+
+		sbrc opcode="1111 110r rrrr 0bbb" Rr, b {
+			if Rr(b) == 0 {
+				PC = PC + 2;
+			} else {
+				PC = PC + 1;
+			}
+		}
+
 	}
 }

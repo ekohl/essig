@@ -143,6 +143,11 @@ condition(left,right) ::= <<
 <left> == <right>
 >>
 
-wordVariable(variable, bit, type, not) ::= <<
-<if(not)>!<endif> <if(bit)>GetBit(<endif>vm_info(state,VM_INFO_<type>,<variable>,&error)<if(bit)>, <bit>)<endif>
+wordVariable(variable, bit, type, not,constant) ::= <<
+<if(not)>!<endif> <if(bit)>GetBit(<endif><if(!constant)>vm_info(state,VM_INFO_<type>,<endif><variable><if(!constant)>,&error)<endif><if(bit)>, <bit>)<endif>
+>>
+
+halt() ::= <<
+	state->stopped_running = true;
+        return false;
 >>

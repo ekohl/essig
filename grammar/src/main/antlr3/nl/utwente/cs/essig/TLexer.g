@@ -32,10 +32,12 @@ GPRS		:	'gprs';
 OP_CODE		:	'opcode';
 SIZE		:	'size';
 CLOCK		:	'clock';
+HALT		:       'HALT';
+CONSTANT	:	'$';
 
 IDENTIFIER		:	LETTER (LETTER | DIGIT)* ;
 
-NUMBER			:	DIGIT+;
+NUMBER			:	MINUS? DIGIT+;
 
 WHITESPACE		:	( '\t' | ' ' | '\r' | '\n'| '\u000C' )+ 	{ $channel = HIDDEN; } ;
 
