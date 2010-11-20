@@ -28,6 +28,11 @@ atmel {
 
 	instructions {
 
+		
+		noop opcode="0" {
+			PC = PC + 1;
+		}
+	
 		/* Add with Carry */
 		adc opcode="0001 11rd dddd rrrr" [clock=1, size=1] Rd, Rr {
 			Rd = Rd + Rr + C;
