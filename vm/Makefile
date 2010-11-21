@@ -10,8 +10,6 @@ TESTFILE=$(TESTFILE1)
 # make sure CFLAGS are also passed to python
 export CFLAGS
 
-all: doc cli
-
 run: cli
 	$(PYTHON) simulator.py $(TESTFILE)
 

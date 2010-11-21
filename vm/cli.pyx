@@ -46,7 +46,12 @@ class CreateClosure(object):
     
     def __getattribute__(self, attr):
         if attr in ('__doc__', '__module__', '__name__'):
-            return getattr(self.func, attr)
+            # work around a bug (or feature?) of older Cython versions where
+            # getattr() needs three arguments
+            if hasattr(self.func, attr):
+                return getattr(self.func, attr, None)
+            raise AttributeError(attr)
+            
         return super(CreateClosure, self).__getattribute__(attr)
     
     def __get__(self, obj, type=None):
@@ -413,7 +418,7 @@ class SimulatorCLI(cmd.Cmd, object):
         
     def complete_info(self, text, line, beginidx, endidx):
         options = ('breakpoints', 'registers', 'symbols', 'cycles',
-                   'ram', 'register', 'pin')
+                   'ram', 'register', 'pin', 'instruction')
         return self.complete_from_it(text, options)
     
     def do_disassemble(self, args):
