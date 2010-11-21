@@ -41,7 +41,7 @@ void AddBit(int *val, int source, int pos)
 
 OpcodeHandler opcode_handlers[] = {
 	<instructions:opcodehandler(); separator=",\n">,
-	0
+	{0}
 };
 // End of instructions
 >>
@@ -51,6 +51,7 @@ opcodehandler(it) ::= <<
 >>
 
 param(name,value) ::= <<
+//bladiebla
 <name> = <value>;
 >>
 
@@ -144,7 +145,7 @@ condition(left,right) ::= <<
 >>
 
 wordVariable(variable, bit, type, not,constant) ::= <<
-<if(not)>!<endif> <if(bit)>GetBit(<endif><if(!constant)>vm_info(state,VM_INFO_<type>,<endif><variable><if(!constant)>,&error)<endif><if(bit)>, <bit>)<endif>
+<if(not)>(!<endif><if(bit)>GetBit(<endif><if(!constant)>vm_info(state,VM_INFO_<type>,<endif><variable><if(!constant)>,&error)<endif><if(bit)>, <bit>)<endif><if(not)>)<endif> 
 >>
 
 halt() ::= <<

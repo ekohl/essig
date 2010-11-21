@@ -7,5 +7,8 @@ test:
 examples: essig
 	java -jar target/essig-0.1-jar-with-dependencies.jar examples/atmel.dmo
 
+run: examples
+	mv examples/atmel.c ../vm/generated_simulator.c && make run -C ../vm	
+
 clean:
 	git clean -d -X -f
