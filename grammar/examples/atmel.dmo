@@ -1,7 +1,7 @@
 atmel {
 	parameters {
 		gprs 32;
-		ram 65536;
+		ram 16777216;
 
 		/* Standard Values */
 		clock 1; /* 1 clock_cycle */
