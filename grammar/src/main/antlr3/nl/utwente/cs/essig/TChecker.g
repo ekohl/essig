@@ -74,16 +74,22 @@ register:
 instruction:
 		^(
 			IDENTIFIER
-			OPCODE {
-				Opcode opcode = new Opcode($OPCODE.text);
+			op=OPCODE {
+				Opcode opcode = new Opcode($op.text);
 				symbolTable.openScope();
 				params.clear();
 			}
+			(op2=OPCODE {
+				Opcode opcode2 = new Opcode($op2.text);
+				//System.out.println(opcode2.toString());
+				//symbolTable.openScope();
+				//params.clear();
+			})?
 			^(PARAMS param*)
 			^(ARGUMENTS argument*)
 			{
 				for (Character c : opcode.getArguments().keySet()) {
-					symbolTable.getDeclaration(c + "", $OPCODE);
+					symbolTable.getDeclaration(c + "", $op);
 				}
 			}
 			^(EXPR expr {

@@ -47,7 +47,7 @@ OpcodeHandler opcode_handlers[] = {
 >>
 
 opcodehandler(it) ::= <<
-{ "<it.name>", 0b<it.opcode>, 0b<it.mask>, (opcode_handler *) <it.name> }
+{ "<it.name>", 0b<it.opcode>, 0b<it.mask>, (opcode_handler *) <it.name>,<it.next_is_arg> }
 >>
 
 param(name,value) ::= <<

@@ -224,7 +224,7 @@ atmel {
 		}
 
 		/* Load Direct from Data Space */
-		lds opcode="1001 000d dddd 0000 kkkk kkkk kkkk kkkk" Rd, k{
+		lds opcode="1001 000d dddd 0000",opcode="kkkk kkkk kkkk kkkk" Rd, k{
 			//Rd = ram(k); //TODO
 			PC = PC + 2;
 		}

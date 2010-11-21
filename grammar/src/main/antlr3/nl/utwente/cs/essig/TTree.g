@@ -60,7 +60,8 @@ register:	IDENTIFIER -> register(name={$IDENTIFIER});
 
 instruction:	^(
 			IDENTIFIER
-			OPCODE { Opcode opcode = new Opcode($OPCODE.text);}
+			op=OPCODE { Opcode opcode = new Opcode($op.text);}
+			(op2=OPCODE { Opcode opcode2 = new Opcode($op2.text);})?
 			^(PARAMS (p+=param)*)
 			^(ARGUMENTS (a+=argument)*)
 			^(EXPR (e+=expr)+)
@@ -72,6 +73,7 @@ instruction:	^(
 		expressions={$e},
 		mask={opcode.getMaskString()},
 		opcode={opcode.getOpcodeString()},
+		next_is_arg={($op2!=null ? "true" : "false")},
 		opcodeparsed={opcode}
 	)
 	;

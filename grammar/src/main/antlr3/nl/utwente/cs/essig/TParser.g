@@ -55,8 +55,8 @@ registers:		REGISTERS LBRACK (register LINE_SEPERATOR)+ RBRACK
 register:		IDENTIFIER;
 
 instructions:		INSTRUCTIONS^ LBRACK! instruction+ RBRACK!;
-instruction:		IDENTIFIER OP_CODE ASSIGN OPCODE params? arguments? LBRACK expr+ RBRACK
-		-> ^(IDENTIFIER OPCODE ^(PARAMS params?) ^(ARGUMENTS arguments?) ^(EXPR expr+));
+instruction:		IDENTIFIER OP_CODE ASSIGN OPCODE (ARG_SEPERATOR OP_CODE ASSIGN OPCODE)? params? arguments? LBRACK expr+ RBRACK
+		-> ^(IDENTIFIER OPCODE OPCODE? ^(PARAMS params?) ^(ARGUMENTS arguments?) ^(EXPR expr+));
 
 params	:		LBRACE param (ARG_SEPERATOR param)* RBRACE
 		-> param+
