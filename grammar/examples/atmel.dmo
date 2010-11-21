@@ -154,9 +154,9 @@ atmel {
 		/* Compare with Immediate */
 		cpi opcode="0011 KKKK dddd KKKK" Rd, K {
 			R = Rd - $K;
-			H = !Rd3 & !$K3 + K3 & R3 + R3 & Rd3;
+			H = !Rd3 & !$K3 + $K3 & R3 + R3 & Rd3;
 			S = N ^ V;
-			V = Rd7 & !K7 & !R7 + !Rd7 & K7 & R7;
+			V = Rd7 & !$K7 & !R7 + !Rd7 & $K7 & R7;
 			N = R7;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
 			C = !Rd7 & K7 + K7 & R7 + R7 & !Rd7;
@@ -193,7 +193,7 @@ atmel {
 
 		/* Load Immediate */
 		ldi opcode="1110 KKKK dddd KKKK" Rd, K {
-			Rd = K;
+			Rd = $K;
 			PC = PC + 1;
 		}
 
@@ -358,20 +358,20 @@ atmel {
 		subi opcode="0101 KKKK dddd KKKK" Rd, K {
 			Rd = Rd - K;
 
-			H = !Rd3 & K3 + K3 & R3 + R3 & Rd3;
+			H = !Rd3 & $K3 + $K3 & R3 + R3 & Rd3;
 			S = N ^ V;
-			V = Rd7 & !K7 & R7 + Rd7 & K7 & R7;
+			V = Rd7 & !$K7 & R7 + Rd7 & $K7 & R7;
 			N = R7;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
-			C = !Rd7 & K7 + K7 & R7 + R7 & !Rd7;
+			C = !Rd7 & $K7 + $K7 & R7 + R7 & !Rd7;
 		}
 
 		sbci opcode="0100 KKKK dddd KKKK" Rd, K {
-			Rd = Rd - K - C;
+			Rd = Rd - $K - C;
 
 			H = !Rd3 & K3 + K3 & R3 + R3 & Rd3;
 			S = N ^ V;
-			V = Rd7 & !K7 & R7 + Rd7 & K7 & R7;
+			V = Rd7 & !$K7 & R7 + Rd7 & $K7 & R7;
 			N = R7;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0 & Z;
 			C = !Rd7 & K7 + K7 & R7 + R7 & !Rd7;
