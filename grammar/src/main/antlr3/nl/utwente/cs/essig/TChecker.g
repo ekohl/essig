@@ -109,7 +109,7 @@ argument:
 	;
 
 expr:
-		assignExpr | ifExpr
+		assignExpr | ifExpr | HALT
 	;
 
 assignExpr:
@@ -130,7 +130,7 @@ condition:
 
 word:
 		NUMBER
-	|	^(id=IDENTIFIER NOT? (IDENTIFIER|n=NUMBER)? )
+	|	^(id=IDENTIFIER NOT? CONSTANT? (IDENTIFIER|n=NUMBER)? )
 		{
 			Variable var;
 			if ($n == null ) {

@@ -73,6 +73,7 @@ argument :		(SIGNED)? IDENTIFIER;
 
 expr	:		assignExpr LINE_SEPERATOR!
 	|		ifExpr
+	|		HALT LINE_SEPERATOR!
 	;
 
 assignExpr:		(IDENTIFIER | (RAM LPAREN! operatorExpr RPAREN!)) ASSIGN^ operatorExpr;
@@ -85,10 +86,11 @@ condition:		word EQUALS^ word
 	|		LPAREN! operatorExpr RPAREN! EQUALS^ word
 	;
 
-word	:		NOT? IDENTIFIER^
+word	:		NOT? CONSTANT? IDENTIFIER^
 				(LPAREN! (IDENTIFIER|NUMBER) RPAREN!)?
 	|		NUMBER
 	|		RAM^ LPAREN! operatorExpr RPAREN!
+	
 	;
 
 operator:		AND | OR | XOR | ADD | MINUS | MULT;

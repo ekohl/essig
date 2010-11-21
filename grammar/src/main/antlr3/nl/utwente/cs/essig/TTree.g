@@ -92,6 +92,7 @@ expr	:	assignExpr
 	-> {$assignExpr.st}
 	|	ifExpr
 	-> {$ifExpr.st}
+	| HALT -> halt()
 	;
 
 assignExpr:	^(
@@ -126,7 +127,7 @@ condition:	^(EQUALS l=operatorExpr r=word)
 word returns [String comment = ""]:
 		NUMBER {$comment = $NUMBER.text;}
 	-> template (number={$NUMBER}) "<number>"
-	|	^( v=IDENTIFIER NOT? (IDENTIFIER|NUMBER)? )
+	|	^( v=IDENTIFIER NOT? CONSTANT? (IDENTIFIER|NUMBER)? )
 		{
 			Variable var;
 			if ($NUMBER == null ) {
@@ -137,7 +138,7 @@ word returns [String comment = ""]:
 			$comment = (($NOT != null) ? $NOT.text : "") + $v.text;
 		}
 	// FIXME: Also handle $i
-	-> wordVariable (variable={var.getName()},bit={var.getNumber()},type={var.getType()},not={$NOT != null})
+	-> wordVariable (variable={var.getName()},bit={var.getNumber()},type={var.getType()},not={$NOT != null},constant={$CONSTANT != null})
 	|	^(RAM operatorExpr)
 		{ $comment = $RAM + "(" + $operatorExpr.comment + ")"; }
 	-> wordVariable(variable={$operatorExpr.st}, type={"RAM"})
