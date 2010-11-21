@@ -3,4 +3,6 @@
 *.o
 .*.swp
 *.so
+*.pyc
+*.pyo
 /cli.c
