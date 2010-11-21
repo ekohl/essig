@@ -1097,7 +1097,7 @@ bool cpi (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 		return false;
 	// C = !Rd7 & K7 + K7 & R7 + R7 & !Rd7     
 	// Calculate expressions for the result var
-	result = (!GetBit(vm_info(state,VM_INFO_REGISTER,d,&error), 7))  & GetBit(vm_info(state,VM_INFO_REGISTER,K,&error), 7)  + GetBit(vm_info(state,VM_INFO_REGISTER,K,&error), 7)  & GetBit(vm_info(state,VM_INFO_REGISTER,R,&error), 7)  + GetBit(vm_info(state,VM_INFO_REGISTER,R,&error), 7)  & (!GetBit(vm_info(state,VM_INFO_REGISTER,d,&error), 7))      ;
+	result = (!GetBit(vm_info(state,VM_INFO_REGISTER,d,&error), 7))  & GetBit(K, 7)  + GetBit(K, 7)  & GetBit(vm_info(state,VM_INFO_REGISTER,R,&error), 7)  + GetBit(vm_info(state,VM_INFO_REGISTER,R,&error), 7)  & (!GetBit(vm_info(state,VM_INFO_REGISTER,d,&error), 7))      ;
 	// Check if there was an error in the calculation of the result
 	if (error)
 		return false;
@@ -2451,7 +2451,7 @@ bool subi (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	// Execute expressions
 	// d = Rd - K 
 	// Calculate expressions for the result var
-	result = vm_info(state,VM_INFO_REGISTER,d,&error)  - vm_info(state,VM_INFO_REGISTER,K,&error)  ;
+	result = vm_info(state,VM_INFO_REGISTER,d,&error)  - K  ;
 	// Check if there was an error in the calculation of the result
 	if (error)
 		return false;
@@ -2563,7 +2563,7 @@ bool sbci (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	int R = result;
 	// H = !Rd3 & K3 + K3 & R3 + R3 & Rd3     
 	// Calculate expressions for the result var
-	result = (!GetBit(vm_info(state,VM_INFO_REGISTER,d,&error), 3))  & GetBit(vm_info(state,VM_INFO_REGISTER,K,&error), 3)  + GetBit(vm_info(state,VM_INFO_REGISTER,K,&error), 3)  & GetBit(vm_info(state,VM_INFO_REGISTER,R,&error), 3)  + GetBit(vm_info(state,VM_INFO_REGISTER,R,&error), 3)  & GetBit(vm_info(state,VM_INFO_REGISTER,d,&error), 3)      ;
+	result = (!GetBit(vm_info(state,VM_INFO_REGISTER,d,&error), 3))  & GetBit(K, 3)  + GetBit(K, 3)  & GetBit(vm_info(state,VM_INFO_REGISTER,R,&error), 3)  + GetBit(vm_info(state,VM_INFO_REGISTER,R,&error), 3)  & GetBit(vm_info(state,VM_INFO_REGISTER,d,&error), 3)      ;
 	// Check if there was an error in the calculation of the result
 	if (error)
 		return false;
@@ -2608,7 +2608,7 @@ bool sbci (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 		return false;
 	// C = !Rd7 & K7 + K7 & R7 + R7 & !Rd7     
 	// Calculate expressions for the result var
-	result = (!GetBit(vm_info(state,VM_INFO_REGISTER,d,&error), 7))  & GetBit(vm_info(state,VM_INFO_REGISTER,K,&error), 7)  + GetBit(vm_info(state,VM_INFO_REGISTER,K,&error), 7)  & GetBit(vm_info(state,VM_INFO_REGISTER,R,&error), 7)  + GetBit(vm_info(state,VM_INFO_REGISTER,R,&error), 7)  & (!GetBit(vm_info(state,VM_INFO_REGISTER,d,&error), 7))      ;
+	result = (!GetBit(vm_info(state,VM_INFO_REGISTER,d,&error), 7))  & GetBit(K, 7)  + GetBit(K, 7)  & GetBit(vm_info(state,VM_INFO_REGISTER,R,&error), 7)  + GetBit(vm_info(state,VM_INFO_REGISTER,R,&error), 7)  & (!GetBit(vm_info(state,VM_INFO_REGISTER,d,&error), 7))      ;
 	// Check if there was an error in the calculation of the result
 	if (error)
 		return false;
