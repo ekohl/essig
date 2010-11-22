@@ -18,7 +18,7 @@ public class Variable {
 	private String name;
 
 	/** Is the variable a constant */
-	private boolean contsant = false;
+	private boolean constant = false;
 
 	/** The type of variable */
 	private final VariableType type;
@@ -114,7 +114,7 @@ public class Variable {
 
 	public void setConstant(boolean val)
 	{
-		this.contsant = val;
+		this.constant = val;
 	}
 
 	/**
@@ -124,7 +124,7 @@ public class Variable {
 	 */
 	public boolean getConstant()
 	{
-		return this.contsant;
+		return this.constant;
 	}
 
 	@Override
