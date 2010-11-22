@@ -137,10 +137,13 @@ word returns [String comment = ""]:
 			} else {
 				var = new Variable($v.text + $NUMBER.text,Variable.VariableType.REGISTER);
 			}
+			if ($CONSTANT!=null) var.setConstant();
+			
 			$comment = (($NOT != null) ? $NOT.text : "") + $v.text;
+			
 		}
 	// FIXME: Also handle $i
-	-> wordVariable (variable={var.getName()},bit={var.getNumber()},type={var.getType()},not={$NOT != null},constant={$CONSTANT != null})
+	-> wordVariable (variable={var.getName()},bit={var.getNumber()},type={var.getType()},not={$NOT != null},constant={var.getConstant()})
 	|	^(RAM operatorExpr)
 		{ $comment = $RAM + "(" + $operatorExpr.comment + ")"; }
 	-> wordVariable(variable={$operatorExpr.st}, type={"RAM"})

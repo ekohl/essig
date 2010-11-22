@@ -17,6 +17,9 @@ public class Variable {
 	/** The register name */
 	private String name;
 
+	/** Is the variable a constant */
+	private boolean contsant = false;
+
 	/** The type of variable */
 	private final VariableType type;
 
@@ -59,7 +62,7 @@ public class Variable {
 			if (this.name.length() > 1
 					&& Character.isLowerCase(this.name.charAt(1))) {
 				this.name = this.name.substring(1);
-			}
+			} else { this.setConstant(); }
 			break;
 		default:
 			this.type = VariableType.REGISTER;
@@ -99,6 +102,24 @@ public class Variable {
 	 */
 	public VariableType getType() {
 		return this.type;
+	}
+
+	/**
+	 * Set variable to constant
+	 */
+	public void setConstant()
+	{
+		this.contsant = true;
+	}
+
+	/**
+	 * Returns if the variable is a constant
+	 * 
+	 * @return if it is a constant
+	 */
+	public boolean getConstant()
+	{
+		return this.contsant;
 	}
 
 	@Override
