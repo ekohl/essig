@@ -126,9 +126,13 @@ operatorExpr(word,operator,expression) ::= <<
 <word> <operator> <expression> 
 >>
 
-assignExpr(var,type,value,comment,is_result) ::= <<
+assignExpr(var,type,value,comment,is_result,constant) ::= <<
 // <comment>
 // Calculate expressions for the result var
+<if (constant)>
+<var> = <value>;
+<endif>
+<if (!constant)>
 result = <value>;
 // Check if there was an error in the calculation of the result
 if (error)
@@ -137,6 +141,7 @@ if (error)
 <if(!is_result)>
 if(!vm_write(state, diff, VM_INFO_<type>, <var>, result))
 	return false;
+<endif>
 <endif>
 >>
 
