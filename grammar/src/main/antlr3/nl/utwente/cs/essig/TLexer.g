@@ -29,8 +29,6 @@ ELSE		:	'else';
 // Parameters
 RAM		:	'ram';
 GPRS		:	'gprs';
-OP_CODE		:	'opcode';
-SIZE		:	'size';
 CLOCK		:	'clock';
 HALT		:       'HALT';
 CONSTANT	:	'$';

@@ -26,6 +26,7 @@ options {
 }
 
 @members {
+	private String defaultClock;
 }
 
 microcontroller: ^(
@@ -39,41 +40,34 @@ microcontroller: ^(
 
 parameter:	^(RAM NUMBER)
 	-> ram(ram={$NUMBER})
-	|	^(GPRS NUMBER)
-	|	^(SIZE NUMBER)
-	-> template(size={$NUMBER.text}) "// FIXME: size = <size>;"
 	|	^(CLOCK NUMBER)
-	-> template(clock={$NUMBER.text}) "// FIXME: clock = <clock>;"
+		{ defaultClock = $NUMBER.text; }
 	;
 
 register:	IDENTIFIER -> register(name={$IDENTIFIER});
 
 instruction:	^(
 			IDENTIFIER
-			op=OPCODE { Opcode opcode = new Opcode($op.text);}
-			(op2=OPCODE { Opcode opcode2 = new Opcode($op2.text);})?
-			^(PARAMS (p+=param)*)
+			^(PARAMS
+				(ops+=opcode)+
+				(^(CLOCK NUMBER))?
+			)
 			^(ARGUMENTS (a+=argument)*)
 			^(EXPR (e+=expr)+)
 		)
 	-> instruction(
 		name={$IDENTIFIER},
-		params={$p},
+		opcodes={$ops},
+		clock={$NUMBER != null ? $NUMBER.text : defaultClock},
 		arguments={$a},
-		expressions={$e},
-		mask={opcode.getMaskString()},
-		opcode={opcode.getOpcodeString()},
-		next_is_arg={($op2!=null ? "true" : "false")},
-		opcodeparsed={opcode}
+		expressions={$e}
 	)
 	;
 
-param	: ^(i=word  v=word)
-	-> param(name={$i.st},value={$v.comment},comment={$i.st + "=" + $v.comment})
-	|	^(CLOCK NUMBER)
-	-> cycles(cycles={$NUMBER.text})
-	|	^(SIZE NUMBER)
-	-> template(v={$NUMBER.text}) "// FIXME size = <v>;"
+opcode:
+		OPCODE
+		{ Opcode opcode = new Opcode($OPCODE.text); }
+	-> opcode(mask={opcode.getMaskString()},opcode={opcode.getOpcodeString()},parsed={opcode})
 	;
 
 argument:	SIGNED? IDENTIFIER
@@ -84,7 +78,8 @@ expr	:	assignExpr
 	-> {$assignExpr.st}
 	|	ifExpr
 	-> {$ifExpr.st}
-	| HALT -> halt()
+	| HALT
+	-> halt()
 	;
 
 assignExpr:	^(

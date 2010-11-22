@@ -26,11 +26,14 @@ options {
 //
 @header {
 	package nl.utwente.cs.essig;
+
+	import java.util.HashSet;
+	import java.util.Set;
 }
 
 @members {	
 	private SymbolTable<CommonTree> symbolTable = new SymbolTable<CommonTree>();
-	private List<String> params = new ArrayList<String>();
+	private Set<String> params = new HashSet<String>();
 }
 
 microcontroller:
@@ -44,11 +47,10 @@ microcontroller:
 	;
 
 parameter:	
-		^(p=(RAM | GPRS | SIZE | CLOCK) NUMBER) {
-			if(params.contains($p.text)) {
+		^(p=(RAM | CLOCK) NUMBER) {
+			if(!params.add($p.text)) {
 				throw new TCheckerException($p, "Duplicate parameter " + $p.text);
 			}
-			params.add($p.text);
 		}
 	;
 
@@ -61,22 +63,18 @@ register:
 instruction:
 		^(
 			IDENTIFIER
-			op=OPCODE {
-				Opcode opcode = new Opcode($op.text);
-				symbolTable.openScope();
-				params.clear();
-			}
-			(op2=OPCODE {
-				Opcode opcode2 = new Opcode($op2.text);
-				//System.out.println(opcode2.toString());
-				//symbolTable.openScope();
-				//params.clear();
-			})?
-			^(PARAMS param*)
+			{ symbolTable.openScope(); }
+			^(
+				PARAMS
+				(opcodes+=OPCODE)+
+				(^(CLOCK NUMBER))?
+			)
 			^(ARGUMENTS argument*)
 			{
-				for (Character c : opcode.getArguments().keySet()) {
-					symbolTable.getDeclaration(c + "", $op);
+				for(Object opcode : $opcodes) {
+					for (Character c : new Opcode(((CommonTree)opcode).getText()).getArguments().keySet()) {
+						symbolTable.getDeclaration(c.toString(), (CommonTree) opcode);
+					}
 				}
 			}
 			^(EXPR expr {
@@ -84,15 +82,6 @@ instruction:
 			} expr* )
 			{ symbolTable.closeScope(); }
 		)
-	;
-
-param:	
-		^(p=(SIZE | CLOCK) NUMBER) {
-			if(params.contains($p.text)) {
-				throw new TCheckerException($p, "Duplicate parameter " + $p.text);
-			}
-			params.add($p.text);
-		}
 	;
 
 argument:		
@@ -108,6 +97,7 @@ expr:
 assignExpr:
 		^(ASSIGN (IDENTIFIER | (RAM operatorExpr)) operatorExpr)
 	;
+
 ifExpr:
 		^(IF condition expr+ (ELSE expr+)?)
 	;
@@ -136,4 +126,6 @@ word:
 	|	^(RAM operatorExpr)
 	;
 
-operator:	AND | OR | XOR | ADD | MINUS | MULT;
+operator:
+		AND | OR | XOR | ADD | MINUS | MULT
+	;

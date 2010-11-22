@@ -20,7 +20,8 @@ parameters:
 "parameters { ram 1024 }"		FAIL	// Missing colon
 "parameters { ram 1024; }"		-> (parameters (ram 1024))
 "parameters { ram 1024; gprs 32 }"	FAIL	// Missing colon
-"parameters { ram 1024; gprs 32; }"	-> (parameters (ram 1024) (gprs 32))
+"parameters { ram 1024; gprs 32; }"	-> (parameters (ram 1024))
+"parameters { ram 1024; gprs 32; clock 1; }"	-> (parameters (ram 1024) (clock 1))
 
 ifExpr:
 "if V == 0 { PC = 1; }"			-> (if (== V 0) (= PC 1))
