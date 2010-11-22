@@ -34,8 +34,11 @@ tokens {
 // What package should the generated source exist in?
 //
 @header {
-
     package nl.utwente.cs.essig;
+}
+
+@members {
+    private int gprs;
 }
 
 // Parser
@@ -45,13 +48,18 @@ microcontroller:	IDENTIFIER^ LBRACK! parameters registers instructions RBRACK! E
 parameters:		PARAMETERS LBRACK (parameter LINE_SEPERATOR)+ RBRACK
 		-> ^(PARAMETERS parameter+);
 parameter:		RAM^ NUMBER
-	|		GPRS^ NUMBER
+	|		GPRS^ NUMBER { gprs = Integer.parseInt($NUMBER.text); }
 	|		SIZE^ NUMBER
 	|		CLOCK^ NUMBER
 	;
 
-registers:		REGISTERS LBRACK (register LINE_SEPERATOR)+ RBRACK
-		-> ^(REGISTERS register+);
+registers:		REGISTERS^ LBRACK! (register LINE_SEPERATOR!)+ RBRACK! {
+			// Hack in the general purpose registers
+			for(int i=0; i < gprs; i++) {
+				adaptor.addChild($REGISTERS.tree, adaptor.create(IDENTIFIER, "R" + Integer.toString(i)));
+			}
+	}
+	;
 register:		IDENTIFIER;
 
 instructions:		INSTRUCTIONS^ LBRACK! instruction+ RBRACK!;

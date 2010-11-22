@@ -49,19 +49,6 @@ parameter:
 				throw new TCheckerException($p, "Duplicate parameter " + $p.text);
 			}
 			params.add($p.text);
-
-			int number;
-			try {
-				number = Integer.parseInt($NUMBER.text);
-			} catch(Exception nfe) {
-				throw new TCheckerException($NUMBER, nfe.getMessage());
-			}
-
-			if($p.text.equals("gprs")) { // FIXME: Ugly check
-				for(int i = 0; i < number; i++) {
-					symbolTable.declare("R" + i, $p); // FIXME: Correct node
-				}
-			}
 		}
 	;
 

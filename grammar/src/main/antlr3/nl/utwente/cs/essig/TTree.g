@@ -26,16 +26,6 @@ options {
 }
 
 @members {
-	private int gprs;
-
-	private List addGPRS(List l) {
-		for(int i=0; i<this.gprs; i++) {
-			StringTemplate attr = new StringTemplate();
-			attr.setAttribute("name", "R" + i);
-			l.add(i, attr);
-		}
-		return l;
-	}
 }
 
 microcontroller: ^(
@@ -44,12 +34,12 @@ microcontroller: ^(
 			^(REGISTERS (r+=register)*)
 			^(INSTRUCTIONS (i+=instruction)*)
 		)
-	-> microcontroller(name={$IDENTIFIER},parameters={$p},registers={addGPRS($r)},instructions={$i})
+	-> microcontroller(name={$IDENTIFIER},parameters={$p},registers={$r},instructions={$i})
 	;
 
 parameter:	^(RAM NUMBER)
 	-> ram(ram={$NUMBER})
-	|	^(GPRS NUMBER) { gprs = Integer.parseInt($NUMBER.text); }
+	|	^(GPRS NUMBER)
 	|	^(SIZE NUMBER)
 	-> template(size={$NUMBER.text}) "// FIXME: size = <size>;"
 	|	^(CLOCK NUMBER)
