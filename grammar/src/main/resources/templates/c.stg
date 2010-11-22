@@ -132,6 +132,7 @@ assignExpr(var,type,value,comment,is_result,constant) ::= <<
 <if (constant)>
 <var> = <value>;
 <endif>
+
 <if (!constant)>
 result = <value>;
 // Check if there was an error in the calculation of the result

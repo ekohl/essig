@@ -109,7 +109,12 @@ public class Variable {
 	 */
 	public void setConstant()
 	{
-		this.contsant = true;
+		this.setConstant(true);
+	}
+
+	public void setConstant(boolean val)
+	{
+		this.contsant = val;
 	}
 
 	/**
