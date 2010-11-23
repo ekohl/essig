@@ -14,6 +14,7 @@ microcontroller(name,parameters,registers,instructions) ::= <<
 int npins = 0;
 size_t pinoffset = 0;
 int nbits_cpu = 16;
+bool is_big_endian = false;
 
 // Registers
 int nregisters = <length(registers)>;
@@ -38,23 +39,15 @@ void AddBit(int *val, int source, int pos)
 // Instructions
 <instructions; separator="\n">
 
-int n_opcode_handlers = <length(instructions)>;
 OpcodeHandler opcode_handlers[] = {
-	<instructions:opcodehandler(); separator=",\n">
+	<instructions:opcodehandler(); separator=",\n">,
+	{0}
 };
 // End of instructions
 >>
 
 opcodehandler(it) ::= <<
-{ "<it.name>", 0b<it.opcode>, 0b<it.mask>, (opcode_handler *) <it.name> }
->>
-
-param(name,value) ::= <<
-<name> = <value>;
->>
-
-cycles(cycles) ::= <<
-state->cycles += <cycles>;
+{ "<it.name>", 0b<first(it.opcodes).opcode>, 0b<first(it.opcodes).mask>, (opcode_handler *) <it.name>, <length(it.opcodes)>-1 }
 >>
 
 register(name) ::= <<
@@ -65,17 +58,7 @@ ram (ram) ::= <<
 size_t ramsize = <ram>;
 >>
 
-clock (clock) ::= <<
-// Standard value for Clock Cycles for 1 instruction.
-int standard_clock = <clock>;
->>
-
-instruction_return_size (size) ::= <<
-// Standard size (words) of 1 instruction return value;
-int instruction_return_size = <size>;
->>
-
-instruction(name,params,arguments,expressions) ::= <<
+instruction(name,opcodes,clock,arguments,expressions) ::= <<
 bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	// error
 	bool error = false;
@@ -83,13 +66,15 @@ bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	// result
 	int result = 0;
 
-	
-	<params; separator="\n">
+	<if(clock)>
+	// Clock cycles
+	state->cycles += <clock>;
+	<endif>
 
 	// Decode the opcode
-	<opcodeparsed>
+	<opcodes; separator="\n">
 
-	//Arguments (cast if signed)
+	// Arguments (cast if signed)
 	<arguments; separator="\n">
 
 	// Execute expressions
@@ -98,6 +83,10 @@ bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
 	return true;
 }
+>>
+
+opcode(mask, opcode, parsed) ::= <<
+<parsed>
 >>
 
 argument(name, signed) ::= <<
@@ -124,9 +113,14 @@ operatorExpr(word,operator,expression) ::= <<
 <word> <operator> <expression> 
 >>
 
-assignExpr(var,type,value,comment,is_result) ::= <<
+assignExpr(var,type,value,comment,is_result,constant) ::= <<
 // <comment>
 // Calculate expressions for the result var
+<if (constant)>
+<var> = <value>;
+<endif>
+
+<if (!constant)>
 result = <value>;
 // Check if there was an error in the calculation of the result
 if (error)
@@ -136,12 +130,18 @@ if (error)
 if(!vm_write(state, diff, VM_INFO_<type>, <var>, result))
 	return false;
 <endif>
+<endif>
 >>
 
 condition(left,right) ::= <<
 <left> == <right>
 >>
 
-wordVariable(variable, bit, type, not) ::= <<
-<if(not)>!<endif> <if(bit)>GetBit(<endif>vm_info(state,VM_INFO_<type>,<variable>,&error)<if(bit)>, <bit>)<endif>
+wordVariable(variable, bit, type, not,constant) ::= <<
+<if(not)>(!<endif><if(bit)>GetBit(<endif><if(!constant)>vm_info(state,VM_INFO_<type>,<endif><variable><if(!constant)>,&error)<endif><if(bit)>, <bit>)<endif><if(not)>)<endif> 
+>>
+
+halt() ::= <<
+	state->stopped_running = true;
+        return false;
 >>

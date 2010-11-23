@@ -26,16 +26,7 @@ options {
 }
 
 @members {
-	private int gprs;
-
-	private List addGPRS(List l) {
-		for(int i=0; i<this.gprs; i++) {
-			StringTemplate attr = new StringTemplate();
-			attr.setAttribute("name", "R" + i);
-			l.add(i, attr);
-		}
-		return l;
-	}
+	private String defaultClock;
 }
 
 microcontroller: ^(
@@ -44,44 +35,39 @@ microcontroller: ^(
 			^(REGISTERS (r+=register)*)
 			^(INSTRUCTIONS (i+=instruction)*)
 		)
-	-> microcontroller(name={$IDENTIFIER},parameters={$p},registers={addGPRS($r)},instructions={$i})
+	-> microcontroller(name={$IDENTIFIER},parameters={$p},registers={$r},instructions={$i})
 	;
 
 parameter:	^(RAM NUMBER)
 	-> ram(ram={$NUMBER})
-	|	^(GPRS NUMBER) { gprs = Integer.parseInt($NUMBER.text); }
-	|	^(SIZE NUMBER)
-	-> template(size={$NUMBER.text}) "// FIXME: size = <size>;"
 	|	^(CLOCK NUMBER)
-	-> template(clock={$NUMBER.text}) "// FIXME: clock = <clock>;"
+		{ defaultClock = $NUMBER.text; }
 	;
 
 register:	IDENTIFIER -> register(name={$IDENTIFIER});
 
 instruction:	^(
 			IDENTIFIER
-			OPCODE { Opcode opcode = new Opcode($OPCODE.text);}
-			^(PARAMS (p+=param)*)
+			^(PARAMS
+				(ops+=opcode)+
+				(^(CLOCK NUMBER))?
+			)
 			^(ARGUMENTS (a+=argument)*)
 			^(EXPR (e+=expr)+)
 		)
 	-> instruction(
 		name={$IDENTIFIER},
-		params={$p},
+		opcodes={$ops},
+		clock={$NUMBER != null ? $NUMBER.text : defaultClock},
 		arguments={$a},
-		expressions={$e},
-		mask={opcode.getMaskString()},
-		opcode={opcode.getOpcodeString()},
-		opcodeparsed={opcode}
+		expressions={$e}
 	)
 	;
 
-param	: ^(i=word  v=word)
-	-> param(name={$i.st},value={$v.comment},comment={$i.st + "=" + $v.comment})
-	|	^(CLOCK NUMBER)
-	-> cycles(cycles={$NUMBER.text})
-	|	^(SIZE NUMBER)
-	-> template(v={$NUMBER.text}) "// FIXME size = <v>;"
+opcode:
+		OPCODE
+		{ Opcode opcode = new Opcode($OPCODE.text); }
+	-> opcode(mask={opcode.getMaskString()},opcode={opcode.getOpcodeString()},parsed={opcode})
 	;
 
 argument:	SIGNED? IDENTIFIER
@@ -92,19 +78,24 @@ expr	:	assignExpr
 	-> {$assignExpr.st}
 	|	ifExpr
 	-> {$ifExpr.st}
+	| HALT
+	-> halt()
 	;
 
 assignExpr:	^(
 			ASSIGN { Variable var = new Variable("A"); }
 			(
-				IDENTIFIER
-					{ var = new Variable($IDENTIFIER.text); }
+				CONSTANT? IDENTIFIER
+					{ 
+						var = new Variable($IDENTIFIER.text); if ($CONSTANT!=null) var.setConstant();
+						if (var.getName().equals("R")) { var.setConstant(false); } 						
+					}
 				| RAM op2=operatorExpr
 					{ var = new Variable($op2.st.toString(),Variable.VariableType.RAM); }
 			)
 			o=operatorExpr
 		)
-	-> assignExpr(var={var},type={var.getType()},value={$o.st},comment={var + " = " + $o.comment}, is_result={var.getName().equals("R")})
+	-> assignExpr(var={var},type={var.getType()},value={$o.st},comment={var + " = " + $o.comment}, is_result={var.getName().equals("R")},constant={var.getConstant()})
 	;
 
 
@@ -126,16 +117,24 @@ condition:	^(EQUALS l=operatorExpr r=word)
 word returns [String comment = ""]:
 		NUMBER {$comment = $NUMBER.text;}
 	-> template (number={$NUMBER}) "<number>"
-	|	^( v=IDENTIFIER NOT? (IDENTIFIER|NUMBER)? )
+	|	^( v=IDENTIFIER NOT? CONSTANT? (IDENTIFIER|NUMBER)? )
 		{
-			Variable var = new Variable($v.text);
-			if ($NUMBER!=null) var = new Variable($NUMBER.text,Variable.VariableType.REGISTER);
+			Variable var;
+			if ($NUMBER == null ) {
+				var = new Variable($v.text);
+			} else {
+				var = new Variable($v.text + $NUMBER.text,Variable.VariableType.REGISTER);
+			}
+			if ($CONSTANT!=null) var.setConstant();
+			
 			$comment = (($NOT != null) ? $NOT.text : "") + $v.text;
 			
 		}
 	// FIXME: Also handle $i
-	-> wordVariable (variable={var.getName()},bit={var.getNumber()},type={var.getType()},not={$NOT != null})
-	|		RAM operatorExpr
+	-> wordVariable (variable={var.getName()},bit={var.getNumber()},type={var.getType()},not={$NOT != null},constant={var.getConstant()})
+	|	^(RAM operatorExpr)
+		{ $comment = $RAM + "(" + $operatorExpr.comment + ")"; }
+	-> wordVariable(variable={$operatorExpr.st}, type={"RAM"})
 	;
 
 operator:      (o=AND | o=OR | o=XOR | o=ADD | o=MINUS | o=MULT)

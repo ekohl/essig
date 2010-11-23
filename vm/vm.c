@@ -112,7 +112,7 @@ _hit_breakpoint(VMState *state)
     
     bp = state->breakpoints;
     while (bp) {
-        if (state->breakpoints->offset == state->registers[PC])
+        if (bp->offset == state->registers[PC])
             return true;
         
         bp = bp->next;
@@ -215,18 +215,19 @@ vm_closediff(VMStateDiff *diff)
 
 /* control functions */
 
-bool 
-vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
+static bool 
+_vm_step(VMState *state, int nsteps, VMStateDiff **diff, bool *hit_bp, bool first)
 {
     Opcode *opcode;
     opcode_handler *handler;
     VMInterruptCallable *callable;
     VMInterruptItem *interrupt_item, *previous_interrupt_item = NULL;
-
+    VMStateDiff *newdiff = NULL;
+    
 #define RETURN(x) do { RELEASE_STATE(state); return (x); } while(0)
     
     *hit_bp = false;
-#ifdef VM_DEBUG
+#if 0
     printf("%-20s %-20s %-20s\n", "Opcode", "Program Counter", "Instruction");
 #endif
     while (nsteps > 0) {
@@ -273,7 +274,7 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
                 // interrupt_item = interrupt_item->next;
                 // 
             // }
-        } else if (_hit_breakpoint(state)) {
+        } else if (!first && _hit_breakpoint(state)) {
             /* breakpoint */
             *hit_bp = true;
             RETURN(true);
@@ -291,7 +292,8 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
                     vm_seterrno(VM_PC_OUT_OF_BOUNDS);
 #ifdef VM_DEBUG
                     printf(LOCATION " pc: %lu max pc: %lu\n", 
-                           pc, state->instructions_size - 1);
+                           (unsigned long) pc, 
+                           (unsigned long) state->instructions_size - 1);
 #endif
                     RETURN(false);
                 }
@@ -299,35 +301,45 @@ vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
             
             /* Save changes in diff */
             if (diff) {
-                diff->pc = state->registers[PC];
-                diff->cycles = state->cycles;
-                
-                diff->next = vm_newdiff();
-                if (!diff->next)
+                if (!(newdiff = vm_newdiff()))
                     RETURN(false);
                 
-                diff = diff->next;
+                newdiff->next = *diff;
+                newdiff->pc = state->registers[PC];
+                newdiff->cycles = state->cycles;
+                
+                *diff = newdiff;
             }
             
             /* Execute instruction */
             opcode = (Opcode *) OPCODE(state);
             handler = opcode_handlers[opcode->opcode_index].handler;
-#ifdef VM_DEBUG
+#if 0
             printf("%-20s 0x%-18x 0x%-18x\n", 
                    opcode_handlers[opcode->opcode_index].opcode_name,
                    state->registers[PC],
                    opcode->instruction);
+            /*printf("0x%x\r", GETPC(state));
+            fflush(stdout);*/
 #endif
-            if (!handler(state, diff, opcode->instruction)) {
+            
+            if (!handler(state, newdiff, opcode->instruction)) {
                 RETURN(state->stopped_running);
             }
         }
         nsteps--;
-        
+        first = false;
         RELEASE_STATE(state);
     }
-
+    
+    return true;
 #undef RETURN
+}
+
+bool 
+vm_step(VMState *state, int nsteps, VMStateDiff **diff, bool *hit_bp)
+{
+    return _vm_step(state, nsteps, diff, hit_bp, true);
 }
 
 static OPCODE_TYPE *
@@ -360,63 +372,144 @@ error:
     return NULL;
 }
 
-VMStateDiff *
-vm_rstep(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp)
+#ifdef VM_DEBUG
+
+static void
+_print_diff(VMState *state, VMStateDiff *diff)
+{
+    char *fmt =        "    %-20s: %lu -> %lu\n";
+    char *fmt_single = "    %-10s at 0x%-04x: %lu -> %lu\n";
+    
+    VMSingleStateDiff *singlediff;
+    
+    puts("VMStateDiff {");
+    
+    printf(fmt, "PC", (unsigned long) state->registers[PC],
+                      (unsigned long) diff->pc);
+    printf(fmt, "Cycles", (unsigned long) state->cycles,
+                          (unsigned long) diff->cycles);
+    
+    singlediff = diff->singlediff;
+    while (singlediff) {
+        char *info_type;
+        switch (singlediff->type) {
+            case VM_INFO_REGISTER:
+                info_type = "Register";
+                break;
+            case VM_INFO_RAM:
+                info_type = "Ram";
+                break;
+            case VM_INFO_PIN:
+                info_type = "Pin";
+                break;
+        }
+        printf(fmt_single, info_type, singlediff->location,
+               (unsigned long) singlediff->oldval, 
+               (unsigned long) singlediff->newval);
+        
+        singlediff = singlediff->next;
+    }
+    
+    puts("}");
+}
+
+#endif /* VM_DEBUG */
+
+static void
+_vm_rstep(VMState *state, int nsteps, VMStateDiff **diff, bool *hit_bp,
+          bool first)
 {
     VMSingleStateDiff *singlediff;
     VMStateDiff *next;
     
     *hit_bp = false;
+    state->stopped_running = false;
     
-    while (nsteps--) {
-        state->cycles = diff->cycles;
-        state->registers[PC] = diff->pc;
+    while (nsteps-- && (*diff)->next) {
+        if (!first && _hit_breakpoint(state)) {
+            *hit_bp = true;
+            break; 
+        }
         
-        singlediff = diff->singlediff;
+        first = false;
         
+#if 0
+        printf("Applying diff: ");
+        _print_diff(state, *diff);
+#endif
+        
+        state->cycles = (*diff)->cycles;
+        state->registers[PC] = (*diff)->pc;
+        
+        singlediff = (*diff)->singlediff;
+        /* Apply singlediff changes */
         while (singlediff) {
             OPCODE_TYPE *location;
             
-            location = _get_location(state, singlediff->type, 
+            location = _get_location(state, singlediff->type,
                                      singlediff->location);
             *location = singlediff->oldval;
             
             singlediff = singlediff->next;
         }
-        /* unwind the diff list */
-        _vm_close_iterable((VMIterable *) diff->singlediff);
-        next = diff->next;
-        free(diff);
-        diff = next;
+        
+        /* Deallocate diff */
+        _vm_close_iterable((VMIterable *) (*diff)->singlediff);
+        next = (*diff)->next;
+        free(*diff);
+        *diff = next;
     }
-    return diff;
 }
 
-bool
-vm_cont(VMState *state, VMStateDiff *diff, bool *hit_bp)
+void
+vm_rstep(VMState *state, int nsteps, VMStateDiff **diff, bool *hit_bp)
+{
+    _vm_rstep(state, nsteps, diff, hit_bp, true);
+}
+
+static bool
+_vm_cont(VMState *state, VMStateDiff **diff, bool *hit_bp, bool first)
 {
     while (true) {
-        if (!vm_step(state, 1000, diff, hit_bp))
+        if (!_vm_step(state, 1000, diff, hit_bp, first))
             return false;
         if (*hit_bp || state->stopped_running)
             break;
+        
+        first = false;
     }
     return true;
 }
 
-VMStateDiff *
-vm_rcont(VMState *state, VMStateDiff *diff, bool *hit_bp)
+
+bool
+vm_cont(VMState *state, VMStateDiff **diff, bool *hit_bp)
 {
-    diff = (VMStateDiff *) vm_reversed_it((VMIterable *) diff);
+    return _vm_cont(state, diff, hit_bp, true);
+}
+
+
+bool
+vm_run(VMState *state, VMStateDiff **diff, bool *hit_bp)
+{
+    return _vm_cont(state, diff, hit_bp, false);
+}
+
+
+void
+vm_rcont(VMState *state, VMStateDiff **diff, bool *hit_bp)
+{
+    bool first = true;
     
-    while (true) {
-        diff = vm_rstep(state, 1000, diff, hit_bp);
+    /* Unwind until the first diff is met (which is unused), or until a
+       breakpoint is met */
+    while ((*diff)->next) {
+        _vm_rstep(state, 1000, diff, hit_bp, first);
         if (*hit_bp)
             break;
+        
+        first = false;
     }
-    
-    (void) vm_reversed_it((VMIterable *) diff);
-    return diff;
 }
 
 bool 
@@ -529,7 +622,11 @@ vm_write(VMState *state, VMStateDiff *diff, VMInfoType type,
         /* update our diffs */
         err_malloc((singlediff = malloc(sizeof(VMSingleStateDiff))));
         singlediff->oldval = *dest;
+        
+#ifdef VM_DEBUG
         singlediff->newval = value;
+#endif
+        
         singlediff->type = type;
         singlediff->location = destaddr;
         
@@ -602,58 +699,56 @@ disassemble(OPCODE_TYPE *assembly, size_t assembly_length)
     size_t i, j;
     bool some_error = false;
     
-    
     err_malloc(result = malloc(sizeof(Opcode) * assembly_length));
     for (i = 0; i < assembly_length; ++i) {
         bool found = false, is_arg = false;
         char *name;
         OPCODE_TYPE instruction = assembly[i];
         
-        // vm_convert_to_host_endianness((char *) &instruction, sizeof(instruction));
+        vm_convert_to_host_endianness((char *) &instruction, sizeof(instruction));
         
-        if (is_arg) {
-            /* Not an actual opcode, but an argument to another opcode
-               (e.g. ld, st) */
-            result[i].opcode_index = 0; /* nop */
-            result[i].instruction = assembly[i];
-            name = "nop";
-        } else {
-            /* Find the right opcode handler for the current instruction and */
-            for (j = 0; opcode_handlers[j].opcode_name; ++j) {
-                op_handler = &opcode_handlers[j];
-                if ((assembly[i] & op_handler->mask) == op_handler->opcode) {
-                    result[i].opcode_index = j;
-                    result[i].instruction = assembly[i];
-                    found = true;
-                    name = op_handler->opcode_name;
-                    break;
-                }
+        for (j = 0; opcode_handlers[j].opcode_name; ++j) {
+            op_handler = &opcode_handlers[j];
+            if ((assembly[i] & op_handler->mask) == op_handler->opcode) {
+                result[i].opcode_index = j;
+                result[i].instruction = assembly[i];
+                found = true;
+                name = op_handler->opcode_name;
+                break;
             }
         }
         
-        if (!found && !is_arg) {
+        if (!found) {
+            /* This is another (16-bits) argument to an instruction. Apparently
+               no instruction handler could be found for the argument. We try
+               to find a handler in any case to allow simulation of code that
+               (incorrectly or maliciously) jumps to an argument. */
+            result[i].opcode_index = 0; /* noop */
+            result[i].instruction = assembly[i];
+            name = "noop";
+            
+            if (!is_arg) {
+                some_error = true;
 #ifdef VM_DEBUG
-            printf(
-                LOCATION " Cannot handle instruction 0x%x at address "
-                "offset 0x%x.\n",
-                (unsigned int) assembly[i], 
-                (unsigned int) (i * sizeof(OPCODE_TYPE)));
+                fprintf(
+                    stderr,
+                    LOCATION " Cannot handle instruction 0x%x at address "
+                    "offset 0x%x.\n",
+                    (unsigned int) assembly[i], 
+                    (unsigned int) (i * sizeof(OPCODE_TYPE)));
 #endif
-            vm_seterrno(VM_ILLEGAL_INSTRUCTION);
-            some_error = true;
+                /* vm_seterrno(VM_ILLEGAL_INSTRUCTION); */
+            }
         }
         
-        /* For now, use this. Later, rely on opcode_handler->next_is_arg. */
-        is_arg = (strcmp(name, "ld")   == 0 ||
-                  strcmp(name, "st")   == 0 ||
-                  strcmp(name, "lpm")  == 0 ||
-                  strcmp(name, "elpm") == 0);
-        // is_arg = op_handler->next_is_arg;
+        is_arg = op_handler->next_is_arg;
     }
 
-    if (some_error)
-        goto error;
-
+    if (some_error) {
+        fprintf(stderr, "WARNING: Some opcodes are not implemented, "
+                        "simulation might not work properly.\n");
+    }
+    
     return result;
 error:
     free(result);

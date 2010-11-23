@@ -34,61 +34,76 @@ tokens {
 // What package should the generated source exist in?
 //
 @header {
-
     package nl.utwente.cs.essig;
+}
+
+@members {
+    private int gprs;
 }
 
 // Parser
 //
-microcontroller:	IDENTIFIER^ LBRACK! parameters registers instructions RBRACK! EOF!;
+microcontroller:	IDENTIFIER^ LBRACK! parameters registers instructions RBRACK! EOF!
+	;
 
-parameters:		PARAMETERS LBRACK (parameter LINE_SEPERATOR)+ RBRACK
-		-> ^(PARAMETERS parameter+);
+parameters:		PARAMETERS^ LBRACK! (parameter LINE_SEPERATOR!)+ RBRACK!
+	;
+
 parameter:		RAM^ NUMBER
-	|		GPRS^ NUMBER
-	|		SIZE^ NUMBER
+	|		GPRS NUMBER { gprs = Integer.parseInt($NUMBER.text); } ->
 	|		CLOCK^ NUMBER
 	;
 
-registers:		REGISTERS LBRACK (register LINE_SEPERATOR)+ RBRACK
-		-> ^(REGISTERS register+);
+registers:		REGISTERS^ LBRACK! (register LINE_SEPERATOR!)+ RBRACK! {
+			// Hack in the general purpose registers
+			for(int i=0; i < gprs; i++) {
+				adaptor.addChild($REGISTERS.tree, adaptor.create(IDENTIFIER, "R" + Integer.toString(i)));
+			}
+	}
+	;
+
 register:		IDENTIFIER;
 
-instructions:		INSTRUCTIONS^ LBRACK! instruction+ RBRACK!;
-instruction:		IDENTIFIER OP_CODE ASSIGN OPCODE params? arguments? LBRACK expr+ RBRACK
-		-> ^(IDENTIFIER OPCODE ^(PARAMS params?) ^(ARGUMENTS arguments?) ^(EXPR expr+));
-
-params	:		LBRACE param (ARG_SEPERATOR param)* RBRACE
-		-> param+
+instructions:		INSTRUCTIONS^ LBRACK! instruction+ RBRACK!
 	;
 
-param	:		SIZE^ ASSIGN! NUMBER
-	|		CLOCK^ ASSIGN! NUMBER
+instruction:		IDENTIFIER params arguments? LBRACK expr+ RBRACK
+		-> ^(IDENTIFIER params ^(ARGUMENTS arguments?) ^(EXPR expr+))
 	;
 
-arguments:		argument (ARG_SEPERATOR argument)*
-		-> argument+;
+params	:		OPCODE (ARG_SEPERATOR OPCODE)* (ARG_SEPERATOR CLOCK ASSIGN NUMBER)?
+		-> ^(PARAMS OPCODE+ (^(CLOCK NUMBER))?)
+	;
 
-argument :		(SIGNED)? IDENTIFIER;
+arguments:		argument (ARG_SEPERATOR! argument)*
+	;
+
+argument:		(SIGNED)? IDENTIFIER
+	;
 
 expr	:		assignExpr LINE_SEPERATOR!
 	|		ifExpr
+	|		HALT LINE_SEPERATOR!
 	;
 
-assignExpr:		(IDENTIFIER | (RAM LPAREN! operatorExpr RPAREN!)) ASSIGN^ operatorExpr;
+assignExpr:		(CONSTANT? IDENTIFIER | (RAM LPAREN! operatorExpr RPAREN!)) ASSIGN^ operatorExpr
+	;
 
-ifExpr:			IF^ condition LBRACK! expr+ RBRACK! (ELSE LBRACK! expr+ RBRACK!)?;
+ifExpr:			IF^ condition LBRACK! expr+ RBRACK! (ELSE LBRACK! expr+ RBRACK!)?
+	;
 
-operatorExpr:		word (operator^ operatorExpr)?;
+operatorExpr:		word (operator^ operatorExpr)?
+	;
 
 condition:		word EQUALS^ word
 	|		LPAREN! operatorExpr RPAREN! EQUALS^ word
 	;
 
-word	:		NOT? IDENTIFIER^
+word	:		NOT? CONSTANT? IDENTIFIER^
 				(LPAREN! (IDENTIFIER|NUMBER) RPAREN!)?
 	|		NUMBER
 	|		RAM^ LPAREN! operatorExpr RPAREN!
 	;
 
-operator:		AND | OR | XOR | ADD | MINUS | MULT;
+operator:		AND | OR | XOR | ADD | MINUS | MULT
+	;

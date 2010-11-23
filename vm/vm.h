@@ -103,7 +103,7 @@ typedef struct {
     OPCODE_TYPE mask;
     opcode_handler *handler;
     /*! Indicates whether the next opcode will be an argument of this opcode.*/
-    // bool next_is_arg;
+    bool next_is_arg;
 } OpcodeHandler;
 
 /*! Each Opcode corresponds to an instruction from the binary code. The code is
@@ -147,7 +147,6 @@ typedef struct VMState {
 #ifdef VM_WITH_THREADS
     pthread_mutex_t lock;
 #endif
-    
 } VMState;
 
 /*! Use this macro as the first attribute of a struct to make it an iterable */
@@ -162,9 +161,11 @@ typedef struct VMIterable {
 typedef struct VMSingleStateDiff {
     VMIterable_Head(VMSingleStateDiff);
     size_t oldval;
-    size_t newval;
     VMInfoType type;
     size_t location;
+#ifdef VM_DEBUG
+    size_t newval;
+#endif
 } VMSingleStateDiff;
 
 /*! Represents a difference in state between two consecutive steps.
@@ -172,7 +173,7 @@ typedef struct VMSingleStateDiff {
 typedef struct VMStateDiff {
     VMIterable_Head(VMStateDiff);
     VMSingleStateDiff *singlediff;
-    size_t pc;
+    OPCODE_TYPE pc;
     unsigned int cycles;
 } VMStateDiff;
 
@@ -232,31 +233,46 @@ void vm_closediff(VMStateDiff *);
     \return zero if successfull, nonzero otherwise, with a VM errno set
 */
 bool vm_break(VMState *state, size_t code_offset);
-/*! Resume execution until a breakpoint is met
+/*! Resume execution until a breakpoint is met.
     \param state The state of the VM
     \param[out] diff If not NULL, keep track of differences in the VMState
 */
+bool vm_cont(VMState *state, VMStateDiff **diff, bool *hit_bp);
+/*! Start executing a program. This is like vm_cont, except that it doesn't
+    run an instruction before checking for breakpoints. vm_cont() does run an
+    instruction first, otherwise it would never pass any breakpoint it hit. */
+bool vm_run(VMState *state, VMStateDiff **diff, bool *hit_bp);
 
-bool vm_cont(VMState *state, VMStateDiff *diff, bool *hit_bp);
 /*! Resume execution in reverse order (could also do snapshots if we want)
     \param state The state of the VM
     \param[in] diff Each step applies one diff until we reach the beginning
                or until we hit a breakpoint.
     \return a pointer to the current diff.
      */
-VMStateDiff *vm_rcont(VMState *state, VMStateDiff *diff, bool *hit_bp);
+void vm_rcont(VMState *state, VMStateDiff **diff, bool *hit_bp);
 
 /*! Step n steps
     \param state The state of the VM
     \param[in] nsteps Number of steps to take
-    \param[out] diff If not NULL, populate with the difference for each step
+    \param[out] diff If not NULL, populate with the difference for each step.
+                     Also updates the list to point to the last element in the
+                     reversed diff chain by doing pointer assignment.
+    
+    For every step, if diff is not NULL, a new diff is allocated and that diff
+    is populated. So if a diff list should be created, the following steps
+    should be taken:
+    
+        allocate the first diff using vm_newdiff; this diff is not used
+        step using the first diff
+        
+    Then the diff list can be unwound until the first diff is encountered, 
+    in which case in can be unwound no further.
 */
-bool vm_step(VMState *state, int nsteps, VMStateDiff *diff, bool *hit_bp);
+bool vm_step(VMState *state, int nsteps, VMStateDiff **diff, bool *hit_bp);
 /*! Reverse step. The list of diffs must be in reverse order and must be at 
     least as long as nsteps. This function cleans diffs that are used during the 
     reverse stepping and returns a pointer to the current VMStateDiff. */
-VMStateDiff *vm_rstep(VMState *state, int nsteps, VMStateDiff *diff, 
-                      bool *hit_bp);
+void vm_rstep(VMState *state, int nsteps, VMStateDiff **diff, bool *hit_bp);
 
 /*! Set a breakpoint asynchronously when the interpreter is running. This
     function is async-signal-safe. */

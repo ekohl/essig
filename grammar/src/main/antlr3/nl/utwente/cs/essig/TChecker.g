@@ -26,11 +26,14 @@ options {
 //
 @header {
 	package nl.utwente.cs.essig;
+
+	import java.util.HashSet;
+	import java.util.Set;
 }
 
 @members {	
 	private SymbolTable<CommonTree> symbolTable = new SymbolTable<CommonTree>();
-	private List<String> params = new ArrayList<String>();
+	private Set<String> params = new HashSet<String>();
 }
 
 microcontroller:
@@ -44,23 +47,9 @@ microcontroller:
 	;
 
 parameter:	
-		^(p=(RAM | GPRS | SIZE | CLOCK) NUMBER) {
-			if(params.contains($p.text)) {
+		^(p=(RAM | CLOCK) NUMBER) {
+			if(!params.add($p.text)) {
 				throw new TCheckerException($p, "Duplicate parameter " + $p.text);
-			}
-			params.add($p.text);
-
-			int number;
-			try {
-				number = Integer.parseInt($NUMBER.text);
-			} catch(Exception nfe) {
-				throw new TCheckerException($NUMBER, nfe.getMessage());
-			}
-
-			if($p.text.equals("gprs")) { // FIXME: Ugly check
-				for(int i = 0; i < number; i++) {
-					symbolTable.declare("R" + i, $p); // FIXME: Correct node
-				}
 			}
 		}
 	;
@@ -74,16 +63,18 @@ register:
 instruction:
 		^(
 			IDENTIFIER
-			OPCODE {
-				Opcode opcode = new Opcode($OPCODE.text);
-				symbolTable.openScope();
-				params.clear();
-			}
-			^(PARAMS param*)
+			{ symbolTable.openScope(); }
+			^(
+				PARAMS
+				(opcodes+=OPCODE)+
+				(^(CLOCK NUMBER))?
+			)
 			^(ARGUMENTS argument*)
 			{
-				for (Character c : opcode.getArguments().keySet()) {
-					symbolTable.getDeclaration(c + "", $OPCODE);
+				for(Object opcode : $opcodes) {
+					for (Character c : new Opcode(((CommonTree)opcode).getText()).getArguments().keySet()) {
+						symbolTable.getDeclaration(c.toString(), (CommonTree) opcode);
+					}
 				}
 			}
 			^(EXPR expr {
@@ -93,28 +84,20 @@ instruction:
 		)
 	;
 
-param:	
-		^(p=(SIZE | CLOCK) NUMBER) {
-			if(params.contains($p.text)) {
-				throw new TCheckerException($p, "Duplicate parameter " + $p.text);
-			}
-			params.add($p.text);
-		}
-	;
-
 argument:		
-		IDENTIFIER {
+		SIGNED? IDENTIFIER {
 			symbolTable.declare(new Variable($IDENTIFIER.text).getName(), $IDENTIFIER);
 		}
 	;
 
 expr:
-		assignExpr | ifExpr
+		assignExpr | ifExpr | HALT
 	;
 
 assignExpr:
-		^(ASSIGN (IDENTIFIER | (RAM operatorExpr)) operatorExpr)
+		^(ASSIGN (CONSTANT? IDENTIFIER | (RAM operatorExpr)) operatorExpr)
 	;
+
 ifExpr:
 		^(IF condition expr+ (ELSE expr+)?)
 	;
@@ -130,10 +113,19 @@ condition:
 
 word:
 		NUMBER
-	|	^(id=IDENTIFIER NOT? IDENTIFIER?) {
-			symbolTable.getDeclaration(new Variable($id.text).getName(), $id);
+	|	^(id=IDENTIFIER NOT? CONSTANT? (IDENTIFIER|n=NUMBER)? )
+		{
+			Variable var;
+			if ($n == null ) {
+				var = new Variable($id.text);
+			} else {
+				var = new Variable($id.text + $n.text,Variable.VariableType.REGISTER);
+			}
+			symbolTable.getDeclaration(var.getName(), $id);
 		}
-	| (RAM operatorExpr)
+	|	^(RAM operatorExpr)
 	;
 
-operator:	AND | OR | XOR | ADD | MINUS | MULT;
+operator:
+		AND | OR | XOR | ADD | MINUS | MULT
+	;

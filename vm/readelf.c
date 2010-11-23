@@ -52,6 +52,7 @@ _elf32_read(VMState *state, char *program, size_t program_size)
                 state->executable_segment_offset = phdr->p_vaddr;
                 
                 /* we loaded the ROM, skip the RAM */
+                phdr++;
                 continue;
             }
             

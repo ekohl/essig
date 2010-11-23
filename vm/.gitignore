@@ -3,4 +3,7 @@
 *.o
 .*.swp
 *.so
+*.pyc
+*.pyo
 /cli.c
+/cython_debug
