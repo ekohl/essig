@@ -55,7 +55,8 @@ parameter:
 	;
 
 register:
-		IDENTIFIER {
+		// FIXME Check NUMBER
+		^(IDENTIFIER NUMBER) {
 			symbolTable.declare($IDENTIFIER.text, $IDENTIFIER);
 		}
 	;
@@ -71,6 +72,7 @@ instruction:
 			)
 			^(ARGUMENTS argument*)
 			{
+				// Verify opcodes with the defined arguments
 				for(Object opcode : $opcodes) {
 					for (Character c : new Opcode(((CommonTree)opcode).getText()).getArguments().keySet()) {
 						symbolTable.getDeclaration(c.toString(), (CommonTree) opcode);
@@ -78,6 +80,7 @@ instruction:
 				}
 			}
 			^(EXPR expr {
+				// First expression declares R
 				symbolTable.declare("R", $EXPR);
 			} expr* )
 			{ symbolTable.closeScope(); }
