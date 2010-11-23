@@ -47,7 +47,7 @@ OpcodeHandler opcode_handlers[] = {
 >>
 
 opcodehandler(it) ::= <<
-{ "<it.name>", 0b<first(it.opcodes).opcode>, 0b<first(it.opcodes).mask>, (opcode_handler *) <it.name>, <length(it.opcodes)> }
+{ "<it.name>", 0b<first(it.opcodes).opcode>, 0b<first(it.opcodes).mask>, (opcode_handler *) <it.name>, <length(it.opcodes)>-1 }
 >>
 
 register(name) ::= <<
