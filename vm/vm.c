@@ -726,7 +726,7 @@ disassemble(OPCODE_TYPE *assembly, size_t assembly_length)
             result[i].opcode_index = 0; /* nop */
             result[i].instruction = assembly[i];
             name = "nop";
-        } else if (is_arg && !found) {
+        } else if (!is_arg && !found) {
 #ifdef VM_DEBUG
             printf(
                 LOCATION " Cannot handle instruction 0x%x at address "
