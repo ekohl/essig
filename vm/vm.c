@@ -718,37 +718,37 @@ disassemble(OPCODE_TYPE *assembly, size_t assembly_length)
             }
         }
         
-        if (is_arg && !found) {
+        if (!found) {
             /* This is another (16-bits) argument to an instruction. Apparently
                no instruction handler could be found for the argument. We try
                to find a handler in any case to allow simulation of code that
                (incorrectly or maliciously) jumps to an argument. */
-            result[i].opcode_index = 0; /* nop */
+            result[i].opcode_index = 0; /* noop */
             result[i].instruction = assembly[i];
-            name = "nop";
-        } else if (!is_arg && !found) {
+            name = "noop";
+            
+            if (!is_arg) {
+                some_error = true;
 #ifdef VM_DEBUG
-            printf(
-                LOCATION " Cannot handle instruction 0x%x at address "
-                "offset 0x%x.\n",
-                (unsigned int) assembly[i], 
-                (unsigned int) (i * sizeof(OPCODE_TYPE)));
+                fprintf(
+                    stderr,
+                    LOCATION " Cannot handle instruction 0x%x at address "
+                    "offset 0x%x.\n",
+                    (unsigned int) assembly[i], 
+                    (unsigned int) (i * sizeof(OPCODE_TYPE)));
 #endif
-            vm_seterrno(VM_ILLEGAL_INSTRUCTION);
-            some_error = true;
+                /* vm_seterrno(VM_ILLEGAL_INSTRUCTION); */
+            }
         }
         
-        /* For now, use this. Later, rely on opcode_handler->next_is_arg. */
-        is_arg = (strcmp(name, "ld")   == 0 ||
-                  strcmp(name, "st")   == 0 ||
-                  strcmp(name, "lpm")  == 0 ||
-                  strcmp(name, "elpm") == 0);
-        // is_arg = op_handler->next_is_arg;
+        is_arg = op_handler->next_is_arg;
     }
 
-    if (some_error)
-        goto error;
-
+    if (some_error) {
+        fprintf(stderr, "WARNING: Some opcodes are not implemented, "
+                        "simulation might not work properly.\n");
+    }
+    
     return result;
 error:
     free(result);
