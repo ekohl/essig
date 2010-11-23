@@ -95,6 +95,34 @@ atmel {
                         N = R7;
                         Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
                 }
+
+		/* Branch if Carry Cleared */
+		brcc "1111 01kk kkkk k000" ~k {
+			if C == 0 {
+				PC = PC + $k + 1;
+			} else {
+				PC = PC + 1;
+			}
+		}
+		
+		/* Branch if Carry Set */
+		brcc "1111 00kk kkkk k000" ~k {
+			if C == 1 {
+				PC = PC + $k + 1;
+			} else {
+				PC = PC + 1;
+			}
+		}
+
+		/* Branch if T Flag is Cleared */
+		brtc "1111 01kk kkkk k110" ~k {
+			if T == 0 {
+				PC = PC + $k + 1;
+			} else {
+				PC = PC + 1;
+			}
+		}
+		
 		/* Branch if Equal */
 		breq "1111 00kk kkkk k001" ~k {
 			if Z == 1 {
@@ -125,6 +153,12 @@ atmel {
 		/* Clear Global Interrupt Flag */
 		cli "1001 0100 1111 1000" {
 			I = 0;
+			PC = PC + 1;
+		}
+
+		/* Clear the T Flag in SREG */
+		clt "1001 0100 1110 1000" {
+			T = 0;
 			PC = PC + 1;
 		}
 
@@ -164,6 +198,15 @@ atmel {
 			PC = PC + 1;
 		}
 
+		/* Compare Skip if Equal */
+		cpse "0001 00rd dddd rrrr" Rd, Rr {
+			if Rr == Rd {
+				PC = PC + 2;
+			} else {
+				PC = PC + 1;
+			}
+		}
+
 		/* Compare with Immediate */
 		com "1001 010d dddd 0000" Rd, K {
 			Rd = 255 - Rd;
@@ -195,6 +238,10 @@ atmel {
 			PC = PC + 1;
 		}
 
+		icall "1001 0101 0000 1001" {
+			PC = R(30); //TODO should be RZ
+		}
+
 		/* Indirect Jump */
 		ijmp "1001 0100 0000 1001" {
 			PC = R(30); //TODO should be RZ
@@ -206,9 +253,36 @@ atmel {
 			PC = PC + 1;
 		}
 
+		/* Increment */
+		inc "1001 010d dddd 0011" Rd {
+			R = Rd + 1;
+			S = N ^ V;
+			V = R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
+			N = R7;
+			Z = !R;
+			Rd = R;
+		}
+
 		/* Jump */
 		jmp "1001 010r rrrr 110r", "kkkk kkkk kkkk kkkk" ~k, r {
 			PC = PC + k;
+		}
+
+		/* Load indirect from X */
+		ld "1001 000d dddd 1100" Rd, c {
+			Rd = ram(R(26)); // TODO Read value from x and use it as address
+		}
+
+		/* Load indirect from X. Post increment X */
+		ldxplus "1001 000d dddd 1101" Rd, c {
+			Rd = ram(R(26)); // TODO Read value from x and use it as address
+			//R(26) = R(26) + 1; // TODO Should be X
+		}
+
+		/* Load indirect from X. Pre decrement X */
+		ldminx "1001 000d dddd 1110" Rd, c {
+			//R(26) = R(26) - 1; // TODO Should be X
+			Rd = ram(R(26)); // TODO Read value from x and use it as address
 		}
 
 		/* Load Immediate */
@@ -279,6 +353,17 @@ atmel {
 			Rd = Rr;
 			// TODO 2 registers! not 1.
 			PC = PC + 1;
+		}
+
+		neg "1001 010d dddd 0001" Rd {
+			R = 0 - Rd;
+			H = R3 + Rd3;
+			S = N ^ V;
+			V = R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1;
+			N = R7;
+			Z = !R;
+			C = R7 + R6 + R5 + R4 + R3 + R2 + R1 + R0; 
+			Rd = R;
 		}
 
 		/* Store Register to I/O Location */
