@@ -85,8 +85,11 @@ expr	:	assignExpr
 assignExpr:	^(
 			ASSIGN { Variable var = new Variable("A"); }
 			(
-				IDENTIFIER
-					{ var = new Variable($IDENTIFIER.text); }
+				CONSTANT? IDENTIFIER
+					{ 
+						var = new Variable($IDENTIFIER.text); if ($CONSTANT!=null) var.setConstant();
+						if (var.getName().equals("R")) { System.out.println("R is geen constante.."); var.setConstant(false); } 						
+					}
 				| RAM op2=operatorExpr
 					{ var = new Variable($op2.st.toString(),Variable.VariableType.RAM); }
 			)

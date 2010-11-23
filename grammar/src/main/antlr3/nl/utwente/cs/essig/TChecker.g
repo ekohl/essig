@@ -95,7 +95,7 @@ expr:
 	;
 
 assignExpr:
-		^(ASSIGN (IDENTIFIER | (RAM operatorExpr)) operatorExpr)
+		^(ASSIGN (CONSTANT? IDENTIFIER | (RAM operatorExpr)) operatorExpr)
 	;
 
 ifExpr:

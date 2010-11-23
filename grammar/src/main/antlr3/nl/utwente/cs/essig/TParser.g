@@ -86,7 +86,7 @@ expr	:		assignExpr LINE_SEPERATOR!
 	|		HALT LINE_SEPERATOR!
 	;
 
-assignExpr:		(IDENTIFIER | (RAM LPAREN! operatorExpr RPAREN!)) ASSIGN^ operatorExpr
+assignExpr:		(CONSTANT? IDENTIFIER | (RAM LPAREN! operatorExpr RPAREN!)) ASSIGN^ operatorExpr
 	;
 
 ifExpr:			IF^ condition LBRACK! expr+ RBRACK! (ELSE LBRACK! expr+ RBRACK!)?
