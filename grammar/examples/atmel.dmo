@@ -254,6 +254,12 @@ atmel {
 			PC = PC + 1;
 		}
 
+		movw "0000 0001 dddd rrrr" Rd, Rr { 
+			$r = $r * 2;
+			$d = $d * 2;
+			Rd = Rr;
+		}
+
 		/* Store Register to I/O Location */
 		out "1011 1AAr rrrr AAAA" A, Rr {
 			A = Rr;
@@ -304,6 +310,7 @@ atmel {
 		sbiw "1001 0111 KKdd KKKK" Rd, K {
 			/* Rd+1:Rd ? Rd+1:Rd - K; */
 			/* TODO same as adiw */
+			
 			S = N ^ V;
 			PC = PC + 1;
 			V = Rd7(h) & !R15;
