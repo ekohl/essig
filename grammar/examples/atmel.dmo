@@ -176,6 +176,15 @@ atmel {
 			PC = PC + 1;
 		}
 
+		/* Decrement */
+		dec "1001 010d dddd 1010" Rd {
+			Rd = Rd - 1;
+			S = N^V;
+			V = !R7 & R6 & R5 & R4 & R3 & R2 & R1 & R0;
+			N = R7;
+			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
+		}
+
 		/* Exclusive Or */
 		eor "0010 01rd dddd rrrr" Rd, Rr {
 			Rd = Rd ^ Rr;
@@ -186,10 +195,20 @@ atmel {
 			PC = PC + 1;
 		}
 
+		/* Indirect Jump */
+		ijmp "1001 0100 0000 1001" {
+			PC = R(30); //TODO should be RZ
+		}
+
 		/* Load an I/O Location to Register */
 		in "1011 0AAd dddd AAAA" Rd, A {
 			A = Rd;
 			PC = PC + 1;
+		}
+
+		/* Jump */
+		jmp "1001 010r rrrr 110r", "kkkk kkkk kkkk kkkk" ~k, r {
+			PC = PC + k;
 		}
 
 		/* Load Immediate */
@@ -254,6 +273,14 @@ atmel {
 			PC = PC + 1;
 		}
 
+		movw "0000 0001 dddd rrrr" Rd, Rr { 
+			$r = $r * 2;
+			$d = $d * 2;
+			Rd = Rr;
+			// TODO 2 registers! not 1.
+			PC = PC + 1;
+		}
+
 		/* Store Register to I/O Location */
 		out "1011 1AAr rrrr AAAA" A, Rr {
 			A = Rr;
@@ -262,17 +289,19 @@ atmel {
 
 		/* Push Register on Stack */
 		push "1001 001r rrrr 1111" Rr {
-			//stack = Rr;
+			// FIXME check if its correct
+			ram(SP) = Rr; 
 			PC = PC + 1;
-
-			/* TODO ADD to stack */
-			/* STACK ? Rr */
+			SP = SP - 1;
 		}
 
 		/* Pop Register from Stack */
 		pop "1001 000d dddd 1111" Rd {
-			//Rd = stack; TODO
+			// FIXME check if its correct
+			SP = SP + 1;			
+			Rd = ram(SP);
 			PC = PC + 1;
+			
 		}
 
 		/* Return from Subroutine */
@@ -304,6 +333,7 @@ atmel {
 		sbiw "1001 0111 KKdd KKKK" Rd, K {
 			/* Rd+1:Rd ? Rd+1:Rd - K; */
 			/* TODO same as adiw */
+			
 			S = N ^ V;
 			PC = PC + 1;
 			V = Rd7(h) & !R15;
@@ -355,6 +385,26 @@ atmel {
 			// TODO Store Rr to Dataspace[RZ]
 			ram(R(30) + q) = Rr; //TODO this are not just single bytes, but TWO registers
 			PC = PC + 1;
+		}
+
+		sbc "0000 10rd dddd rrrr" Rd, Rr {
+			Rd = Rd - Rr - C;
+			H = !Rd3 & Rr3 + Rr3 & R3 + R3 & Rd3;
+			S = N ^ V;
+			V = Rd7 & !Rr7 & !R7 + !Rd7 & Rr7 & R7;
+			N = R7;
+			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0 & Z;
+			C = !Rd7 & Rr7 + Rr7 & R7 + R7 & !Rd7;			
+		}
+		
+		sub "001 10rd dddd rrrr" Rd, Rr {
+			Rd = Rd - Rr;
+			H = !Rd3 & Rr3 + Rr3 & R3 + R3 & Rd3;
+			S = N ^ V;
+			V = Rd7 & !Rr7 & !R7 + !Rd7 & Rr7 & R7;
+			N = R7;
+			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
+			C = !Rd7 & Rr7 + Rr7 & R7 + R7 & !Rd7;	
 		}
 
 		subi "0101 KKKK dddd KKKK" Rd, K {
