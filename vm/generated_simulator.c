@@ -1,1 +1,1 @@
-../grammar/examples/atmel.c
+../grammar/examples/atmel/generated_simulator.c
