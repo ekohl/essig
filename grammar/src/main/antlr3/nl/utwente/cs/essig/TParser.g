@@ -106,14 +106,17 @@ ifExpr:			IF^ condition LBRACK! expr+ RBRACK! (ELSE LBRACK! expr+ RBRACK!)?
 operatorExpr:		word (operator^ operatorExpr)?
 	;
 
-condition:		word EQUALS^ word
-	|		LPAREN! operatorExpr RPAREN! EQUALS^ word
+condition:		word comparison^ word
+	|		LPAREN! operatorExpr RPAREN! comparison^ word
 	;
 
 word	:		NOT? CONSTANT? IDENTIFIER^
 				(LPAREN! (IDENTIFIER|NUMBER) RPAREN!)?
 	|		NUMBER
 	|		RAM^ LPAREN! operatorExpr RPAREN!
+	;
+
+comparison:		EQUALS | LT | LTE | GT | GTE
 	;
 
 operator:		AND | OR | XOR | ADD | MINUS | MULT

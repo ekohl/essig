@@ -275,8 +275,8 @@ atmel {
 
 		/* Jump */
 		jmp "1001 010r rrrr 110r", "kkkk kkkk kkkk kkkk" ~k, r {
-			RAM(SP) = PC + 2;
-			if (k < 65536) {
+			ram(SP) = PC + 2;
+			if k < 65536 {
 				SP = SP - 2;
 			} else {
 				SP = SP - 3;

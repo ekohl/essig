@@ -94,13 +94,17 @@ operatorExpr:
 	;
 
 condition:
-			^(EQUALS operatorExpr word)
+			^(comparison operatorExpr word)
 	;
 
 word:
 			NUMBER
 	|		^(IDENTIFIER NOT? CONSTANT? (IDENTIFIER|NUMBER)?)
 	|		^(RAM operatorExpr)
+	;
+
+comparison:
+			EQUALS | LT | LTE | GT | GTE
 	;
 
 operator:

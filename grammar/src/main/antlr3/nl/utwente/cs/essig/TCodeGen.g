@@ -113,8 +113,8 @@ operatorExpr returns [String comment = ""] :
 	-> operatorExpr(operator={$o.st},word={$w.st},expression={$e.st})
 	;
 
-condition:	^(EQUALS l=operatorExpr r=word)
-	-> condition(left={$l.st},right={$r.st})
+condition:	^(c=comparison l=operatorExpr r=word)
+	-> condition(left={$l.st},comparison={$c.st},right={$r.st})
 	;
 
 word returns [String comment = ""]:
@@ -138,6 +138,10 @@ word returns [String comment = ""]:
 	|	^(RAM operatorExpr)
 		{ $comment = $RAM + "(" + $operatorExpr.comment + ")"; }
 	-> wordVariable(variable={$operatorExpr.st}, type={"RAM"})
+	;
+
+comparison:		(c=EQUALS | c=LT | c=LTE | c=GT | c=GTE)
+	-> template(c={$c}) "<c>"
 	;
 
 operator:      (o=AND | o=OR | o=XOR | o=ADD | o=MINUS | o=MULT)

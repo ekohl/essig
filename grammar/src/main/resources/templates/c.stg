@@ -98,7 +98,7 @@ resultExpr(expression) ::= <<
 int R = result;
 >>
 
-ifExpr(conditio,ifExpr,elseExpr) ::= <<
+ifExpr(condition,ifExpr,elseExpr) ::= <<
 if (<condition>) {
 	<ifExpr; separator="\n">
 }
@@ -133,8 +133,8 @@ if(!vm_write(state, diff, VM_INFO_<type>, <var>, result))
 <endif>
 >>
 
-condition(left,right) ::= <<
-<left> == <right>
+condition(left,comparison,right) ::= <<
+<left> <comparison> <right>
 >>
 
 wordVariable(variable, bit, type, not,constant) ::= <<
