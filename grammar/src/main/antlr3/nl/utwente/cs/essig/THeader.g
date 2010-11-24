@@ -1,0 +1,108 @@
+tree grammar THeader;
+
+options {
+
+    // Default but name it anyway
+    //
+    language   = Java;
+
+    // Use the vocab from the parser (not the lexer)
+    //
+    tokenVocab = TParser;
+
+    // Use ANTLR built-in CommonTree for tree nodes
+    //
+    ASTLabelType = CommonTree;
+
+    // Output a template
+    //
+    output = template;
+}
+
+// What package should the generated source exist in?
+//
+@header {
+    package nl.utwente.cs.essig;
+}
+
+microcontroller:
+			^(
+				IDENTIFIER
+				^(PARAMETERS (p+=parameter)+)
+				^(REGISTERS (r+=register)*)
+				^(INSTRUCTIONS instruction*)
+			)
+		-> header(parameters={$p},registers={$r})
+	;
+
+parameter:
+			^(RAM NUMBER)
+	|		^(CLOCK NUMBER)
+	|		^(OP_SIZE NUMBER)
+		-> opcode_size(bits={$NUMBER})
+	;
+
+register:	^(IDENTIFIER NUMBER)
+		-> register(name={$IDENTIFIER},offset={$NUMBER})
+	;
+
+instruction:
+			^(
+				IDENTIFIER
+				^(PARAMS
+					opcode+
+					(^(CLOCK NUMBER))?
+				)
+				^(ARGUMENTS argument*)
+				^(EXPR expr+)
+			)
+	;
+
+opcode:
+			OPCODE
+	;
+
+argument:
+			SIGNED? IDENTIFIER
+	;
+
+expr:
+			assignExpr
+	|		ifExpr
+	|		HALT
+	;
+
+assignExpr:
+			^(
+				ASSIGN
+				(
+					CONSTANT? IDENTIFIER
+					| RAM operatorExpr
+				)
+				operatorExpr
+			)
+	;
+
+
+ifExpr:
+			^(IF condition expr+ (ELSE expr+)?)
+	;
+
+operatorExpr:
+			word
+	|		^(operator word operatorExpr)
+	;
+
+condition:
+			^(EQUALS operatorExpr word)
+	;
+
+word:
+			NUMBER
+	|		^(IDENTIFIER NOT? CONSTANT? (IDENTIFIER|NUMBER)?)
+	|		^(RAM operatorExpr)
+	;
+
+operator:
+			(AND | OR | XOR | ADD | MINUS | MULT)
+	;

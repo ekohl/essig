@@ -15,7 +15,8 @@ public class Main {
 	/** The file suffix which we accept */
 	public static final String SUFFIX = ".dmo";
 
-	public static final String TEMPLATE = "templates/c.stg";
+	public static final String TEMPLATE_CODE = "templates/c.stg";
+	public static final String TEMPLATE_HEADER = "templates/h.stg";
 
 	/**
 	 * Just a simple test driver for the ASP parser to show how to call it.
@@ -115,6 +116,18 @@ public class Main {
 				w.printStackTrace();
 			}
 
+			// Now walk it with another tree walker, which generates the header
+			// file
+			try {
+				StringTemplate output = generateHeader(t);
+				FileWriter outputStream = new FileWriter(sourceName + ".h");
+				outputStream.write(output.toString());
+				outputStream.close();
+			} catch (Exception w) {
+				System.out.println("AST walk caused exception.");
+				w.printStackTrace();
+			}
+
 			// Optionally make a dot file
 			if (makeDot && tokens.size() < 4096) {
 				dot(sourceName, t);
@@ -182,7 +195,8 @@ public class Main {
 	 * @throws RecognitionException
 	 *             In case the tree has an inconsistency
 	 */
-	private static void checkTree(Tree tree) throws RecognitionException, TCheckerError {
+	private static void checkTree(Tree tree) throws RecognitionException,
+			TCheckerError {
 		TChecker checker = new TChecker(new CommonTreeNodeStream(tree));
 		System.out.println("    Checker Start\n");
 		long pStart = System.currentTimeMillis();
@@ -192,7 +206,8 @@ public class Main {
 				+ "ms.");
 
 		if (checker.getNumberOfSyntaxErrors() != 0) {
-			throw new TCheckerError("Checker finished with " + checker.getNumberOfSyntaxErrors() + " errors");
+			throw new TCheckerError("Checker finished with "
+					+ checker.getNumberOfSyntaxErrors() + " errors");
 		}
 	}
 
@@ -209,20 +224,37 @@ public class Main {
 	 */
 	private static StringTemplate generateCode(Tree tree) throws IOException,
 			RecognitionException {
-		TTree walker = new TTree(new CommonTreeNodeStream(tree));
-
-		// Load Stringtemplate
-		InputStream template = getInputStreamForFilename(TEMPLATE);
-		Reader groupFileR = new InputStreamReader(template);
-		StringTemplateGroup templates = new StringTemplateGroup(groupFileR);
-		template.close();
-		groupFileR.close();
-
-		walker.setTemplateLib(templates);
+		TCodeGen walker = new TCodeGen(new CommonTreeNodeStream(tree));
+		walker.setTemplateLib(readStringTemplateGroup(TEMPLATE_CODE));
 
 		System.out.println("    AST Walk Start\n");
 		long pStart = System.currentTimeMillis();
-		TTree.microcontroller_return mr = walker.microcontroller();
+		TCodeGen.microcontroller_return mr = walker.microcontroller();
+		long stop = System.currentTimeMillis();
+		System.out.println("      AST Walked in " + (stop - pStart) + "ms.");
+
+		return (StringTemplate) mr.getTemplate();
+	}
+
+	/**
+	 * Generates a {@link StringTemplate} from the given <code>tree</code>
+	 *
+	 * @param tree
+	 *            The tree to generate code from
+	 * @return A {@link StringTemplate} containing the generated code
+	 * @throws IOException
+	 *             If template could not be opened
+	 * @throws RecognitionException
+	 *             If the tree could not be walked
+	 */
+	private static StringTemplate generateHeader(Tree tree) throws IOException,
+			RecognitionException {
+		THeader walker = new THeader(new CommonTreeNodeStream(tree));
+		walker.setTemplateLib(readStringTemplateGroup(TEMPLATE_HEADER));
+
+		System.out.println("    AST Walk Start\n");
+		long pStart = System.currentTimeMillis();
+		THeader.microcontroller_return mr = walker.microcontroller();
 		long stop = System.currentTimeMillis();
 		System.out.println("      AST Walked in " + (stop - pStart) + "ms.");
 
@@ -270,20 +302,37 @@ public class Main {
 	/**
 	 * This method returns an InputStream for the given filename.
 	 *
-	 * @param name the filename
+	 * @param name
+	 *            the filename
 	 * @return the InputStream
+	 * @throws FileNotFoundException
 	 */
-	public static InputStream getInputStreamForFilename( String name )
-	{
-		InputStream result = Main.class.getResourceAsStream( "/" + name );
-		if( result == null )
-		{
-			try
-			{
-				result = new FileInputStream( name );
-			}
-			catch( FileNotFoundException e ) {}
+	public static InputStream getInputStreamForFilename(String name)
+			throws FileNotFoundException {
+		InputStream result = Main.class.getResourceAsStream("/" + name);
+		if (result == null) {
+			result = new FileInputStream(name);
 		}
 		return result;
+	}
+
+	/**
+	 * Read a string template group from a given <code>fileName</code>
+	 *
+	 * @param fileName
+	 *            The name of the file to read
+	 * @return The string template group
+	 * @throws IOException
+	 *             In case the file could not be read
+	 */
+	private static StringTemplateGroup readStringTemplateGroup(String fileName)
+			throws IOException {
+		InputStream template = getInputStreamForFilename(fileName);
+		Reader groupFileR = new InputStreamReader(template);
+		StringTemplateGroup templates = new StringTemplateGroup(groupFileR);
+		template.close();
+		groupFileR.close();
+
+		return templates;
 	}
 }

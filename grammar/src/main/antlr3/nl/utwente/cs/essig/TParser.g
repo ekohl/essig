@@ -58,6 +58,7 @@ parameter:		RAM^ NUMBER
 				gprs_offset = Integer.parseInt($offset.text);
 			})?
 		->
+	|		OP_SIZE^ NUMBER
 	|		CLOCK^ NUMBER
 	;
 
@@ -66,7 +67,6 @@ registers:		REGISTERS^ LBRACK! (register LINE_SEPERATOR!)+ RBRACK! {
 			for(int i=0; i < gprs; i++) {
 				CommonTree reg = (CommonTree) adaptor.create(IDENTIFIER, "R" + Integer.toString(i));
 				adaptor.becomeRoot($REGISTERS.tree, reg);
-				// FIXME: offset = base + i
 				adaptor.addChild(reg, adaptor.create(NUMBER, Integer.toString(gprs_offset + i)));
 			}
 	}

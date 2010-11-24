@@ -1,0 +1,17 @@
+group h;
+
+header(parameters, registers) ::= <<
+#include \<stdint.h\>
+
+<parameters; separator="\n">
+
+<registers; separator="\n">
+>>
+
+opcode_size(bits) ::= <<
+#define OPCODE_TYPE uint<bits>_t
+>>
+
+register(name, offset) ::= <<
+#define <name> <offset>
+>>
