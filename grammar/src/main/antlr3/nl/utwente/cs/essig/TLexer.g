@@ -30,6 +30,8 @@ ELSE		:	'else';
 RAM		:	'ram';
 GPRS		:	'gprs';
 CLOCK		:	'clock';
+OP_SIZE		:	'opcode-size';
+
 HALT		:       'HALT';
 CONSTANT	:	'$';
 

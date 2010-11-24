@@ -1,4 +1,4 @@
-tree grammar TTree;
+tree grammar TCodeGen;
 
 options {
 
@@ -42,6 +42,7 @@ parameter:	^(RAM NUMBER)
 	-> ram(ram={$NUMBER})
 	|	^(CLOCK NUMBER)
 		{ defaultClock = $NUMBER.text; }
+	|	^(OP_SIZE NUMBER)
 	;
 
 register:	^(IDENTIFIER NUMBER)

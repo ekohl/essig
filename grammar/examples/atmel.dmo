@@ -2,6 +2,7 @@ atmel {
 	parameters {
 		gprs 32+0;
 		ram 16777216;
+		opcode-size 16; // 16 bits opcodes
 
 		/* Standard Values */
 		clock 1; /* 1 clock_cycle */
