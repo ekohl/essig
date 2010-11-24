@@ -24,6 +24,11 @@ atmel {
 		PC	= 8; /* Program counter */
 		// FIXME: SPL = $3D ($5D), SPH = $3E ($5E)
 		SP	= 93; /* Stack Pointer */
+
+		/** X,Y,Z registers */
+		RX = R27:R26;
+		RY = R29:R28;
+		RZ = R31:R30;
 	}
 
 	instructions {
@@ -61,7 +66,7 @@ atmel {
 			PC = PC + 1;
 		}
 
-		/* Add Immediate to Word  TODO: solve: ADIW Rd+1:Rd,K*/
+		/* Add Immediate to Word */
 		adiw "1001 0110 KKdd KKKK" Rd, K {
 			// Rd+1:Rd ? Rd+1:Rd + K; TODO
 			R30 = R(30) + $K;
@@ -89,6 +94,7 @@ atmel {
   		/* Logical AND with Immediate */
                 andi "0111 KKKK dddd KKKK" Rd, K {
                         /* 16 <= d <= 31, 0 <= K <= 255 */
+			$d = 16 + $d;
                         Rd = Rd & $K;
                         PC = PC + 1;
                         S = N ^ V;
@@ -288,6 +294,7 @@ atmel {
 
 		/* Load Immediate */
 		ldi "1110 KKKK dddd KKKK" Rd, K {
+			$d = 16 + $d;			
 			Rd = $K;
 			PC = PC + 1;
 		}
