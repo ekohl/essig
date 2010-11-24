@@ -244,8 +244,12 @@ atmel {
 			PC = R(30); //TODO should be RZ
 		}
 		
-		call "1001 010k kkkk 111k", "kkkk kkkk kkkk kkkk" {
+		/* Long Call to a Subroutine */
+		call "1001 010k kkkk 111k", "kkkk kkkk kkkk kkkk", clock=4 k {
+			/* 0 <= k < 64K */
 			PC = k;
+			ram(SP) = PC + 2;
+			SP = SP - 2;
 		}
 		
 		/* Indirect Jump */
