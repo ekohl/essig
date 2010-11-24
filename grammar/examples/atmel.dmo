@@ -107,7 +107,7 @@ atmel {
 		}
 		
 		/* Branch if Carry Set */
-		brcc "1111 00kk kkkk k000" ~k {
+		brcs "1111 00kk kkkk k000" ~k {
 			if C == 1 {
 				PC = PC + $k + 1;
 			} else {

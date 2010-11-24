@@ -25,10 +25,12 @@ run-pdb: cli
 
 profile: 
 	make clean
+	ulimit -v $$((1024 * 1024)) && \
 	CFLAGS="$$CFLAGS -pg -O3" LDFLAGS="-pg" $(MAKE) _profile
 
 cachegrind:
 	make clean
+	ulimit -v $$((1024 * 1024)) && \
 	CFLAGS="$$CFLAGS-O3" $(MAKE) _cachegrind
 
 runtest: $(PROFILE_OBJECTS)
@@ -46,7 +48,7 @@ _cachegrind: runtest
 # problem if the user has a 64-bit OS but a 32-bit Python
 # We could have distutils do everything, if we care
 cli: $(OBJECTS)
-	CFLAGS=$(CFLAGS) $(PYTHON) setup.py build_ext --inplace $(PYTHON_DEBUG)
+	CFLAGS="$(CFLAGS)" $(PYTHON) setup.py build_ext --inplace $(PYTHON_DEBUG)
 
 vm.o: vm.c vm.h simulator.h readelf.c vmerrno.h
 generated_simulator.o: generated_simulator.c generated_simulator.h
