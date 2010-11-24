@@ -1,6 +1,6 @@
 atmel {
 	parameters {
-		gprs 32;
+		gprs 32+0;
 		ram 16777216;
 
 		/* Standard Values */
@@ -9,23 +9,24 @@ atmel {
 
 	registers {
 		/* -- Status Register (SREG) -- */
-		SREG; /* Status register */
-		C; /* Carry flag */
-		Z; /* Zero flag */
-		N; /* Negative flag */
-		V; /* Two's complement overflow indicator */
-		S; /* N^V, For signed tests */
-		H; /* Half Carry Flag */
-		T; /* Transfer bit used by BLD and BST instructions */
+		SREG	= 95; /* Status register */
+		// TODO: SREG(0) till SREG(7)
+		C	= 32; /* Carry flag */
+		Z	= 33; /* Zero flag */
+		N	= 34; /* Negative flag */
+		V	= 35; /* Two's complement overflow indicator */
+		S	= 36; /* N^V, For signed tests */
+		H	= 37; /* Half Carry Flag */
+		T	= 38; /* Transfer bit used by BLD and BST instructions */
+		I	= 39; /* Global Interrupt Enable/Disable Flag */
 
 		/* -- Rest -- */
-		I; /* Global Interrupt Enable/Disable Flag */
-		PC; /* Program counter */
-		SP; /* Stack Pointer */
+		PC	= 8; /* Program counter */
+		// FIXME: SPL = $3D ($5D), SPH = $3E ($5E)
+		SP	= 93; /* Stack Pointer */
 	}
 
 	instructions {
-
 		
 		noop "0000 0000 0000 0000" {
 			PC = PC + 1;
@@ -439,7 +440,7 @@ atmel {
 		}
 
 		/* Store Indirect From Register to Data Space using Index X+ */
-		stxplus "1001 001r rrrr 1101" X, Rr {
+		stxplus "1001 001r rrrr 1101", clock=2 X, Rr {
 			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
 			// TODO Store Rr to Dataspace[X]
 			ram(R(26)) = Rr; //TODO this are not just single bytes, but TWO registers

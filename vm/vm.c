@@ -1,27 +1,6 @@
 #include <elf.h>
 #include "vm.h"
 
-#define GETPC(state) state->registers[PC]
-#define OPCODE(state) (state->instructions + GETPC(state))
-
-#define STRINGIFY(msg) #msg
-#define TOSTRING(msg) STRINGIFY(msg)
-#define LOCATION __FILE__ ":" TOSTRING(__LINE__)
-#if VM_DEBUG
-#   define print_err(x) puts(x)
-#else
-#   define print_err(x)
-#endif
-
-#define err(result, msg, errno) \
-    if (!(bool) (result)) { \
-        print_err(LOCATION " " msg); \
-        vm_seterrno(errno); \
-        goto error; \
-    }
-
-#define err_malloc(result) err(result, "malloc", VM_NO_MEMORY)
-
 static bool _read_elf(VMState *state, char *program, size_t program_size);
 
 static char *_vm_error_messages[] = { 
@@ -46,6 +25,8 @@ vm_strerror(int err)
 {
     if (err == -1)
         err = _vm_errno;
+    
+    _vm_errno = VM_NO_ERROR;
     
     if (err == VM_OSERROR)
         return strerror(errno);
@@ -127,6 +108,23 @@ vm_newstate(void *program,
             size_t program_size,
             VMInterruptPolicy interrupt_policy)
 {
+    VMState *newstate;
+    
+    if (!(newstate = vm_newstate_no_code(interrupt_policy)))
+        goto error;
+    
+    if (!_read_elf(newstate, program, program_size))
+        goto error;
+    
+    return newstate;
+error:
+    vm_closestate(newstate);
+    return NULL;
+}
+
+VMState *
+vm_newstate_no_code(VMInterruptPolicy interrupt_policy)
+{
     VMState *newstate = NULL;
     err_malloc(newstate = calloc(1, sizeof(VMState)));
     
@@ -144,9 +142,6 @@ vm_newstate(void *program,
     err_malloc(newstate->pins = calloc(npins, sizeof(OPCODE_TYPE)));
     newstate->interrupt_policy = interrupt_policy;
     newstate->break_async = false;
-    
-    if (!_read_elf(newstate, program, program_size))
-        goto error;
     
     return newstate;
 error:

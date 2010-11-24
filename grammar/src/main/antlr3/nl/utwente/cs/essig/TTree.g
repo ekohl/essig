@@ -44,7 +44,9 @@ parameter:	^(RAM NUMBER)
 		{ defaultClock = $NUMBER.text; }
 	;
 
-register:	IDENTIFIER -> register(name={$IDENTIFIER});
+register:	^(IDENTIFIER NUMBER)
+	-> register(name={$IDENTIFIER},offset={$NUMBER})
+	;
 
 instruction:	^(
 			IDENTIFIER

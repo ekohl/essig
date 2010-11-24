@@ -25,6 +25,27 @@
 #   define RELEASE_STATE(state) do {} while (0)
 #endif
 
+#define GETPC(state) state->registers[PC]
+#define OPCODE(state) (state->instructions + GETPC(state))
+
+#define STRINGIFY(msg) #msg
+#define TOSTRING(msg) STRINGIFY(msg)
+#define LOCATION __FILE__ ":" TOSTRING(__LINE__)
+#if VM_DEBUG
+#   define print_err(x) puts(x)
+#else
+#   define print_err(x)
+#endif
+
+#define err(result, msg, errno) \
+    if (!(bool) (result)) { \
+        print_err(LOCATION " " msg); \
+        vm_seterrno(errno); \
+        goto error; \
+    }
+
+#define err_malloc(result) err(result, "malloc", VM_NO_MEMORY)
+
 /*! \mainpage
 \section VMMainPage Microcontroller simulator API
 \subsection VMMainPublicAPI The public API that will be exposed by the Simulator
@@ -215,6 +236,9 @@ typedef struct {
 VMState *vm_newstate(void *program,
                      size_t program_size, 
                      VMInterruptPolicy interrupt_policy);
+/*! Create a new VMState without any kind of instructions. */
+VMState *vm_newstate_no_code(VMInterruptPolicy interrupt_policy);
+
 /*! Create a new diff that can be passed to functions like vm_cont() and 
     vm_step() */
 VMStateDiff *vm_newdiff(void);

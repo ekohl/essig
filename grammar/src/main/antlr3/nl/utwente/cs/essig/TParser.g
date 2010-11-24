@@ -38,7 +38,8 @@ tokens {
 }
 
 @members {
-    private int gprs;
+    private int gprs = 0;
+    private int gprs_offset = 0;
 }
 
 // Parser
@@ -50,19 +51,29 @@ parameters:		PARAMETERS^ LBRACK! (parameter LINE_SEPERATOR!)+ RBRACK!
 	;
 
 parameter:		RAM^ NUMBER
-	|		GPRS NUMBER { gprs = Integer.parseInt($NUMBER.text); } ->
+	|		GPRS amount=NUMBER {
+				gprs = Integer.parseInt($amount.text);
+			}
+			(ADD offset=NUMBER {
+				gprs_offset = Integer.parseInt($offset.text);
+			})?
+		->
 	|		CLOCK^ NUMBER
 	;
 
 registers:		REGISTERS^ LBRACK! (register LINE_SEPERATOR!)+ RBRACK! {
 			// Hack in the general purpose registers
 			for(int i=0; i < gprs; i++) {
-				adaptor.addChild($REGISTERS.tree, adaptor.create(IDENTIFIER, "R" + Integer.toString(i)));
+				CommonTree reg = (CommonTree) adaptor.create(IDENTIFIER, "R" + Integer.toString(i));
+				adaptor.becomeRoot($REGISTERS.tree, reg);
+				// FIXME: offset = base + i
+				adaptor.addChild(reg, adaptor.create(NUMBER, Integer.toString(gprs_offset + i)));
 			}
 	}
 	;
 
-register:		IDENTIFIER;
+register:		IDENTIFIER^ ASSIGN! NUMBER
+	;
 
 instructions:		INSTRUCTIONS^ LBRACK! instruction+ RBRACK!
 	;
