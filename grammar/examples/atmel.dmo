@@ -242,7 +242,11 @@ atmel {
 		icall "1001 0101 0000 1001" {
 			PC = R(30); //TODO should be RZ
 		}
-
+		
+		call "1001 010k kkkk 111k", "kkkk kkkk kkkk kkkk" {
+			PC = k;
+		}
+		
 		/* Indirect Jump */
 		ijmp "1001 0100 0000 1001" {
 			PC = R(30); //TODO should be RZ
@@ -266,7 +270,14 @@ atmel {
 
 		/* Jump */
 		jmp "1001 010r rrrr 110r", "kkkk kkkk kkkk kkkk" ~k, r {
-			PC = PC + k;
+			RAM(SP) = PC + 2;
+			if (k < 65536) {
+				SP = SP - 2;
+			} else {
+				SP = SP - 3;
+			}
+			
+			PC = k;
 		}
 
 		/* Load indirect from X */
