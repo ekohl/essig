@@ -692,11 +692,11 @@ disassemble(OPCODE_TYPE *assembly, size_t assembly_length)
     Opcode *result = NULL;
     OpcodeHandler *op_handler;
     size_t i, j;
-    bool some_error = false;
+    bool some_error = false, is_arg = false;
     
     err_malloc(result = malloc(sizeof(Opcode) * assembly_length));
     for (i = 0; i < assembly_length; ++i) {
-        bool found = false, is_arg = false;
+        bool found = false;
         char *name;
         OPCODE_TYPE instruction = assembly[i];
         
