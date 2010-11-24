@@ -58,6 +58,7 @@ LPAREN		:	'(';
 RPAREN		:	')';
 ASSIGN		:	'=';
 LINE_SEPERATOR	:	';';
+COLON		:	':';
 ARG_SEPERATOR	:	',';
 EQUALS		:	'==';
 QUOTE		:	'"';

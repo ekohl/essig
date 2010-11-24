@@ -26,7 +26,10 @@ options {
 }
 
 @members {
+	import java.util.Vector;	
 	private String defaultClock;
+	private HashMap<String,String> registers = new HashMap<String,String>(); 
+	//private SymbolTable<CommonTree> symbolTable = new SymbolTable<CommonTree>();
 }
 
 microcontroller: ^(
@@ -44,9 +47,16 @@ parameter:	^(RAM NUMBER)
 		{ defaultClock = $NUMBER.text; }
 	;
 
-register:	^(IDENTIFIER NUMBER)
-	-> register(name={$IDENTIFIER},offset={$NUMBER})
+register:	^(IDENTIFIER NUMBER) -> register(name={$IDENTIFIER},offset={$NUMBER})
+	|       ^(IDENTIFIER multiword_register {}) -> register(name={$IDENTIFIER},offset={"123"})
 	;
+
+//register_type : 
+//	NUMBER 	-> template (number={$NUMBER}) "<number>"
+//	| multiword_register -> template(operator={"123"}) "<operator>" 
+//	;
+
+ multiword_register : 	^(IDENTIFIER (COLON IDENTIFIER)+);
 
 instruction:	^(
 			IDENTIFIER

@@ -30,7 +30,7 @@ bool GetBit(int b, int pos)
 	return ((b & (1 \<\< pos)) != 0);
 }
 
-void AddBit(int *val, int source, int pos)
+void AddBit(long long *val, int source, int pos)
 {
 	*val \<\<=1;
 	*val |= GetBit(source,pos);
