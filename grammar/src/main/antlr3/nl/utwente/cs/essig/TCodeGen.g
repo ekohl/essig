@@ -74,7 +74,7 @@ opcode:
 	;
 
 argument:	SIGNED? IDENTIFIER
-	-> argument(name={$IDENTIFIER},signed={$SIGNED})
+	-> argument(name={new Variable($IDENTIFIER.text).getName()},signed={$SIGNED})
 	;
 
 expr	:	assignExpr

@@ -71,10 +71,13 @@ bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	state->cycles += <clock>;
 	<endif>
 
+	// Declare arguments
+	<arguments:{int <it.name> = 0; int <it.name>_bits = 0;}; separator="\n">
+
 	// Decode the opcode
 	<opcodes; separator="\n">
 
-	// Arguments (cast if signed)
+	// Cast signed arguments
 	<arguments; separator="\n">
 
 	// Execute expressions
