@@ -26,7 +26,6 @@ options {
 }
 
 @members {
-	import java.util.Vector;	
 	private String defaultClock;
 	private HashMap<String,String> registers = new HashMap<String,String>(); 
 	//private SymbolTable<CommonTree> symbolTable = new SymbolTable<CommonTree>();
