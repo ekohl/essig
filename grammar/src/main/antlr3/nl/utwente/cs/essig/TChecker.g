@@ -113,7 +113,7 @@ operatorExpr:
 	;
 
 condition:
-		^(EQUALS operatorExpr word)
+		^(comparison operatorExpr word)
 	;
 
 word:
@@ -129,6 +129,10 @@ word:
 			symbolTable.getDeclaration(var.getName(), $id);
 		}
 	|	^(RAM operatorExpr)
+	;
+
+comparison:
+		EQUALS | LT | LTE | GT | GTE
 	;
 
 operator:

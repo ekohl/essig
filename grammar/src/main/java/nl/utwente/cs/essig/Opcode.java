@@ -77,9 +77,15 @@ public class Opcode {
 			Character addr = entry.getKey();
 
 			// Build a string that looks like:
+<<<<<<< HEAD
 			// int ADDR = 0; AddBit(&ADDR,opcode,INDEX); \n
 			builder.append("long long ").append(addr).append(" = 0;\nint ").append(addr)
 				.append("_bits = ").append(entry.getValue().size()).append(";\n");
+=======
+			// ADDR_bits += X;\n AddBit(&ADDR,opcode,INDEX); \n
+			builder.append(addr).append("_bits += ").append(
+					entry.getValue().size()).append(";\n");
+>>>>>>> 6ed74dbf7b552235c7b292690ab96b590d626e12
 			for (Integer index : entry.getValue()) {
 				builder.append("AddBit(&").append(addr).append(",opcode,")
 						.append(index).append(");\n");

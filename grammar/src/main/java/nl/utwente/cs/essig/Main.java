@@ -105,10 +105,16 @@ public class Main {
 			// Run checker
 			checkTree(t);
 
+			// Ensure the directory exists
+			File dir = new File(sourceName);
+			if(!dir.isDirectory() && dir.mkdirs()) {
+				throw new Exception("Could not create directory " + sourceName);
+			}
+
 			// Now walk it with the tree walker, which generates the C file
 			try {
 				StringTemplate output = generateCode(t);
-				FileWriter outputStream = new FileWriter(sourceName + ".c");
+				FileWriter outputStream = new FileWriter(sourceName + "/generated_simulator.c");
 				outputStream.write(output.toString());
 				outputStream.close();
 			} catch (Exception w) {
@@ -120,7 +126,7 @@ public class Main {
 			// file
 			try {
 				StringTemplate output = generateHeader(t);
-				FileWriter outputStream = new FileWriter(sourceName + ".h");
+				FileWriter outputStream = new FileWriter(sourceName + "/generated_simulator.h");
 				outputStream.write(output.toString());
 				outputStream.close();
 			} catch (Exception w) {
@@ -129,7 +135,7 @@ public class Main {
 			}
 
 			// Optionally make a dot file
-			if (makeDot && tokens.size() < 4096) {
+			if (makeDot && tokens.size() < 8192) {
 				dot(sourceName, t);
 			}
 		} catch (FileNotFoundException ex) {
@@ -278,7 +284,7 @@ public class Main {
 		// Use the ANLTR built in dot generator
 		DOTTreeGenerator gen = new DOTTreeGenerator();
 
-		String outputName = sourceName + ".dot";
+		String outputName = sourceName + "/ast.dot";
 
 		System.out.println("    Producing AST dot (graphviz) file");
 
@@ -292,7 +298,7 @@ public class Main {
 		System.out.println("    Producing png graphic for tree");
 		long pStart = System.currentTimeMillis();
 		Process proc = Runtime.getRuntime().exec(
-				"dot -Tpng -o" + sourceName + ".png " + outputName);
+				"dot -Tpng -o" + sourceName + "/ast.png " + outputName);
 		proc.waitFor();
 		long stop = System.currentTimeMillis();
 		System.out.println("      PNG graphic produced in " + (stop - pStart)
