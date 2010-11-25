@@ -251,13 +251,9 @@ atmel {
 			PC = R(30); //TODO should be RZ
 		}
 		
-<<<<<<< HEAD
-		call "1001 010r rrrr 111r", "kkkk kkkk kkkk kkkk" ~k, r {
-=======
 		/* Long Call to a Subroutine */
 		call "1001 010k kkkk 111k", "kkkk kkkk kkkk kkkk", clock=4 k {
 			/* 0 <= k < 64K */
->>>>>>> 6ed74dbf7b552235c7b292690ab96b590d626e12
 			PC = k;
 			ram(SP) = PC + 2;
 			SP = SP - 2;
@@ -287,11 +283,7 @@ atmel {
 		/* Jump */
 		jmp "1001 010r rrrr 110r", "kkkk kkkk kkkk kkkk" ~k, r {
 			ram(SP) = PC + 2;
-<<<<<<< HEAD
-			if k == 65536 {
-=======
 			if k < 65536 {
->>>>>>> 6ed74dbf7b552235c7b292690ab96b590d626e12
 				SP = SP - 2;
 			} else {
 				SP = SP - 3;

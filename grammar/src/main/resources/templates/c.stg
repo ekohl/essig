@@ -1,0 +1,150 @@
+group c;
+
+microcontroller(name,parameters,registers,instructions) ::= <<
+#include \<stdio.h\>
+#include "simulator.h"
+
+// Spec for <name>
+
+// Parameters
+<parameters; separator="\n">
+// End of parameters
+
+// FIXME: Hardcoded parameters
+int npins = 0;
+size_t pinoffset = 0;
+int nbits_cpu = 16;
+bool is_big_endian = false;
+
+// Registers
+int nregisters = <length(registers)>;
+Register registers[] = {
+	<registers:{\{ "<it.name>", <it.name> \}}; separator=",\n">
+
+ };
+// End of registers
+
+// helper functions (should be in VM I Think)
+bool GetBit(int b, int pos)
+{
+	return ((b & (1 \<\< pos)) != 0);
+}
+
+void AddBit(int *val, int source, int pos)
+{
+	*val \<\<=1;
+	*val |= GetBit(source,pos);
+} 
+
+// Instructions
+<instructions; separator="\n">
+
+OpcodeHandler opcode_handlers[] = {
+	<instructions:opcodehandler(); separator=",\n">,
+	{0}
+};
+// End of instructions
+>>
+
+opcodehandler(it) ::= <<
+{ "<it.name>", 0b<first(it.opcodes).opcode>, 0b<first(it.opcodes).mask>, (opcode_handler *) <it.name>, <length(it.opcodes)>-1 }
+>>
+
+register(name) ::= <<
+"<name>"
+>>
+
+ram (ram) ::= <<
+size_t ramsize = <ram>;
+>>
+
+instruction(name,opcodes,clock,arguments,expressions) ::= <<
+bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
+	// error
+	bool error = false;
+
+	// result
+	int result = 0;
+
+	<if(clock)>
+	// Clock cycles
+	state->cycles += <clock>;
+	<endif>
+
+	// Declare arguments
+	<arguments:{long long <it.name> = 0; int <it.name>_bits = 0;}; separator="\n">
+
+	// Decode the opcode
+	<opcodes; separator="\n">
+
+	// Cast signed arguments
+	<arguments; separator="\n">
+
+	// Execute expressions
+	<first(expressions):resultExpr()>
+	<rest(expressions); separator="\n">
+
+	return true;
+}
+>>
+
+opcode(mask, opcode, parsed) ::= <<
+<parsed>
+>>
+
+argument(name, signed) ::= <<
+<if(signed)> <name> = (int) vm_convert_to_signed(<name>,<name>_bits); <endif>
+>>
+
+resultExpr(expression) ::= <<
+<expression>
+int R = result;
+>>
+
+ifExpr(condition,ifExpr,elseExpr) ::= <<
+if (<condition>) {
+	<ifExpr; separator="\n">
+}
+<if(elseExpr)>
+else {
+	<elseExpr; separator="\n">
+}
+<endif>
+>>
+
+operatorExpr(word,operator,expression) ::= <<
+<word> <operator> <expression> 
+>>
+
+assignExpr(var,type,value,comment,is_result,constant) ::= <<
+// <comment>
+// Calculate expressions for the result var
+<if (constant)>
+<var> = <value>;
+<endif>
+
+<if (!constant)>
+result = <value>;
+// Check if there was an error in the calculation of the result
+if (error)
+	return false;
+
+<if(!is_result)>
+if(!vm_write(state, diff, VM_INFO_<type>, <var>, result))
+	return false;
+<endif>
+<endif>
+>>
+
+condition(left,comparison,right) ::= <<
+<left> <comparison> <right>
+>>
+
+wordVariable(variable, bit, type, not,constant) ::= <<
+<if(not)>(!<endif><if(bit)>GetBit(<endif><if(!constant)>vm_info(state,VM_INFO_<type>,<endif><variable><if(!constant)>,&error)<endif><if(bit)>, <bit>)<endif><if(not)>)<endif> 
+>>
+
+halt() ::= <<
+	state->stopped_running = true;
+        return false;
+>>
