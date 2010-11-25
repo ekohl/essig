@@ -3,7 +3,7 @@ atmel {
 		gprs 32+0;
 		ram 16777216;
 		opcode-size 16; // 16 bits opcodes
-
+		// register-size = 8; //TODO
 		/* Standard Values */
 		clock 1; /* 1 clock_cycle */
 	}
@@ -189,20 +189,21 @@ atmel {
 			S = N ^ V;
 			V = Rd7 & !Rr7 & !R7 + !Rd7 & Rr7 & R7;
 			N = R7;
-			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0 & Z;
+			Z = !R & Z;
 			C = !Rd7 & Rr7 + Rr7 & R7 + R7 & !Rd7;
 			PC = PC + 1;
 		}
 
 		/* Compare with Immediate */
 		cpi "0011 KKKK dddd KKKK" Rd, K {
+			$d = 16 + $d;
 			R = Rd - $K;
-			H = !Rd3 & !$K3 + $K3 & R3 + R3 & Rd3;
+			H = !Rd3 & !$K3 | $K3 & R3 | R3 & Rd3;
 			S = N ^ V;
 			V = Rd7 & !$K7 & !R7 + !Rd7 & $K7 & R7;
 			N = R7;
-			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
-			C = !Rd7 & $K7 + $K7 & R7 + R7 & !Rd7;
+			Z = !R;
+			C = !Rd7 & $K7 | $K7 & R7 | R7 & !Rd7;
 			PC = PC + 1;
 		}
 
@@ -250,7 +251,7 @@ atmel {
 			PC = R(30); //TODO should be RZ
 		}
 		
-		call "1001 010k kkkk 111k", "kkkk kkkk kkkk kkkk" {
+		call "1001 010r rrrr 111r", "kkkk kkkk kkkk kkkk" ~k, r {
 			PC = k;
 		}
 		
@@ -277,8 +278,8 @@ atmel {
 
 		/* Jump */
 		jmp "1001 010r rrrr 110r", "kkkk kkkk kkkk kkkk" ~k, r {
-			RAM(SP) = PC + 2;
-			if (k < 65536) {
+			ram(SP) = PC + 2;
+			if k == 65536 {
 				SP = SP - 2;
 			} else {
 				SP = SP - 3;
@@ -345,7 +346,8 @@ atmel {
 
 		/* Logical Shift Right */
 		lsr "1001 010d dddd 0110" Rd {
-			//TODO			
+			//TODO
+			Rd = Rd * 2;			
 			S = N ^ V;
 			V = N ^ C;
 			N = 0;
@@ -392,6 +394,22 @@ atmel {
 			PC = PC + 1;
 		}
 
+		or "0010 10rd dddd rrrr" Rd,Rr {
+			Rd = Rd | Rr;
+			S = N ^ V;
+			V = 0;
+			N = R7;
+			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
+		}
+
+		ori "0110 KKKK dddd KKKK" Rd, K {
+			Rd = Rd | $K;
+			S = N ^ V;
+			V = 0;
+			N = R7;
+			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
+		}
+
 		/* Push Register on Stack */
 		push "1001 001r rrrr 1111" Rr {
 			// FIXME check if its correct
@@ -431,7 +449,9 @@ atmel {
 		/* Rotate Right through Carry */
 		ror "1001 010d dddd 0111" Rd {
 			/* TODO: zie datasheet */
+			
 			C = Rd0;
+			PC = PC + 1;
 		}
 
 		/* Subtract Immediate from Word */
@@ -456,6 +476,11 @@ atmel {
 			} else {
 				PC = PC + 1;
 			}
+		}
+
+		sec "1001 0100 0000 1000" {
+			C = 1;
+			PC = PC + 1;
 		}
 
 		/* Store Indirect From Register to Data Space using Index X+ */
@@ -484,11 +509,20 @@ atmel {
 			PC = PC + 1;
 		}
 
-		/* Store Indirect From Register to Data Space using Index X+ */
-		stdzplus "10q0 qq1r rrrr 0qqq" q, Rr {
+		/* Store Indirect From Register to Data Space using Index Z+q*/
+		stdzplusq "10q0 qq1r rrrr 0qqq" q, Rr {
 			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
 			// TODO Store Rr to Dataspace[RZ]
 			ram(R(30) + q) = Rr; //TODO this are not just single bytes, but TWO registers
+			PC = PC + 1;
+		}
+
+		/* Store Indirect From Register to Data Space using Index Z+ */
+		stdzplus "1001 001r rrrr 0001" Rr {
+			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
+			// TODO Store Rr to  [RZ]
+			ram(R(30)) = Rr; //TODO this are not just single bytes, but TWO registers
+			// TODO RZ = RZ + 1;
 			PC = PC + 1;
 		}
 
@@ -500,6 +534,11 @@ atmel {
 			N = R7;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0 & Z;
 			C = !Rd7 & Rr7 + Rr7 & R7 + R7 & !Rd7;			
+		}
+
+		set "1001 0100 0110 1000" {
+			T = 1;
+			PC = PC + 1; 
 		}
 		
 		sub "001 10rd dddd rrrr" Rd, Rr {
