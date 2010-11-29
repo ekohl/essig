@@ -4,10 +4,10 @@ CFLAGS=-g -Wall -O1 -mmcu=atmega16
 
 all: empty factorial
 
-dump: 
+dump: factorial
 	avr-objdump -d factorial | less
 
-empty-dump:
+empty-dump: empty
 	avr-objdump -d empty | less
 
 clean:
