@@ -297,7 +297,7 @@ atmel {
 		}
 
 		/* Jump */
-		jmp "1001 010k kkkk 110k", "kkkk kkkk kkkk kkkk" k {
+		jmp "1001 010k kkkk 110k", "kkkk kkkk kkkk kkkk" ~k {
 			PC = $k;
 		}
 
@@ -418,6 +418,7 @@ atmel {
 		/* Multiply Unsigned */
 		mul "1001 11rd dddd rrrr", clock=2 ~Rd, ~Rr {
 			//R1:R0 = Rd * Rr; // TODO
+			R = 0; // FIXME: temp var
 
 			C = R15;
 			Z = !R15 & !R14 & !R13 & !R12 & !R11 & !R10 & !R9 & !R8 & !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
