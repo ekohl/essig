@@ -116,6 +116,7 @@ operatorExpr(word,operator,expression) ::= <<
 <word> <operator> <expression> 
 >>
 
+
 assignExpr(var,type,value,comment,is_result,constant) ::= <<
 // <comment>
 // Calculate expressions for the result var
@@ -136,6 +137,12 @@ if(!vm_write(state, diff, VM_INFO_<type>, <var>, result))
 <endif>
 >>
 
+multiRegisterAssignExpr() ::= <<
+//======MULTI WORD BEGIN
+
+//======MULTI WORD END
+>>
+
 condition(left,comparison,right) ::= <<
 <left> <comparison> <right>
 >>
@@ -147,4 +154,8 @@ wordVariable(variable, bit, type, not,constant) ::= <<
 halt() ::= <<
 	state->stopped_running = true;
         return false;
+>>
+
+multiRegister(r1,r2) ::= <<
+((vm_info(state,VM_INFO_REGISTER,<r1>,&error) \<\<8) + vm_info(state,VM_INFO_REGISTER,<r2>,&error))
 >>

@@ -19,6 +19,9 @@ public class Variable {
 
 	/** Is the variable a constant */
 	private boolean constant = false;
+	
+	/** Is the variable the result value of an instruction */
+	private boolean isResult = false;
 
 	/** The type of variable */
 	private final VariableType type;
@@ -115,6 +118,20 @@ public class Variable {
 	public void setConstant(boolean val)
 	{
 		this.constant = val;
+	}
+
+	public void setResult()
+	{
+		this.setResult(true);
+	}
+
+	public void setResult(boolean val)
+	{
+		this.isResult = val;
+	}
+
+	public boolean isResult() {
+	 	return this.isResult;
 	}
 
 	/**

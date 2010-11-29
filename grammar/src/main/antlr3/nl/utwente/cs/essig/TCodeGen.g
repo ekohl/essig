@@ -97,17 +97,21 @@ expr	:	assignExpr
 assignExpr:	^(
 			ASSIGN { Variable var = new Variable("A"); }
 			(
-				CONSTANT? IDENTIFIER
+				CONSTANT? IDENTIFIER (LPAREN (op=operatorExpr) RPAREN)?
 					{ 
-						var = new Variable($IDENTIFIER.text); if ($CONSTANT!=null) var.setConstant();
-						if (var.getName().equals("R")) { var.setConstant(false); } 						
+						var = new Variable($IDENTIFIER.text + ($op.st!=null?$op.st:"")); if ($CONSTANT!=null) var.setConstant();
+						if (var.getName().equals("R")) { var.setConstant(false); var.setResult(); }
+						if ($op.st!=null) {var.setConstant(false); var.setResult(false);}
+					
 					}
 				| RAM op2=operatorExpr
 					{ var = new Variable($op2.st.toString(),Variable.VariableType.RAM); }
 			)
 			o=operatorExpr
 		)
-	-> assignExpr(var={var},type={var.getType()},value={$o.st},comment={var + " = " + $o.comment}, is_result={var.getName().equals("R")},constant={var.getConstant()})
+	-> assignExpr(var={var},type={var.getType()},value={$o.st},comment={var + " = " + $o.comment}, is_result={var.isResult()},constant={var.getConstant()})
+	|	^(MULTI_REG i1=IDENTIFIER o1=operatorExpr i2=IDENTIFIER o2=operatorExpr o3=operatorExpr)
+	-> multiRegisterAssignExpr(r1={$o1.st},r2={$o2.st})
 	;
 
 
@@ -147,6 +151,8 @@ word returns [String comment = ""]:
 	|	^(RAM operatorExpr)
 		{ $comment = $RAM + "(" + $operatorExpr.comment + ")"; }
 	-> wordVariable(variable={$operatorExpr.st}, type={"RAM"})
+	|	^(MULTI_REG IDENTIFIER o1=operatorExpr IDENTIFIER o2=operatorExpr)
+	-> multiRegister(r1={$o1.st},r2={$o2.st})
 	;
 
 comparison:		(c=EQUALS | c=LT | c=LTE | c=GT | c=GTE)

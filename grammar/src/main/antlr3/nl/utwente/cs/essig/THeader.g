@@ -107,6 +107,7 @@ word:
 			NUMBER
 	|		^(IDENTIFIER NOT? CONSTANT? (IDENTIFIER|NUMBER)?)
 	|		^(RAM operatorExpr)
+	|		^(MULTI_REG IDENTIFIER operatorExpr IDENTIFIER operatorExpr)
 	;
 
 comparison:

@@ -29,6 +29,7 @@ tokens {
 	PARAMS;
 	ARGUMENTS;
 	EXPR;
+	MULTI_REG;
 }
 
 // What package should the generated source exist in?
@@ -99,7 +100,8 @@ expr	:		assignExpr LINE_SEPERATOR!
 	|		HALT LINE_SEPERATOR!
 	;
 
-assignExpr:		(CONSTANT? IDENTIFIER | (RAM LPAREN! operatorExpr RPAREN!)) ASSIGN^ operatorExpr
+assignExpr:		(CONSTANT? IDENTIFIER (LPAREN (operatorExpr) RPAREN)? | (RAM LPAREN! operatorExpr RPAREN!) | (LPAREN! (operatorExpr) RPAREN!)) ASSIGN^ operatorExpr
+	|		multi_register^ ASSIGN! operatorExpr
 	;
 
 ifExpr:			IF^ condition LBRACK! expr+ RBRACK! (ELSE LBRACK! expr+ RBRACK!)?
@@ -113,10 +115,14 @@ condition:		word comparison^ word
 	;
 
 word	:		NOT? CONSTANT? IDENTIFIER^
-				(LPAREN! (IDENTIFIER|NUMBER) RPAREN!)?
+				(LPAREN! (operatorExpr) RPAREN!)?
 	|		NUMBER
 	|		RAM^ LPAREN! operatorExpr RPAREN!
+	|		multi_register
 	;
+
+multi_register : LBRACE IDENTIFIER LPAREN operatorExpr RPAREN COLON IDENTIFIER LPAREN operatorExpr RPAREN RBRACE
+			-> ^(MULTI_REG IDENTIFIER operatorExpr IDENTIFIER operatorExpr);
 
 comparison:		EQUALS | LT | LTE | GT | GTE
 	;

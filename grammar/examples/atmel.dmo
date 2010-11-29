@@ -70,7 +70,7 @@ atmel {
 		/* Add Immediate to Word */
 		adiw "1001 0110 KKdd KKKK" Rd, K {
 			// Rd+1:Rd ? Rd+1:Rd + K; TODO
-			R30 = R(30) + $K;
+			//R30 = R(30) + $K;
 			// d = {24,26,28,30}
 			$d = 24 + $d * 2;
 
@@ -523,7 +523,12 @@ atmel {
 		sbiw "1001 0111 KKdd KKKK" Rd, K {
 			/* Rd+1:Rd ? Rd+1:Rd - K; */
 			/* TODO same as adiw */
+			R = [R($d+1):R(d)] - $K;
 
+			//R(27) = 5;		
+			[R($d+1):R($d)] = $K;
+			//R($d+1) = $R(h);
+			//Rd = K(l);
 			S = N ^ V;
 			V = Rd7(h) & !R15;
 			N = R15;

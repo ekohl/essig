@@ -100,7 +100,8 @@ expr:
 	;
 
 assignExpr:
-		^(ASSIGN (CONSTANT? IDENTIFIER | (RAM operatorExpr)) operatorExpr)
+		^(ASSIGN (CONSTANT? IDENTIFIER (LPAREN (operatorExpr) RPAREN)? | (RAM operatorExpr)) operatorExpr)
+	|	^(MULTI_REG IDENTIFIER operatorExpr IDENTIFIER operatorExpr operatorExpr)
 	;
 
 ifExpr:
@@ -129,6 +130,11 @@ word:
 			symbolTable.getDeclaration(var.getName(), $id);
 		}
 	|	^(RAM operatorExpr)
+	|	multi_register
+	;
+
+multi_register:
+	^(MULTI_REG IDENTIFIER operatorExpr IDENTIFIER operatorExpr)
 	;
 
 comparison:
