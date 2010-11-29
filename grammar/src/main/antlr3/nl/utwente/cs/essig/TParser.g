@@ -75,7 +75,7 @@ registers:		REGISTERS^ LBRACK! (register LINE_SEPERATOR!)+ RBRACK! {
 register:		IDENTIFIER^ ASSIGN! (NUMBER | multiword_register)
 	;
 
-multiword_register : 	IDENTIFIER^ (COLON IDENTIFIER)+;
+multiword_register : 	IDENTIFIER^ (COLON! IDENTIFIER)+;
 
 instructions:		INSTRUCTIONS^ LBRACK! instruction+ RBRACK!
 	;

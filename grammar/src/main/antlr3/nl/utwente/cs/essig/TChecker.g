@@ -61,7 +61,7 @@ register:
 		}
 	;
 
-multiword_register : 	^(IDENTIFIER (COLON IDENTIFIER)+);
+multiword_register : 	^(IDENTIFIER IDENTIFIER+);
 
 instruction:
 		^(

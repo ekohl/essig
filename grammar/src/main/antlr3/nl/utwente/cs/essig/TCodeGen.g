@@ -56,7 +56,7 @@ register:	^(IDENTIFIER NUMBER) -> register(name={$IDENTIFIER},offset={$NUMBER})
 //	| multiword_register -> template(operator={"123"}) "<operator>" 
 //	;
 
- multiword_register : 	^(IDENTIFIER (COLON IDENTIFIER)+);
+ multiword_register : 	^(IDENTIFIER IDENTIFIER+);
 
 instruction:	^(
 			IDENTIFIER

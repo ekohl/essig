@@ -42,9 +42,15 @@ parameter:
 		-> opcode_size(bits={$NUMBER})
 	;
 
-register:	^(IDENTIFIER NUMBER)
+register:
+			^(IDENTIFIER (NUMBER | multiword_register))
 		-> register(name={$IDENTIFIER},offset={$NUMBER})
 	;
+
+multiword_register:
+			^(IDENTIFIER IDENTIFIER+)
+	;
+
 
 instruction:
 			^(
