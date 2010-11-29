@@ -1,4 +1,4 @@
-CFLAGS += -g -Wall -fPIC -DVM_DEBUG=1
+CFLAGS += -O2 -g -Wall -Wno-unused-variable -fPIC -DVM_DEBUG=1
 OBJECTS=vm.o generated_simulator.o
 PROFILE_OBJECTS=$(OBJECTS) runtest.o
 PYTHON_DEBUG=`cython 2>&1 | grep -q '\--debug' && echo --pyrex-debug`
