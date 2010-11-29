@@ -87,6 +87,7 @@ assignExpr:
 				)
 				operatorExpr
 			)
+	|	^(MULTI_REG i1=IDENTIFIER o1=operatorExpr i2=IDENTIFIER o2=operatorExpr o3=operatorExpr)
 	;
 
 
