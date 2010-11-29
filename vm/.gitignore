@@ -7,3 +7,4 @@
 *.pyo
 /cli.c
 /cython_debug
+/runtest
