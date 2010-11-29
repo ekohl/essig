@@ -524,11 +524,7 @@ atmel {
 			/* Rd+1:Rd ? Rd+1:Rd - K; */
 			/* TODO same as adiw */
 			R = [R($d+1):R(d)] - $K;
-
-			//R(27) = 5;		
-			[R($d+1):R($d)] = $K;
-			//R($d+1) = $R(h);
-			//Rd = K(l);
+			[R($d+1):R($d)] = $R;
 			S = N ^ V;
 			V = Rd7(h) & !R15;
 			N = R15;

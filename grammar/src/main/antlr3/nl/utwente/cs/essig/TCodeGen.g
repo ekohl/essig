@@ -111,7 +111,7 @@ assignExpr:	^(
 		)
 	-> assignExpr(var={var},type={var.getType()},value={$o.st},comment={var + " = " + $o.comment}, is_result={var.isResult()},constant={var.getConstant()})
 	|	^(MULTI_REG i1=IDENTIFIER o1=operatorExpr i2=IDENTIFIER o2=operatorExpr o3=operatorExpr)
-	-> multiRegisterAssignExpr(r1={$o1.st},r2={$o2.st})
+	-> multiRegisterAssignExpr(low={$o1.st},high={$o2.st},value={$o3.st})
 	;
 
 
