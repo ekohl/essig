@@ -1,4 +1,5 @@
 #include <elf.h>
+
 #include "vm.h"
 
 static bool _read_elf(VMState *state, char *program, size_t program_size);
@@ -700,7 +701,8 @@ disassemble(OPCODE_TYPE *assembly, size_t assembly_length)
         char *name;
         OPCODE_TYPE instruction = assembly[i];
         
-        vm_convert_to_host_endianness((char *) &instruction, sizeof(instruction));
+        vm_convert_to_host_endianness((char *) &instruction, 
+                                      sizeof(instruction));
         
         for (j = 0; opcode_handlers[j].opcode_name; ++j) {
             op_handler = &opcode_handlers[j];

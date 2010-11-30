@@ -78,7 +78,6 @@ extern size_t ramsize;
 /*! NULL-terminated list of opcode handlers. */
 extern OpcodeHandler opcode_handlers[];
 
-
 /*! Holds the register names and offsets */
 extern Register registers[];
 

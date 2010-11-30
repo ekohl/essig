@@ -95,6 +95,9 @@ cdef extern from "vm.h":
     OPCODE_TYPE vm_info(VMState *state, VMInfoType type, size_t vmaddr, 
                         bool *result)
     
+    bool vm_write(VMState *state, VMStateDiff *diff, VMInfoType type, 
+                  size_t destaddr, OPCODE_TYPE value)
+    
     void Py_INCREF(object obj)
     bool vm_register_interrupt_callable(VMState *state, void *func, 
                                         void *argument)

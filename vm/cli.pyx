@@ -194,12 +194,26 @@ cdef class Simulator(object):
 class SimulatorCLI(cmd.Cmd, object):
     
     def __init__(self, program):
+        cdef Register *register
+        
         super(SimulatorCLI, self).__init__()
         self.program = program
         self.simulator = Simulator(open(program).read())
         self.symtab = self.read_symtab()
         self.symtab_offset_to_func = {v : k for k, v in self.symtab.items()}
         self.prompt = '(sim) '
+        
+        self.registers = {}
+        for i from 0 <= i < nregisters:
+            self.registers[registers[i].name.lower()] = registers[i].offset
+        
+        self.register_fmt = '%-15s 0x%-*x'
+        
+        self.vm_info_type = {
+            'register': VM_INFO_REGISTER,
+            'ram'     : VM_INFO_RAM,
+            'pin'     : VM_INFO_PIN,
+        }
         
         # indicates whether the 'run' command has been called. If it has been
         # called before, have Simulator allocate a new VMState
@@ -334,21 +348,13 @@ class SimulatorCLI(cmd.Cmd, object):
     def info_cycles(self, Simulator sim, about):
         print sim.state.cycles, 'cycles have passed.'
     
-    def info_registers(self, Simulator sim, about, register=None):
-        if register is None:
-            fmt = '%-15s 0x%-*x'
-        else:
-            fmt = '%s 0x%-*x'
-    
+    def info_registers(self, Simulator sim, about):
         for i in range(nregisters):
-            if register is None or registers[i].name == register:
-                val = sim.state.registers[registers[i].offset]
-                print fmt % (registers[i].name, sizeof(OPCODE_TYPE) * 2, val)
-                if register is not None:
-                    break
-        else:
-            if register is not None:
-                print 'No such register: %r' % register
+            val = sim.state.registers[registers[i].offset]
+            print self.register_fmt % (registers[i].name, 
+                                       sizeof(OPCODE_TYPE) * 2,
+                                       val)
+            
     
     def info_symbols(self, Simulator sim, about):
         for symname, offset in sorted(self.symtab.iteritems()):
@@ -368,18 +374,22 @@ class SimulatorCLI(cmd.Cmd, object):
             except ValueError, e:
                 print e
             else:
-                value = vm_info(sim.state, VM_INFO_RAM, address, <bool *> &error)
+                value = vm_info(sim.state, VM_INFO_RAM, address, 
+                                <bool *> &error)
                 if error:
                     self.print_err()
                 else:
                     print value
     
     def info_register(self, Simulator sim, about):
-        if about:
-            self.info_registers(sim, about, register=about)
-        else:
-            print 'Provide the name of a register.'
-    
+        offset = self.registers.get(about.lower())
+        if offset is None:
+            raise ErrorMessage('No such register: %r' % about)
+        
+        print self.register_fmt % (about, 
+                                   sizeof(OPCODE_TYPE) * 2,
+                                   sim.state.registers[offset])
+        
     def info_instruction(self, Simulator sim, about, pc=None):
         cdef Opcode *op
         
@@ -421,6 +431,34 @@ class SimulatorCLI(cmd.Cmd, object):
                    'ram', 'register', 'pin', 'instruction')
         return self.complete_from_it(text, options)
     
+    def do_set(self, args):
+        '''
+        set register name value
+        set ram address value
+        set pin address value
+        '''
+        cdef Simulator sim = self.simulator
+        
+        arglist = args.split()
+        if len(arglist) != 3:
+            raise ErrorMessage('Usage: ' + self.do_set.__doc__)
+        
+        type, addr, value = arglist
+        vm_info_type = self.vm_info_type.get(type)
+        if vm_info_type is None:
+            raise ErrorMessage('Invalid argument: %r' % args)
+        
+        if vm_info_type == VM_INFO_REGISTER:
+            addr = self.registers[addr]
+        
+        value = int(value, 0)
+        
+        if not vm_write(sim.state, NULL, vm_info_type, addr, value):
+            raise VMError()
+        
+    def complete_set(self, text, line, beginidx, endidx):
+        return self.complete_from_it(text, ('register', 'ram', 'pin'))
+    
     def do_disassemble(self, args):
         """
         Disassemble the program that's to be simulated.
@@ -460,7 +498,7 @@ class SimulatorCLI(cmd.Cmd, object):
         while True:
             try:
                 super(SimulatorCLI, self).cmdloop(banner)
-            except ErrorMessage, e:
+            except (KeyboardInterrupt, ErrorMessage), e:
                 sys.stderr.write(str(e) + '\n')
             
             banner = ''
