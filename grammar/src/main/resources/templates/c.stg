@@ -140,9 +140,13 @@ if(!vm_write(state, diff, VM_INFO_<type>, <var>, result))
 multiRegisterAssignExpr(low,high,value) ::= <<
 //======MULTI WORD BEGIN
 // Low Byte
-vm_write(sate,VM_INFO_REGISTER,<low>,(<value>&&0xFF));
+vm_write(state,VM_INFO_REGISTER,<low>,(<value>&&0xFF),&error);
+if(error)
+	return false;
 // High Byte
-vm_write(sate,VM_INFO_REGISTER,<high>,((<value> && 0xFF00)\>\>8));
+vm_write(state,VM_INFO_REGISTER,<high>,((<value> && 0xFF00)\>\>8),&error);
+if(error)
+	return false;
 //======MULTI WORD END
 >>
 
