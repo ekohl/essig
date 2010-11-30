@@ -266,7 +266,7 @@ atmel {
 		/* Long Call to a Subroutine */
 		call "1001 010k kkkk 111k", "kkkk kkkk kkkk kkkk", clock=4 k {
 			/* 0 <= k < 64K */
-			PC = k;
+			PC = $k;
 			ram(SP) = PC + 2;
 			SP = SP - 2;
 		}
