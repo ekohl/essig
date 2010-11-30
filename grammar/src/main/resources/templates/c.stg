@@ -65,7 +65,7 @@ bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
 	// result
 	int result = 0;
-
+	//printf("<name> \n");
 	<if(clock)>
 	// Clock cycles
 	state->cycles += <clock>;
