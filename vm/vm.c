@@ -223,9 +223,6 @@ _vm_step(VMState *state, int nsteps, VMStateDiff **diff, bool *hit_bp, bool firs
 #define RETURN(x) do { RELEASE_STATE(state); return (x); } while(0)
     
     *hit_bp = false;
-#if 0
-    printf("%-20s %-20s %-20s\n", "Opcode", "Program Counter", "Instruction");
-#endif
     while (nsteps > 0) {
         /* acquire and release for every step. This allows for some nice 
            contention! */
@@ -243,34 +240,8 @@ _vm_step(VMState *state, int nsteps, VMStateDiff **diff, bool *hit_bp, bool firs
             callable = callable->next;
         }
         
-        if (false || state->interrupts != NULL) {
-            // /* interrupt */
-            // interrupt_item = state->interrupts;
-            // while (interrupt_item) {
-                // if (interrupt_item->cycles <= state->cycles) {
-                    // bool result; 
-                    // interrupt_handler *handler;
-                    // 
-                    // handler = state->interrupt_handlers[
-                                            // interrupt_item->interrupt_type];
-                    // result = handler(state, interrupt_item->interrupt_type);
-                    // 
-                    // /* delete item from the queue */
-                    // if (previous_interrupt_item) {
-                        // previous_interrupt_item->next = interrupt_item->next;
-                    // } else {
-                        // state->interrupts = interrupt_item->next;
-                    // }
-                    // free(interrupt_item);
-                    // interrupt_item = previous_interrupt_item;
-                    // 
-                    // if (!result)
-                        // return false;
-                // }
-                // interrupt_item = interrupt_item->next;
-                // 
-            // }
-        } else if (!first && _hit_breakpoint(state)) {
+        
+        if (!first && _hit_breakpoint(state)) {
             /* breakpoint */
             *hit_bp = true;
             RETURN(true);
@@ -307,18 +278,24 @@ _vm_step(VMState *state, int nsteps, VMStateDiff **diff, bool *hit_bp, bool firs
                 *diff = newdiff;
             }
             
+            if (state->interrupt_policy != VM_POLICY_INTERRUPT_NEVER) {
+                if (state->interrupts != NULL) {
+                    /* There are interrupts specified in the queue, call the 
+                       user-written set_interrupt callback. */
+                    if (!set_interrupt(state, newdiff))
+                        RETURN(false);
+                }
+                
+                /* For every step, handle an interrupt in the debuggee (if present)
+                   bytes calling a user-written function (or a default noop). */
+                if (!handle_interrupt(state, newdiff)) {
+                    RETURN(false);
+                }
+            }
+            
             /* Execute instruction */
             opcode = (Opcode *) OPCODE(state);
             handler = opcode_handlers[opcode->opcode_index].handler;
-#if 0
-            printf("%-20s 0x%-18x 0x%-18x\n", 
-                   opcode_handlers[opcode->opcode_index].opcode_name,
-                   state->registers[PC],
-                   opcode->instruction);
-            /*printf("0x%x\r", GETPC(state));
-            fflush(stdout);*/
-#endif
-            
             if (!handler(state, newdiff, opcode->instruction)) {
                 RETURN(state->stopped_running);
             }
@@ -611,7 +588,7 @@ vm_write(VMState *state, VMStateDiff *diff, VMInfoType type,
     OPCODE_TYPE *dest; 
     VMSingleStateDiff *singlediff;
     
-    if (!(dest =_get_location(state, type, destaddr)))
+    if (!(dest = _get_location(state, type, destaddr)))
         goto error;
     
     if (diff) {
@@ -691,7 +668,7 @@ static Opcode *
 disassemble(OPCODE_TYPE *assembly, size_t assembly_length) 
 {
     Opcode *result = NULL;
-    OpcodeHandler *op_handler;
+    OpcodeHandler *op_handler = NULL;
     size_t i, j;
     bool some_error = false, is_arg = false;
     

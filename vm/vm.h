@@ -356,6 +356,14 @@ void vm_convert_to_host_endianness(char *value, size_t length);
 /*! Convert unsigned two-complement's value of nbits to signed. */
 long long vm_convert_to_signed(unsigned long long value, int nbits);
 
+/*! \defgroup User-written code */
+/* @{ */
+/*! Interrupts */
+bool set_interrupt(VMState *state, VMStateDiff *diff);
+bool handle_interrupt(VMState *state, VMStateDiff *diff);
+/* @} */
+
+
 /* include the private API specification */
 #include "simulator.h"
 
