@@ -1,0 +1,94 @@
+#include "vm.h"
+#include "generated_simulator.h"
+#define MCUCR 0x55
+#define GICR 0x5B
+#define MCUCSR 0x54
+#define GIFR 0x5A
+#define TIMSK 0x59
+#define TIFR 0x58
+#define ADCSRA 0x26
+#define SPCR 0x2D
+#define SPSR 0x2E
+
+
+bool 
+set_interrupt(VMState *state, VMStateDiff *diff) 
+{
+    VMInterruptItem *interrupt_item, *previous_interrupt_item = NULL;
+    interrupt_item = state->interrupts;
+    while (interrupt_item) {
+        if (interrupt_item->cycles <= state->cycles) {
+            bool result; 
+            switch(interrupt_item->interrupt_type){
+                //Set proper pins
+            }
+            /* delete item from the queue */
+            if (previous_interrupt_item) {
+                previous_interrupt_item->next = interrupt_item->next;
+            } else {
+                state->interrupts = interrupt_item->next;
+            }
+            free(interrupt_item);
+            interrupt_item = previous_interrupt_item;
+        }else{
+            previous_interrupt_item = interrupt_item;
+        }
+        if(interrupt_item){
+            interrupt_item = interrupt_item->next;
+        }else{
+            interrupt_item = state->interrupts;
+        }
+    }
+    return true;
+}
+
+bool
+handle_interrupt(VMState *state, VMStateDiff *diff)
+{
+    bool switchContext = false;
+    unsigned short int targetPC;
+    if(state->registers[I]){
+        //Long nested if statement around interrupt pins
+        //RESET
+        //TODO: RESET is complicated :(
+        //INT0
+        if(vm_info(state, VM_INFO_RAM, GICR) & 0x40 && 
+            vm_info(state, VM_INFO_RAM, GIFR) & 0x40){
+            targetPC = 0x02;
+            switchContext = true;
+        }else if(vm_info(state. VM_INFO_RAM, GICR) & 0x80 &&
+                vm_info(state, VM_INFO_RAM, GIFR) & 0x80){
+            targetPC = 0x04;
+            switchContext = true;
+        }
+        //INT1
+        //TIMER2 COMP
+        //TIMER2 OVF
+        //TIMER1 CAPT
+        //TIMER1 COMPA
+        //TIMER1 COMPB
+        //TIMER1 OVF
+        //SPI, STC
+        //USART, RXC
+        //USART, UDRE
+        //USART, TXC
+        //ADC
+        //EE_RDY
+        //ANA_COMP
+        //TWI
+        //INT2
+        //TIMER0 COMP
+        //SPM_RDY
+    }
+    if(contextSwitch){
+        //PUSH the PC
+        vm_write(state, VM_INFO_RAM, 
+            vm_info(state, VM_INFO_REGISTER, SP, &error), 
+            vm_info(state, VM_INFO_REGISTER, PC, &error), diff);
+        //DO context switch
+        vm_write(state, VM_INFO_REGISTER, PC, targetPC, diff);
+        //Update I
+        vm_write(state, VM_INFO_REGISTER, I, 0, diff);
+    }
+    return true;
+}
