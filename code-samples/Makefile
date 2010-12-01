@@ -1,14 +1,21 @@
 CC=avr-gcc
 #CC=gcc
-CFLAGS=-g -Wall -O1 -mmcu=atmega16
+OBJDUMP=avr-objdump
+#OBJDUMP=objdump
+CFLAGS=-g -Wall -mmcu=atmega16
+ALL=empty factorial
 
-all: empty factorial
+.PHONY: all
+all: $(ALL)
 
+.PHONY: dump
 dump: factorial
-	avr-objdump -d factorial | less
+	$(OBJDUMP) -d factorial | less
 
+.PHONY: empty-dump
 empty-dump: empty
-	avr-objdump -d empty | less
+	$(OBJDUMP) -d empty | less
 
+.PHONY: clean
 clean:
 	git clean -d -X -f
