@@ -121,6 +121,10 @@ def parse_nsteps_decorator(func):
     return CreateClosure(parse_nsteps_wrapper, func)
     
 
+def getpc(sim):
+    offset = sim.registers['pc']
+    return (<Simulator> sim.simulator).state.registers[offset]
+
 cdef class Simulator(object):
     cdef VMState *state
     cdef VMStateDiff *diff, *firstdiff
@@ -305,7 +309,7 @@ class SimulatorCLI(cmd.Cmd, object):
         cdef bint hit_bp
         
         if not vm_step(sim.state, nsteps, &sim.diff, &hit_bp):
-            raise VMError()
+            raise ErrorMessage()
         
         if not hit_bp:
             self.info_instruction(self.simulator, '')        
@@ -386,9 +390,15 @@ class SimulatorCLI(cmd.Cmd, object):
         if offset is None:
             raise ErrorMessage('No such register: %r' % about)
         
-        print self.register_fmt % (about, 
-                                   sizeof(OPCODE_TYPE) * 2,
-                                   sim.state.registers[offset])
+        if about.lower() == 'pc':
+            print '%-15s 0x%-x address: 0x%-x' % (
+                about, 
+                sim.state.registers[offset], 
+                sim.state.registers[offset] * 2)
+        else:
+            print self.register_fmt % (about, 
+                                       sizeof(OPCODE_TYPE) * 2,
+                                       sim.state.registers[offset])
         
     def info_instruction(self, Simulator sim, about, pc=None):
         cdef Opcode *op
@@ -400,9 +410,12 @@ class SimulatorCLI(cmd.Cmd, object):
             raise ErrorMessage('PC out of bounds: %r' % (pc,))
         
         op = &sim.state.instructions[pc]
-        print '%10s 0x%-*x' % (opcode_handlers[op.opcode_index].opcode_name,
-                               sizeof(OPCODE_TYPE) * 2,
-                               op.instruction)
+        print '%10s 0x%-*x pc: 0x%x address: 0x%x' % (
+            opcode_handlers[op.opcode_index].opcode_name,
+            sizeof(OPCODE_TYPE) * 2,
+            op.instruction, 
+            getpc(self),
+            getpc(self) * 2)
     
     def do_info(self, about):
         """
@@ -454,7 +467,7 @@ class SimulatorCLI(cmd.Cmd, object):
         value = int(value, 0)
         
         if not vm_write(sim.state, NULL, vm_info_type, addr, value):
-            raise VMError()
+            raise ErrorMessage()
         
     def complete_set(self, text, line, beginidx, endidx):
         return self.complete_from_it(text, ('register', 'ram', 'pin'))

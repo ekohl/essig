@@ -56,7 +56,7 @@ _cachegrind: runtest
 cli: $(OBJECTS)
 	CFLAGS="$(CFLAGS)" $(PYTHON) setup.py build_ext --inplace $(PYTHON_DEBUG)
 
-vm.o: vm.c vm.h simulator.h readelf.c vmerrno.h
+vm.o: vm.c vm.h simulator.h readelf.c vmerrno.h generated_simulator.h
 generated_simulator.o: generated_simulator.c generated_simulator.h
 interrupt_handler.o: $(INTERRUPT_HANDLER)
 
