@@ -95,6 +95,8 @@ cdef extern from "vm.h":
     OPCODE_TYPE vm_info(VMState *state, VMInfoType type, size_t vmaddr, 
                         bool *result)
     
+    void _print_diff(VMState *state, VMStateDiff *diff)
+
     bool vm_write(VMState *state, VMStateDiff *diff, VMInfoType type, 
                   size_t destaddr, OPCODE_TYPE value)
     

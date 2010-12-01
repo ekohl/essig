@@ -416,6 +416,8 @@ class SimulatorCLI(cmd.Cmd, object):
             op.instruction, 
             getpc(self),
             getpc(self) * 2)
+
+        _print_diff(sim.state, sim.diff)
     
     def do_info(self, about):
         """

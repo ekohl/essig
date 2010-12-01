@@ -347,7 +347,7 @@ error:
 
 #ifdef VM_DEBUG
 
-static void
+void
 _print_diff(VMState *state, VMStateDiff *diff)
 {
     char *fmt =        "    %-20s: %lu -> %lu\n";
