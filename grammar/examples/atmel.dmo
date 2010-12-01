@@ -166,6 +166,7 @@ atmel {
 
 		/* Clear Global Interrupt Flag */
 		cli "1001 0100 1111 1000" {
+			// Checked
 			I = 0;
 
 			PC = PC + 1;
@@ -292,7 +293,8 @@ atmel {
 
 		/* Load an I/O Location to Register */
 		in "1011 0AAd dddd AAAA" Rd, A {
-			A = Rd;
+			// FIXME: I/O port
+			Rd = ram(A+32);
 
 			PC = PC + 1;
 		}
@@ -378,7 +380,7 @@ atmel {
 		}
 
 		/* Load Direct from Data Space */
-		lds "1001 000d dddd 0000","kkkk kkkk kkkk kkkk" Rd, k{
+		lds "1001 000d dddd 0000","kkkk kkkk kkkk kkkk", clock=2 Rd, k{
 			Rd = ram(k);
 
 			PC = PC + 2;
@@ -469,7 +471,8 @@ atmel {
 
 		/* Store Register to I/O Location */
 		out "1011 1AAr rrrr AAAA" A, Rr {
-			A = Rr;
+			// FIXME I/O
+			ram(A) = Rr - 32;
 
 			PC = PC + 1;
 		}
@@ -559,6 +562,7 @@ atmel {
 			R = [R($d+1):R(d)] - $K;
 			[R($d+1):R($d)] = $R;
 
+			$d = $d + 1; // TODO (== high bit)
 			S = N ^ V;
 			V = Rd7(h) & !R15;
 			N = R15;
