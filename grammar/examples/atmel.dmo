@@ -111,7 +111,7 @@ atmel {
                 }
 
 		/* Branch if Carry Cleared */
-		brcc "1111 01kk kkkk k000" k {
+		brcc "1111 01kk kkkk k000" ~k {
 			if C == 0 {
 				PC = PC + $k + 1;
 			} else {
@@ -156,7 +156,7 @@ atmel {
 		}
 
 		/* Branch if Not Equal */
-		brne "1111 01kk kkkk k001" k {
+		brne "1111 01kk kkkk k001" ~k {
 			if Z == 0 {
 				PC = PC + $k + 1;
 			} else {
@@ -208,14 +208,16 @@ atmel {
 
 		/* Compare with Immediate */
 		cpi "0011 KKKK dddd KKKK" Rd, K {
+			// Checked
+			/* 16 <= d <= 31 */
 			$d = 16 + $d;
 			R = Rd - $K;
 
-			H = !Rd3 & !$K3 | $K3 & R3 | R3 & Rd3;
+			H = !Rd3 & $K3 | $K3 & R3 | R3 & !Rd3;
 			S = N ^ V;
 			V = Rd7 & !$K7 & !R7 | !Rd7 & $K7 & R7;
 			N = R7;
-			Z = !R;
+			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
 			C = !Rd7 & $K7 | $K7 & R7 | R7 & !Rd7;
 
 			PC = PC + 1;
@@ -384,15 +386,15 @@ atmel {
 
 		/* Logical Shift Right */
 		lsr "1001 010d dddd 0110" Rd {
-			// FIXME
-			Rd = Rd * 2;
+
+			C = Rd0;
+			Rd = Rd >> 1;
 
 			S = N ^ V;
 			V = N ^ C;
 			N = 0;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
-			C = Rd0;
-
+			
 			PC = PC + 1;
 		}
 
@@ -484,6 +486,8 @@ atmel {
 		}
 
 		ori "0110 KKKK dddd KKKK" Rd, K {
+			/* 16 <= d <= 31 */
+			$d = 16 + $d;
 			Rd = Rd | $K;
 
 			S = N ^ V;
@@ -516,11 +520,14 @@ atmel {
 		ret "1001 0101 0000 1000" {
 			SP = SP + 2; // TODO not sure if this should be done after or before reading form stack.
 			PC = ram(SP);
+			// FIXME: Something like
+			//PC = [ram(SP+1):ram(SP)];
 		}
 
 		/* Relative Call to Subroutine */
 		rcall "1101 kkkk kkkk kkkk" ~k {
 			PC = PC + $k + 1;
+			// FIXME
 			ram(SP) = PC + 1;
 			SP = SP - 2;
 		}
@@ -536,9 +543,13 @@ atmel {
 
 		/* Rotate Right through Carry */
 		ror "1001 010d dddd 0111" Rd {
-			/* FIXME: zie datasheet */
-
 			C = Rd0;
+	
+			R = Rd >> 1 | C << 8;
+			S = N ^ V;
+			V = N ^ C;
+			N = R7;
+			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
 
 			PC = PC + 1;
 		}
@@ -637,6 +648,7 @@ atmel {
 		}
 
 		sub "001 10rd dddd rrrr" Rd, Rr {
+			/* 0 <= d <= 31 */
 			Rd = Rd - Rr;
 
 			H = !Rd3 & Rr3 | Rr3 & R3 | R3 & Rd3;
@@ -650,11 +662,15 @@ atmel {
 		}
 
 		subi "0101 KKKK dddd KKKK" Rd, K {
+			// Checked
+			/* 0 <= K <= 255 */
+			/* 16 <= d <= 31 */
+			$d = 16 + $d;
 			Rd = Rd - $K;
 
-			H = !Rd3 & $K3 | $K3 & R3 | R3 & Rd3;
+			H = !Rd3 & $K3 | $K3 & R3 | R3 & !Rd3;
 			S = N ^ V;
-			V = Rd7 & !$K7 & R7 | Rd7 & $K7 & R7;
+			V = Rd7 & !$K7 & !R7 | !Rd7 & $K7 & R7;
 			N = R7;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
 			C = !Rd7 & $K7 | $K7 & R7 | R7 & !Rd7;
@@ -663,6 +679,9 @@ atmel {
 		}
 
 		sbci "0100 KKKK dddd KKKK" Rd, K {
+			/* 0 <= K <= 255 */
+			/* 16 <= d <= 31 */
+			$d = 16 + $d;
 			Rd = Rd - $K - C;
 
 			H = !Rd3 & $K3 | $K3 & R3 | R3 & Rd3;

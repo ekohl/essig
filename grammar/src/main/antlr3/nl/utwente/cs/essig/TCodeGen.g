@@ -159,6 +159,6 @@ comparison:		(c=EQUALS | c=LT | c=LTE | c=GT | c=GTE)
 	-> template(c={$c}) "<c>"
 	;
 
-operator:      (o=AND | o=OR | o=XOR | o=ADD | o=MINUS | o=MULT)
+operator:      (o=AND | o=OR | o=XOR | o=ADD | o=MINUS | o=MULT | o=SHIFT)
 	-> template(operator={$o}) "<operator>"
 	;

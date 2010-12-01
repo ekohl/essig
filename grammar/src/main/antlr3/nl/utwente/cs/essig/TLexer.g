@@ -65,6 +65,7 @@ ARG_SEPERATOR	:	',';
 EQUALS		:	'==';
 QUOTE		:	'"';
 
+
 // Logical operators
 NOT		:	'!';
 SIGNED		:	'~';
@@ -78,3 +79,4 @@ GT		:	'>';
 GTE		:	'>=';
 LT		:	'<';
 LTE		:	'=<';
+SHIFT		: 	'<<' | '>>';
