@@ -16,6 +16,7 @@ PROFILE_N_STEPS = 10000000
 
 
 # make sure CFLAGS are also passed to python
+export PATH
 export PYTHONPATH
 
 run: cli
