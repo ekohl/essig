@@ -142,5 +142,5 @@ comparison:
 	;
 
 operator:
-		AND | OR | XOR | ADD | MINUS | MULT
+		AND | OR | XOR | ADD | MINUS | MULT | SHIFT
 	;

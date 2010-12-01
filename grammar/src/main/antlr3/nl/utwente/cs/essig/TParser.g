@@ -127,5 +127,5 @@ multi_register : LBRACE IDENTIFIER LPAREN operatorExpr RPAREN COLON IDENTIFIER L
 comparison:		EQUALS | LT | LTE | GT | GTE
 	;
 
-operator:		AND | OR | XOR | ADD | MINUS | MULT
+operator:		AND | OR | XOR | ADD | MINUS | MULT | SHIFT
 	;

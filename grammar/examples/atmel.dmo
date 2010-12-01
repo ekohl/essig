@@ -156,7 +156,7 @@ atmel {
 		}
 
 		/* Branch if Not Equal */
-		brne "1111 01kk kkkk k001" k {
+		brne "1111 01kk kkkk k001" ~k {
 			if Z == 0 {
 				PC = PC + $k + 1;
 			} else {
@@ -384,15 +384,15 @@ atmel {
 
 		/* Logical Shift Right */
 		lsr "1001 010d dddd 0110" Rd {
-			// FIXME
-			Rd = Rd * 2;
+
+			C = Rd0;
+			Rd = Rd >> 1;
 
 			S = N ^ V;
 			V = N ^ C;
 			N = 0;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
-			C = Rd0;
-
+			
 			PC = PC + 1;
 		}
 
@@ -536,9 +536,13 @@ atmel {
 
 		/* Rotate Right through Carry */
 		ror "1001 010d dddd 0111" Rd {
-			/* FIXME: zie datasheet */
-
 			C = Rd0;
+	
+			R = Rd >> 1 | C << 8;
+			S = N ^ V;
+			V = N ^ C;
+			N = R7;
+			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
 
 			PC = PC + 1;
 		}
