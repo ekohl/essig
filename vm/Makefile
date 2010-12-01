@@ -1,4 +1,3 @@
-PWD=`pwd`
 CFLAGS += -O2 -g -Wall -Wno-unused-variable -fPIC -DVM_DEBUG=1
 INTERRUPT_HANDLER=interrupt_handler.c
 OBJECTS=vm.o generated_simulator.o interrupt_handler.o
