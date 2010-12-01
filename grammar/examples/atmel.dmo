@@ -106,7 +106,7 @@ atmel {
                 }
 
 		/* Branch if Carry Cleared */
-		brcc "1111 01kk kkkk k000" ~k {
+		brcc "1111 01kk kkkk k000" k {
 			if C == 0 {
 				PC = PC + $k + 1;
 			} else {
@@ -151,7 +151,7 @@ atmel {
 		}
 
 		/* Branch if Not Equal */
-		brne "1111 01kk kkkk k001" ~k {
+		brne "1111 01kk kkkk k001" k {
 			if Z == 0 {
 				PC = PC + $k + 1;
 			} else {
@@ -193,7 +193,7 @@ atmel {
 			S = N ^ V;
 			V = Rd7 & !Rr7 & !R7 | !Rd7 & Rr7 & R7;
 			N = R7;
-			Z = !R & Z;
+			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0 & Z;
 			C = !Rd7 & Rr7 | Rr7 & R7 | R7 & !Rd7;
 
 			PC = PC + 1;
@@ -244,6 +244,8 @@ atmel {
 			V = !R7 & R6 & R5 & R4 & R3 & R2 & R1 & R0;
 			N = R7;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
+
+			PC = PC + 1;
 		}
 
 		/* Exclusive Or */
@@ -323,6 +325,7 @@ atmel {
 
 		/* Load Immediate */
 		ldi "1110 KKKK dddd KKKK" Rd, K {
+			/* 16 <= d <= 31 */
 			$d = 16 + $d;
 			Rd = $K;
 
