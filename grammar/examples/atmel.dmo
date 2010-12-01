@@ -10,7 +10,7 @@ atmel {
 
 	registers {
 		/* -- Status Register (SREG) -- */
-		SREG	= 95; /* Status register */
+		SREG	= 40; //95; /* Status register */
 		// TODO: SREG(0) till SREG(7)
 		C	= 32; /* Carry flag */
 		Z	= 33; /* Zero flag */
@@ -22,9 +22,9 @@ atmel {
 		I	= 39; /* Global Interrupt Enable/Disable Flag */
 
 		/* -- Rest -- */
-		PC	= 8; /* Program counter */
+		PC	= 41; //8; /* Program counter */
 		// FIXME: SPL = $3D ($5D), SPH = $3E ($5E)
-		SP	= 93; /* Stack Pointer */
+		SP	= 42; //93; /* Stack Pointer */
 
 		/** X,Y,Z registers */
 		RX = R27:R26;
@@ -73,23 +73,27 @@ atmel {
 			$d = 24 + $d * 2;
 			R = [R($d+1):R($d)] + $K;
 			[R($d+1):R($d)] = R;
+
 			S = N ^ V;
-			PC = PC + 1;
 			V = !Rd7(h) & R15; //TODO High byte.. maybe iets van R($d+1)7 ipv de h te gebruiken
 			N = R15;
 			Z = !R15 & !R14 & !R13 & !R12 & !R11 & !R10 & !R9 & !R8 & !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
 			C = !R15 & Rd7(h); //TODO High byte.. maybe iets van R($d+1)7 ipv de h te gebruiken
+
+			PC = PC + 1;
 		}
 
 		/* Logical AND */
 		and "0010 00rd dddd rrrr" Rd, Rr {
 			/* 0 <= d <= 31, 0 <= r 31 */
 			Rd = Rd & Rr;
-			PC = PC + 1;
+
 			S = N ^ V;
 			V = 0;
 			N = R7;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
+
+			PC = PC + 1;
 		}
 
   		/* Logical AND with Immediate */
@@ -98,15 +102,16 @@ atmel {
 			$d = 16 + $d;
                         Rd = Rd & $K;
 
-                        PC = PC + 1;
                         S = N ^ V;
                         V = 0;
                         N = R7;
                         Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
+
+                        PC = PC + 1;
                 }
 
 		/* Branch if Carry Cleared */
-		brcc "1111 01kk kkkk k000" ~k {
+		brcc "1111 01kk kkkk k000" k {
 			if C == 0 {
 				PC = PC + $k + 1;
 			} else {
@@ -151,7 +156,7 @@ atmel {
 		}
 
 		/* Branch if Not Equal */
-		brne "1111 01kk kkkk k001" ~k {
+		brne "1111 01kk kkkk k001" k {
 			if Z == 0 {
 				PC = PC + $k + 1;
 			} else {
@@ -162,12 +167,14 @@ atmel {
 		/* Clear Global Interrupt Flag */
 		cli "1001 0100 1111 1000" {
 			I = 0;
+
 			PC = PC + 1;
 		}
 
 		/* Clear the T Flag in SREG */
 		clt "1001 0100 1110 1000" {
 			T = 0;
+
 			PC = PC + 1;
 		}
 
@@ -193,7 +200,7 @@ atmel {
 			S = N ^ V;
 			V = Rd7 & !Rr7 & !R7 | !Rd7 & Rr7 & R7;
 			N = R7;
-			Z = !R & Z;
+			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0 & Z;
 			C = !Rd7 & Rr7 | Rr7 & R7 | R7 & !Rd7;
 
 			PC = PC + 1;
@@ -244,6 +251,8 @@ atmel {
 			V = !R7 & R6 & R5 & R4 & R3 & R2 & R1 & R0;
 			N = R7;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
+
+			PC = PC + 1;
 		}
 
 		/* Exclusive Or */
@@ -268,7 +277,7 @@ atmel {
 
 		/* Long Call to a Subroutine */
 		call "1001 010k kkkk 111k", "kkkk kkkk kkkk kkkk", clock=4 k {
-			/* 0 <= k < 64K */			
+			/* 0 <= k < 64K */
 			PC = $k;
 			ram(SP) = PC + 2;
 			SP = SP - 2;
@@ -307,22 +316,29 @@ atmel {
 		/* Load indirect from X */
 		ld "1001 000d dddd 1100" Rd, c {
 			Rd = ram([R(27):R(26)]); // TODO should be RX
+
+			PC = PC + 1;
 		}
 
 		/* Load indirect from X. Post increment X */
 		ldxplus "1001 000d dddd 1101" Rd, c {
 			Rd = ram([R(27):R(26)]); // TODO Should be RX
 			[R(27):R(26)] = [R(27):R(26)] + 1; // TODO Should be RX
+
+			PC = PC + 1;
 		}
 
 		/* Load indirect from X. Pre decrement X */
 		ldminx "1001 000d dddd 1110" Rd, c {
-			[R(27):R(26)] = [R(27):R(26)] - 1; // TODO Should be RX			
+			[R(27):R(26)] = [R(27):R(26)] - 1; // TODO Should be RX
 			Rd = ram([R(27):R(26)]); // TODO Should be RX
+
+			PC = PC + 1;
 		}
 
 		/* Load Immediate */
 		ldi "1110 KKKK dddd KKKK" Rd, K {
+			/* 16 <= d <= 31 */
 			$d = 16 + $d;
 			Rd = $K;
 
@@ -332,6 +348,7 @@ atmel {
 		/* Load Indirect from Data Space to Register using Index Y+ */
 		lddyplus "10q0 qq0d dddd 1qqq" Rd, q {
 			Rd = ram([R(29):R(28)]+$q); //TODO Should be RX
+
 			PC = PC + 1;
 		}
 
@@ -339,6 +356,7 @@ atmel {
 		lddzmin "1001 000d dddd 0010" Rd {
 			[R(31):R(30)] = [R(31):R(30)] - 1;
 			Rd = ram([R(31):R(30)]); //TODO Should be RZ
+
 			PC = PC + 1;
 		}
 
@@ -346,24 +364,27 @@ atmel {
 		lddzplus "1001 000d dddd 0001" Rd {
 			Rd = ram([R(31):R(30)]); //TODO Should be RZ
 			[R(31):R(30)] = [R(31):R(30)] + 1; //TODO should be RZ
+
 			PC = PC + 1;
 		}
 
 		/* Load Indirect from Data Space to Register using Index Z+q */
 		lddzq "10q0 qq0d dddd 0qqq" Rd, q {
 			Rd = ram([R(31):R(30)]+$q); //TODO Should be RZ
+
 			PC = PC + 1;
 		}
 
 		/* Load Direct from Data Space */
 		lds "1001 000d dddd 0000","kkkk kkkk kkkk kkkk" Rd, k{
 			Rd = ram(k);
+
 			PC = PC + 2;
 		}
 
 		/* Logical Shift Right */
 		lsr "1001 010d dddd 0110" Rd {
-			//TODO
+			// FIXME
 			Rd = Rd * 2;
 
 			S = N ^ V;
@@ -377,19 +398,23 @@ atmel {
 
 		/* Load Program Memory */
 		lpm "1001 0101 1100 1000", clock=3 {
+			// FIXME something with RAMPXYZ
 			//R(0) = [R(31):R(30)]; // TODO should be RZ
+
 			PC = PC + 1;
 		}
 
 		/* Load Program Memory */
 		lpmz "1001 000d dddd 0100", clock=3 d {
-			Rd = RZ; // TODO
+			// FIXME implement me
+			//Rd = RZ; // TODO something with RAMPXYZ
 
 			PC = PC + 1;
 		}
 
 		/* Load Program Memory */
 		lpmzplus "1001 000d dddd 0101", clock=3 d {
+			// FIXME something with RAMPXYZ
 			//R0 = RZ; // TODO
 			//RZ = RZ + 1;
 
@@ -404,9 +429,12 @@ atmel {
 		}
 
 		movw "0000 0001 dddd rrrr" Rd, Rr {
+			/* r in 0,2,..,30 */
 			$r = $r * 2;
+			/* d in 0,2,..,30 */
 			$d = $d * 2;
 			[R($d+1):R($d)] = [R($r+1):R($r)];
+
 			PC = PC + 1;
 		}
 
@@ -508,7 +536,7 @@ atmel {
 
 		/* Rotate Right through Carry */
 		ror "1001 010d dddd 0111" Rd {
-			/* TODO: zie datasheet */
+			/* FIXME: zie datasheet */
 
 			C = Rd0;
 
@@ -519,6 +547,7 @@ atmel {
 		sbiw "1001 0111 KKdd KKKK" Rd, K {
 			R = [R($d+1):R(d)] - $K;
 			[R($d+1):R($d)] = $R;
+
 			S = N ^ V;
 			V = Rd7(h) & !R15;
 			N = R15;
@@ -550,6 +579,7 @@ atmel {
 			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
 			ram([R(27):R(26)]) = Rr; //TODO Should be RX registers
 			[R(27):R(26)] = [R(27):R(26)] + 1; //TODO Should be RX
+
 			PC = PC + 1;
 		}
 
@@ -566,6 +596,7 @@ atmel {
 		stdyplusq "10q0 qq1r rrrr 1qqq" Rr,q {
 			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
 			ram([R(29):R(28)] + $q) = Rr; //TODO Should be RY
+
 			PC = PC + 1;
 		}
 
@@ -582,6 +613,7 @@ atmel {
 			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
 			ram([R(31):R(30)]) = Rr; //TODO Should be RZ
 			[R(31):R(30)] = [R(31):R(30)] + 1; // TODO Should be RZ
+
 			PC = PC + 1;
 		}
 
