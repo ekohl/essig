@@ -66,6 +66,7 @@ parameter:		RAM^ NUMBER
 registers:		REGISTERS^ LBRACK! (register LINE_SEPERATOR!)+ RBRACK! {
 			// Hack in the general purpose registers
 			for(int i=0; i < gprs; i++) {
+				// -> IDENTIFIER^ NUMBER[Ri]
 				CommonTree reg = (CommonTree) adaptor.create(IDENTIFIER, "R" + Integer.toString(i));
 				adaptor.becomeRoot($REGISTERS.tree, reg);
 				adaptor.addChild(reg, adaptor.create(NUMBER, Integer.toString(gprs_offset + i)));

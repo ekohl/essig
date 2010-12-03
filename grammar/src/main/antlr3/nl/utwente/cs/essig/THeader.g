@@ -29,9 +29,9 @@ microcontroller:
 			^(
 				IDENTIFIER
 				^(PARAMETERS (p+=parameter)+)
-				^(REGISTERS (r+=register)*)
+				^(REGISTERS (r+=register)+)
 				^(MAPS (m+=map+))
-				^(INSTRUCTIONS instruction*)
+				^(INSTRUCTIONS instruction+)
 			)
 		-> header(parameters={$p},registers={$r},maps={$m})
 	;

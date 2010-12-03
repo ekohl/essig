@@ -23,10 +23,11 @@ options {
 REGISTERS	:	'registers';
 PARAMETERS	:	'parameters';
 INSTRUCTIONS	:	'instructions';
+MAPS		:	'maps';
 IF		:	'if';
 ELSE		:	'else';
-
-// Parameters
+CHUNK		:	'chunk';
+IO		:	'io';
 RAM		:	'ram';
 GPRS		:	'gprs';
 CLOCK		:	'clock';
