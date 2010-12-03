@@ -32,6 +32,13 @@ atmel {
 		RZ = R31:R30;
 	}
 
+	maps {
+		chunk		(0, 0xFFFF);
+		registers	(0, 0x1F);
+		io		(0x20, 0x5F);
+		ram		(0, 0x460);
+	}
+
 	instructions {
 
 		noop "0000 0000 0000 0000" {
