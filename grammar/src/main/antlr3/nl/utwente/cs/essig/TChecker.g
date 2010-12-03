@@ -41,6 +41,7 @@ microcontroller:
 			{ symbolTable.openScope(); }
 			^(PARAMETERS parameter*)
 			^(REGISTERS register*)
+			^(MAPS map+)
 			^(INSTRUCTIONS instruction*)
 			{ symbolTable.closeScope(); }
 		)
@@ -62,6 +63,11 @@ register:
 	;
 
 multiword_register : 	^(IDENTIFIER IDENTIFIER+);
+
+map:
+		// FIXME Check if maps aren't duplicated
+		^((CHUNK | REGISTERS | IO | RAM) NUMBER NUMBER)
+	;
 
 instruction:
 		^(

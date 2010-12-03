@@ -35,6 +35,7 @@ microcontroller: ^(
 			IDENTIFIER
 			^(PARAMETERS (p+=parameter)+)
 			^(REGISTERS (r+=register)*)
+			^(MAPS map+)
 			^(INSTRUCTIONS (i+=instruction)*)
 		)
 	-> microcontroller(name={$IDENTIFIER},parameters={$p},registers={$r},instructions={$i})
@@ -57,6 +58,9 @@ register:	^(IDENTIFIER NUMBER) -> register(name={$IDENTIFIER},offset={$NUMBER})
 //	;
 
  multiword_register : 	^(IDENTIFIER IDENTIFIER+);
+
+map:		^((CHUNK | REGISTERS | IO | RAM) NUMBER NUMBER)
+	;
 
 instruction:	^(
 			IDENTIFIER

@@ -45,7 +45,7 @@ tokens {
 
 // Parser
 //
-microcontroller:	IDENTIFIER^ LBRACK! parameters registers instructions RBRACK! EOF!
+microcontroller:	IDENTIFIER^ LBRACK! parameters registers maps instructions RBRACK! EOF!
 	;
 
 parameters:		PARAMETERS^ LBRACK! (parameter LINE_SEPERATOR!)+ RBRACK!
@@ -77,6 +77,12 @@ register:		IDENTIFIER^ ASSIGN! (NUMBER | multiword_register)
 	;
 
 multiword_register : 	IDENTIFIER^ (COLON! IDENTIFIER)+;
+
+maps:			MAPS^ LBRACK! (map LINE_SEPERATOR!)+ RBRACK!
+	;
+
+map:			(CHUNK | REGISTERS | IO | RAM)^ LPAREN! NUMBER ARG_SEPERATOR! NUMBER RPAREN!
+	;
 
 instructions:		INSTRUCTIONS^ LBRACK! instruction+ RBRACK!
 	;

@@ -3,13 +3,23 @@ group h;
 header(parameters, registers) ::= <<
 #include \<stdint.h\>
 
+// Parameters
 <parameters; separator="\n">
 
+// Maps
+<maps; separator="\n">
+
+// Registers
 <registers; separator="\n">
 >>
 
 opcode_size(bits) ::= <<
 #define OPCODE_TYPE uint<bits>_t
+>>
+
+map(type, begin, end) ::= <<
+#define <type>_OFFSET <begin>
+#define <type>_END <end>
 >>
 
 register(name, offset) ::= <<
