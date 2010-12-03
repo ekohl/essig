@@ -69,6 +69,7 @@ ASSIGN		:	'=';
 LINE_SEPERATOR	:	';';
 COLON		:	':';
 ARG_SEPERATOR	:	',';
+INTERVAL	:	'..';
 EQUALS		:	'==';
 QUOTE		:	'"';
 

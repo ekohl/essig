@@ -78,8 +78,8 @@ atmel {
 		adiw "1001 0110 KKdd KKKK", clock=2 Rd, K {
 			// d = {24,26,28,30}
 			$d = 24 + $d * 2;
-			R = [R($d+1):R($d)] + $K;
-			[R($d+1):R($d)] = R;
+			//R = [R($d+1):R($d)] + $K;
+			//[R($d+1):R($d)] = R;
 
 			$d = $d + 1; // Set Rd to the high byte // TODO
 			V = !Rd7(h) & R15; //TODO High byte.. maybe iets van R($d+1)7 ipv de h te gebruiken
@@ -297,6 +297,7 @@ atmel {
 		/* Indirect Jump */
 		ijmp "1001 0100 0000 1001", clock=2 { // Checked
 			PC = [R(31):R(30)]; //TODO should be RZ
+			PC = R[31..30];
 		}
 
 		/* Load an I/O Location to Register */
@@ -529,9 +530,7 @@ atmel {
 		/* Return from Subroutine */
 		ret "1001 0101 0000 1000" { // TODO: Check me
 			SP = SP + 2; // TODO not sure if this should be done after or before reading form stack.
-			PC = ram(SP);
-			// FIXME: Something like
-			//PC = [ram(SP+1):ram(SP)];
+			PC = ram[SP+1..SP];
 		}
 
 		/* Relative Call to Subroutine */
@@ -569,7 +568,9 @@ atmel {
 		sbiw "1001 0111 KKdd KKKK" Rd, K { // TODO: Check me
 			/* d = {24,26,28,30} */
 			$d = 24 + $d * 2;
-			R = [R($d+1):R(d)] - $K;
+			//R = [R($d+1):R(d)] - $K;
+			R = R[$d+1..d] - $K;
+
 			[R($d+1):R($d)] = $R;
 
 			$d = $d + 1; // TODO (== high bit)
@@ -712,7 +713,8 @@ atmel {
 
 		sbrc "1111 110r rrrr 0bbb" Rr, b { // TODO: Check me
 			// FIXME: this doesn't translate into GetBit(Rr, b), but it should
-			if Rr(b) == 0 {
+			//R = Rr;
+			if Rb == 0 {
 				PC = PC + 2;
 			} else {
 				PC = PC + 1;

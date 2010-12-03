@@ -142,8 +142,10 @@ word:
 	;
 
 multi_register:
-	^(MULTI_REG IDENTIFIER operatorExpr IDENTIFIER operatorExpr)
+	^(MULTI_REG multi_identifier operatorExpr IDENTIFIER? operatorExpr)
 	;
+
+multi_identifier : IDENTIFIER | RAM;
 
 comparison:
 		EQUALS | LT | LTE | GT | GTE

@@ -128,8 +128,15 @@ word	:		NOT? CONSTANT? IDENTIFIER^
 	|		multi_register
 	;
 
-multi_register : LBRACE IDENTIFIER LPAREN operatorExpr RPAREN COLON IDENTIFIER LPAREN operatorExpr RPAREN RBRACE
-			-> ^(MULTI_REG IDENTIFIER operatorExpr IDENTIFIER operatorExpr);
+multi_register : 	multi_identifier LBRACE operatorExpr INTERVAL operatorExpr RBRACE
+				-> ^(MULTI_REG multi_identifier operatorExpr operatorExpr)
+		|	multi_register2;
+
+multi_identifier : IDENTIFIER | RAM;
+
+multi_register2 : LBRACE i=IDENTIFIER LPAREN operatorExpr RPAREN COLON IDENTIFIER LPAREN operatorExpr RPAREN RBRACE { System.out.println("regel aanpassen!:" + $LBRACE.getLine());}
+			-> ^(MULTI_REG IDENTIFIER operatorExpr IDENTIFIER operatorExpr)
+	;
 
 comparison:		EQUALS | LT | LTE | GT | GTE
 	;

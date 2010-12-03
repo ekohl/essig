@@ -151,9 +151,13 @@ word returns [String comment = ""]:
 	|	^(RAM operatorExpr)
 		{ $comment = $RAM + "(" + $operatorExpr.comment + ")"; }
 	-> wordVariable(variable={$operatorExpr.st}, type={"RAM"})
-	|	^(MULTI_REG IDENTIFIER o1=operatorExpr IDENTIFIER o2=operatorExpr)
-	-> multiRegister(r1={$o1.st},r2={$o2.st})
+	|	^(MULTI_REG multi_identifier o1=operatorExpr IDENTIFIER? o2=operatorExpr)
+	-> multiRegister(r1={$o1.st},r2={$o2.st},type={$multi_identifier.st})
 	;
+
+multi_identifier : 
+	IDENTIFIER ->  template(var={"REGISTER"}) "<var>"
+	|	RAM ->  template(var={"RAM"}) "<var>";
 
 comparison:		(c=EQUALS | c=LT | c=LTE | c=GT | c=GTE)
 	-> template(c={$c}) "<c>"

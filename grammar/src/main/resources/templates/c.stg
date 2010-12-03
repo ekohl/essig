@@ -163,6 +163,6 @@ halt() ::= <<
         return false;
 >>
 
-multiRegister(r1,r2) ::= <<
-((vm_info(state,VM_INFO_REGISTER,<r1>,&error) \<\<8) + vm_info(state,VM_INFO_REGISTER,<r2>,&error))
+multiRegister(r1,r2,type) ::= <<
+((vm_info(state,VM_INFO_<type>,<r1>,&error) \<\<8) + vm_info(state,VM_INFO_<type>,<r2>,&error))
 >>
