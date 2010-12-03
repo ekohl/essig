@@ -20,7 +20,7 @@ execute: $(EXAMPLE)
 	java -jar $(ESSIG) examples/$@
 
 # Run the example
-run: examples
+run: example
 	$(MAKE) run -C ../vm
 
 clean:
