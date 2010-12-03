@@ -38,14 +38,14 @@ atmel {
 			PC = PC + 1;
 		}
 
-		/* Add with Carry */
+		/* Add with Carry */ //Checked
 		adc "0001 11rd dddd rrrr" Rd, Rr {
 			Rd = Rd + Rr + C;
 
 			H = Rd3 & Rr3 | Rr3 & !R3 | !R3 & Rd3;
-			S = N ^ V;
 			V = Rd7 & Rr7 & !R7 | !Rd7 & !Rr7 & R7;
 			N = R7;
+			S = N ^ V;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
 			C = Rd7 & Rr7 | Rr7 & !R7 | !R7 & Rd7;
 
@@ -53,14 +53,14 @@ atmel {
 
 		}
 
-		/* Add without Carry */
+		/* Add without Carry */ //Checked
 		add "0000 11rd dddd rrrr" Rd, Rr {
 			Rd = Rd + Rr;
 
 			H = Rd3 & Rr3 | Rr3 & !R3 | !R3 & Rd3;
-			S = N ^ V;
 			V = Rd7 & Rr7 & !R7 | !Rd7 & !Rr7 & R7;
 			N = R7;
+			S = N ^ V;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
 			C = Rd7 & Rr7 | Rr7 & !R7 | !R7 & Rd7;
 
@@ -75,44 +75,44 @@ atmel {
 			[R($d+1):R($d)] = R;
 
 			$d = $d + 1; // Set Rd to the high byte // TODO
-			S = N ^ V;
 			V = !Rd7(h) & R15; //TODO High byte.. maybe iets van R($d+1)7 ipv de h te gebruiken
 			N = R15;
+			S = N ^ V;
 			Z = !R15 & !R14 & !R13 & !R12 & !R11 & !R10 & !R9 & !R8 & !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
 			C = !R15 & Rd7(h); //TODO High byte.. maybe iets van R($d+1)7 ipv de h te gebruiken
 
 			PC = PC + 1;
 		}
 
-		/* Logical AND */
-		and "0010 00rd dddd rrrr" Rd, Rr { // TODO: Check me
+		/* Logical AND */ //Checked
+		and "0010 00rd dddd rrrr" Rd, Rr {
 			/* 0 <= d <= 31, 0 <= r 31 */
 			Rd = Rd & Rr;
 
-			S = N ^ V;
 			V = 0;
 			N = R7;
+			S = N ^ V;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
 
 			PC = PC + 1;
 		}
 
-  		/* Logical AND with Immediate */
-                andi "0111 KKKK dddd KKKK" Rd, K { // TODO: Check me
+  		/* Logical AND with Immediate */ //Checked
+                andi "0111 KKKK dddd KKKK" Rd, K {
                         /* 16 <= d <= 31, 0 <= K <= 255 */
 			$d = 16 + $d;
                         Rd = Rd & $K;
 
-                        S = N ^ V;
                         V = 0;
                         N = R7;
+                        S = N ^ V;
                         Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
 
                         PC = PC + 1;
                 }
 
-		/* Branch if Carry Cleared */
-		brcc "1111 01kk kkkk k000" ~k { // TODO: Check me
+		/* Branch if Carry Cleared */ // Checked
+		brcc "1111 01kk kkkk k000" ~k {
 			if C == 0 {
 				PC = PC + $k + 1;
 			} else {
@@ -120,8 +120,8 @@ atmel {
 			}
 		}
 
-		/* Branch if Carry Set */
-		brcs "1111 00kk kkkk k000" ~k { // TODO: Check me
+		/* Branch if Carry Set */ // Checked
+		brcs "1111 00kk kkkk k000" ~k {
 			if C == 1 {
 				PC = PC + $k + 1;
 			} else {
@@ -129,8 +129,8 @@ atmel {
 			}
 		}
 
-		/* Branch if T Flag is Cleared */
-		brtc "1111 01kk kkkk k110" ~k { // TODO: Check me
+		/* Branch if T Flag is Cleared */ // Checked
+		brtc "1111 01kk kkkk k110" ~k {
 			if T == 0 {
 				PC = PC + $k + 1;
 			} else {
@@ -138,8 +138,8 @@ atmel {
 			}
 		}
 
-		/* Branch if Equal */
-		breq "1111 00kk kkkk k001" ~k { // TODO: Check me
+		/* Branch if Equal */ //Checked
+		breq "1111 00kk kkkk k001" ~k {
 			if Z == 1 {
 				PC = PC + $k + 1;
 			} else {
@@ -147,17 +147,17 @@ atmel {
 			}
 		}
 
-		/* Branch if Greater or Equal (Signed) */
-		brge "1111 01kk kkkk k100" ~k { // TODO: Check me
-			if (N ^ V) == 0 {
+		/* Branch if Greater or Equal (Signed) */ // Checked
+		brge "1111 01kk kkkk k100" ~k {
+			if S == 0 {
 				PC = PC + $k + 1;
 			} else {
 				PC = PC + 1;
 			}
 		}
 
-		/* Branch if Not Equal */
-		brne "1111 01kk kkkk k001" ~k { // TODO: Check me
+		/* Branch if Not Equal */ //Checked
+		brne "1111 01kk kkkk k001" ~k {
 			if Z == 0 {
 				PC = PC + $k + 1;
 			} else {
@@ -173,21 +173,21 @@ atmel {
 		}
 
 		/* Clear the T Flag in SREG */
-		clt "1001 0100 1110 1000" { // TODO: Check me
+		clt "1001 0100 1110 1000" { // Checked
 			T = 0;
 
 			PC = PC + 1;
 		}
 
-		/* Compare */
-		cp "0001 01rd dddd rrrr" Rd, Rr { // TODO: Check me
+		/* Compare */ // Checked
+		cp "0001 01rd dddd rrrr" Rd, Rr {
 			R = Rd - Rr;
 
-			H = !Rd3 & Rr3 | Rr3 &R3 | R3 & !Rd3;
-			S = N ^ V;
+			H = !Rd3 & Rr3 | Rr3 & R3 | R3 & !Rd3;
 			V = Rd7 & !Rr7 & !R7 | !Rd7 & Rr7 & R7;
 			N = R7;
-			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0 & Z;
+			S = N ^ V;
+			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
 			C = !Rd7 & Rr7 | Rr7 & R7 | R7 & !Rd7;
 
 			PC = PC + 1;
