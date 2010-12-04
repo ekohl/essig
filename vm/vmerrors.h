@@ -22,7 +22,5 @@ __vm_errno__(VM_PC_OUT_OF_BOUNDS,
              "Program counter points outside the executable segment.")
 __vm_errno__(VM_INTERRUPT_CALLABLE_ERROR,
              "An error occurred in an interrupt callable.")
-__vm_errno__(VM_NULL_DIFF,
-             "The provided diff was NULL.")
 
 #include "user_errnos.h"

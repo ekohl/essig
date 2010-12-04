@@ -1,6 +1,9 @@
 #include <elf.h>
 #include <string.h>
 
+
+#define LOAD_ADDRESS phdr->p_paddr
+
 /* Note: this file is included by vm.c to support both 32 and 64 bit ELF files.
          Alternatively, we could have used libelf or BFD, but this seems easy
          enough.
@@ -13,13 +16,14 @@ _elf32_read(VMState *state, char *program, size_t program_size)
 {
     Elf32_Ehdr *ehdr;
     Elf32_Phdr *phdr;
-    char *ram;
+    char *rom;
     int i;
-    
-    ram = (char *) state->ram;
+    struct _mapping *rommapping = get_info_type_mapping(VM_INFO_ROM);
+
+    rom = (char *) state->chunk + rommapping->offset;
     ehdr = (Elf32_Ehdr *) program;
     
-    state->registers[PC] = ehdr->e_entry;
+    SETPC(state, ehdr->e_entry);
 
     if (!ehdr->e_phoff) {
         vm_seterrno(VM_NO_SEGMENTS);
@@ -31,7 +35,7 @@ _elf32_read(VMState *state, char *program, size_t program_size)
         if (phdr->p_type & PT_LOAD) {
             char *startaddr;
     
-            startaddr = ram + phdr->p_vaddr;
+            startaddr = rom + LOAD_ADDRESS;
     
             if (phdr->p_flags & PF_X) {
                 /* executable segment, disassemble */
@@ -49,20 +53,16 @@ _elf32_read(VMState *state, char *program, size_t program_size)
                     (OPCODE_TYPE *) (program + phdr->p_offset),
                     state->instructions_size);
                 
-                state->executable_segment_offset = phdr->p_vaddr;
-                
-                /* we loaded the ROM, skip the RAM */
-                phdr++;
-                continue;
+                state->executable_segment_offset = LOAD_ADDRESS;
             }
             
-            if (startaddr + phdr->p_memsz > ram + ramsize ||
-                startaddr + phdr->p_memsz < ram) {
+            if (startaddr + phdr->p_memsz > rom + rommapping->size ||
+                startaddr + phdr->p_memsz < rom) {
                 vm_seterrno(VM_ERROR_PROGRAM_TOO_BIG);
                 return false;
             }
             
-            /* load segment into the RAM of the VM */
+            /* load segment into the ROM of the VM */
             memcpy(startaddr, program + phdr->p_offset, phdr->p_filesz);
             
             /* NUL the rest */
@@ -77,3 +77,6 @@ _elf32_read(VMState *state, char *program, size_t program_size)
     
     return (bool) state->instructions;
 }
+
+
+#undef LOAD_ADDRESS

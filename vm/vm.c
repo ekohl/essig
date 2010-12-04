@@ -1,8 +1,29 @@
+#include <assert.h>
 #include <elf.h>
 
 #include "vm.h"
 
 static bool _read_elf(VMState *state, char *program, size_t program_size);
+static struct _mapping *get_info_type_mapping(VMInfoType type);
+Opcode *get_opcode(VMState *state, PC_TYPE pc);
+
+struct _mapping {
+    VMInfoType type; /* Keep this one for sanity checks */
+    size_t offset;
+    size_t end;
+    size_t size;
+};
+
+static struct _mapping memory_mappings[] = {
+    { VM_INFO_CHUNK,    CHUNK_OFFSET,    CHUNK_END,    SIZEOF_CHUNK },
+    { VM_INFO_REGISTER, REGISTER_OFFSET, REGISTER_END, SIZEOF_REGISTER },
+    { VM_INFO_RAM,      RAM_OFFSET,      RAM_END,      SIZEOF_RAM },
+    { VM_INFO_ROM,      ROM_OFFSET,      ROM_END,      SIZEOF_ROM },
+    { VM_INFO_IO,       IO_OFFSET,       IO_END,       SIZEOF_IO },
+    { VM_INFO_PC,       PC_OFFSET,       PC_OFFSET + 
+                                         SIZEOF_PC,    SIZEOF_PC },
+};
+
 
 static char *_vm_error_messages[] = { 
 #   define __vm_errno__(a,b) b,
@@ -94,7 +115,7 @@ _hit_breakpoint(VMState *state)
     
     bp = state->breakpoints;
     while (bp) {
-        if (bp->offset == state->registers[PC])
+        if (bp->offset == GETPC(state))
             return true;
         
         bp = bp->next;
@@ -129,8 +150,7 @@ vm_newstate_no_code(VMInterruptPolicy interrupt_policy)
     VMState *newstate = NULL;
     err_malloc(newstate = calloc(1, sizeof(VMState)));
     
-    // ramsize is in bytes
-    err_malloc(newstate->ram = calloc(ramsize, 1));
+    err_malloc(newstate->chunk = calloc(CHUNK_END, 1));
     
 #ifdef VM_WITH_THREADS
     err(pthread_mutex_init(&newstate->lock, NULL) == 0,
@@ -138,9 +158,6 @@ vm_newstate_no_code(VMInterruptPolicy interrupt_policy)
         VM_OSERROR);
 #endif
     
-    // We make all registers ints
-    err_malloc(newstate->registers = calloc(nregisters, sizeof(OPCODE_TYPE)));
-    err_malloc(newstate->pins = calloc(npins, sizeof(OPCODE_TYPE)));
     newstate->interrupt_policy = interrupt_policy;
     newstate->break_async = false;
     
@@ -182,8 +199,7 @@ vm_closestate(VMState *state)
 {
     if (state) {
         free(state->instructions);
-        free(state->ram);
-        free(state->registers);
+        free(state->chunk);
 #ifdef VM_WITH_THREADS
         (void) pthread_mutex_destroy(&state->lock);
 #endif
@@ -214,10 +230,7 @@ vm_closediff(VMStateDiff *diff)
 static bool 
 _vm_step(VMState *state, int nsteps, VMStateDiff **diff, bool *hit_bp, bool first)
 {
-    Opcode *opcode;
-    opcode_handler *handler;
     VMInterruptCallable *callable;
-    VMInterruptItem *interrupt_item, *previous_interrupt_item = NULL;
     VMStateDiff *newdiff = NULL;
     
 #define RETURN(x) do { RELEASE_STATE(state); return (x); } while(0)
@@ -246,33 +259,20 @@ _vm_step(VMState *state, int nsteps, VMStateDiff **diff, bool *hit_bp, bool firs
             *hit_bp = true;
             RETURN(true);
         } else {
-            
-            /* PC error checking */
-            {
-                /* offsets in bytes */
-                size_t pc;
-                
-                pc = GETPC(state);
-                
-                if (pc < state->executable_segment_offset || 
-                    pc >= state->instructions_size) {
-                    vm_seterrno(VM_PC_OUT_OF_BOUNDS);
-#ifdef VM_DEBUG
-                    printf(LOCATION " pc: %lu max pc: %lu\n", 
-                           (unsigned long) pc, 
-                           (unsigned long) state->instructions_size - 1);
-#endif
-                    RETURN(false);
-                }
-            }
-            
+            Opcode *opcode;
+            opcode_handler *handler;
+
+            /* Do the PC validity checks before updating any diffs. */
+            if (!(opcode = get_opcode(state, GETPC(state))))
+                RETURN(false);
+           
             /* Save changes in diff */
             if (diff) {
                 if (!(newdiff = vm_newdiff()))
                     RETURN(false);
                 
                 newdiff->next = *diff;
-                newdiff->pc = state->registers[PC];
+                newdiff->pc = GETPC(state);
                 newdiff->cycles = state->cycles;
                 
                 *diff = newdiff;
@@ -294,12 +294,11 @@ _vm_step(VMState *state, int nsteps, VMStateDiff **diff, bool *hit_bp, bool firs
             }
             
             /* Execute instruction */
-            opcode = (Opcode *) OPCODE(state);
             handler = opcode_handlers[opcode->opcode_index].handler;
-            if (!handler(state, newdiff, opcode->instruction)) {
+            if (!handler(state, newdiff, opcode->instruction))
                 RETURN(state->stopped_running);
-            }
         }
+
         nsteps--;
         first = false;
         RELEASE_STATE(state);
@@ -315,34 +314,34 @@ vm_step(VMState *state, int nsteps, VMStateDiff **diff, bool *hit_bp)
     return _vm_step(state, nsteps, diff, hit_bp, true);
 }
 
-static OPCODE_TYPE *
-_get_location(VMState *state, VMInfoType type, size_t addr)
+static struct _mapping *
+get_info_type_mapping(VMInfoType type)
 {
-    OPCODE_TYPE *location = NULL;
+    struct _mapping *mapping;
 
-    switch (type) {
-        case VM_INFO_REGISTER:
-            location = state->registers;
-            if (addr >= nregisters)
-                goto error;
-            break;
-        case VM_INFO_RAM:
-            location = state->ram;
-            if (addr >= ramsize)
-                goto error;
-            break;
-        case VM_INFO_PIN:
-            location = state->pins + pinoffset;
-            if (addr >= npins)
-                goto error;
-            break;
-    }
+    assert(CHUNK_OFFSET == 0);
+    assert(type >= 0 && type < VM_INFO_NTYPES);
     
-    return location + addr;
+    mapping = memory_mappings + type; 
+    assert(mapping->type == type);
 
-error:
-    vm_seterrno(VM_OUT_OF_BOUNDS_ERROR);
-    return NULL;
+    return mapping;
+}
+
+static char *
+_get_location(VMState *state, VMInfoType type, size_t addr, int *nbytes)
+{
+    struct _mapping *mapping = get_info_type_mapping(type);
+   
+    if (addr < 0 ||addr >= mapping->size) {
+        vm_seterrno(VM_OUT_OF_BOUNDS_ERROR);
+        return NULL;
+    }
+
+    /* Address within indicated address space. */
+    if (nbytes)
+        *nbytes = mapping->size;
+    return state->chunk + mapping->offset + addr; 
 }
 
 #ifdef VM_DEBUG
@@ -357,14 +356,14 @@ _print_diff(VMState *state, VMStateDiff *diff)
     
     puts("VMStateDiff {");
     
-    printf(fmt, "PC", (unsigned long) state->registers[PC],
+    printf(fmt, "PC", (unsigned long) GETPC(state),
                       (unsigned long) diff->pc);
     printf(fmt, "Cycles", (unsigned long) state->cycles,
                           (unsigned long) diff->cycles);
     
     singlediff = diff->singlediff;
     while (singlediff) {
-        char *info_type;
+        char *info_type = NULL;
         switch (singlediff->type) {
             case VM_INFO_REGISTER:
                 info_type = "Register";
@@ -372,8 +371,14 @@ _print_diff(VMState *state, VMStateDiff *diff)
             case VM_INFO_RAM:
                 info_type = "Ram";
                 break;
-            case VM_INFO_PIN:
-                info_type = "Pin";
+            case VM_INFO_IO:
+                info_type = "IO";
+                break;
+            case VM_INFO_ROM:
+                info_type = "ROM";
+                break;
+            case VM_INFO_CHUNK:
+                info_type = "CHUNK";
                 break;
         }
         printf(fmt_single, info_type, singlediff->location,
@@ -406,22 +411,20 @@ _vm_rstep(VMState *state, int nsteps, VMStateDiff **diff, bool *hit_bp,
         
         first = false;
         
-#if 0
-        printf("Applying diff: ");
-        _print_diff(state, *diff);
-#endif
-        
         state->cycles = (*diff)->cycles;
-        state->registers[PC] = (*diff)->pc;
+        SETPC(state, (*diff)->pc);
         
         singlediff = (*diff)->singlediff;
         /* Apply singlediff changes */
         while (singlediff) {
-            OPCODE_TYPE *location;
-            
-            location = _get_location(state, singlediff->type,
-                                     singlediff->location);
-            *location = singlediff->oldval;
+            vm_write_nbytes(
+                state,
+                NULL,
+                singlediff->type,
+                singlediff->location,
+                singlediff->oldval,
+                singlediff->nbytes
+            );
             
             singlediff = singlediff->next;
         }
@@ -566,35 +569,57 @@ error:
     return false;
 }
 
-OPCODE_TYPE
+BIGTYPE
 vm_info(VMState *state, VMInfoType type, size_t vmaddr, bool *errorp)
 {
-    OPCODE_TYPE *dest;
+   struct _mapping *mapping = get_info_type_mapping(type);
+   return vm_info_nbytes(state, type, vmaddr, errorp, mapping->size);
+}
+
+bool
+vm_write(VMState *state, VMStateDiff *diff, VMInfoType type,
+         size_t destaddr, BIGTYPE value)
+{
+    struct _mapping *mapping = get_info_type_mapping(type);
+    return vm_write_nbytes(state, diff, type, destaddr, value, mapping->size);
+}
+
+BIGTYPE
+vm_info_nbytes(VMState *state, VMInfoType type, size_t vmaddr, bool *errorp, 
+               int nbytes)
+{
+    BIGTYPE result = 0;
+    char *location;
     
-    if (!(dest = _get_location(state, type, vmaddr))) {
+    if (!(location = _get_location(state, type, vmaddr, NULL))) {
         if (errorp)
             *errorp = true;
         
         return 0;
     }
     
-    return *dest;
+    memcpy(&result, location, nbytes);
+    vm_convert_endianness((char *) &result, nbytes);
+    
+    return result;
 }
 
 bool
-vm_write(VMState *state, VMStateDiff *diff, VMInfoType type,
-         size_t destaddr, OPCODE_TYPE value)
+vm_write_nbytes(VMState *state, VMStateDiff *diff, VMInfoType type,
+         size_t destaddr, BIGTYPE value, int nbytes)
 {
-    OPCODE_TYPE *dest; 
+    char *location;
     VMSingleStateDiff *singlediff;
     
-    if (!(dest = _get_location(state, type, destaddr)))
+    if (!(location = _get_location(state, type, destaddr, NULL)))
         goto error;
     
     if (diff) {
         /* update our diffs */
         err_malloc((singlediff = malloc(sizeof(VMSingleStateDiff))));
-        singlediff->oldval = *dest;
+        /* We already did error checking, don't do it again. Read and store
+           in host endianness so rstep can write to uC endianness. */
+        singlediff->oldval = vm_info(state, type, destaddr, NULL);
         
 #ifdef VM_DEBUG
         singlediff->newval = value;
@@ -602,13 +627,15 @@ vm_write(VMState *state, VMStateDiff *diff, VMInfoType type,
         
         singlediff->type = type;
         singlediff->location = destaddr;
-        
+        singlediff->nbytes = nbytes;
         singlediff->next = diff->singlediff;
         diff->singlediff = singlediff;
     }
     
     /* finally, write the value */
-    *dest = value;
+    vm_convert_endianness((char *) &value, nbytes);
+    memcpy(location, &value, nbytes);
+    
     return true;
     
 error:
@@ -629,28 +656,22 @@ swap_bytes(char *value, size_t length)
 }
 
 void 
-vm_convert_to_host_endianness(char *value, size_t length)
+vm_convert_endianness(char *value, size_t length)
 {
     int val;
     char *valp;
     
     val = 1;
     valp = (char *) &val;
-    if (valp[0] == 0) {
-        /* Host is big endian */
-        if (!is_big_endian)
-            swap_bytes(value, length);
-    } else {
-        /* Host is little endian */
-        if (is_big_endian)
-            swap_bytes(value, length);
-    }
+    if ((valp[0] == 0 && !is_big_endian) || 
+        (valp[0] != 0 && is_big_endian))
+        swap_bytes(value, length);
 }
 
-long long
-vm_convert_to_signed(unsigned long long value, int nbits)
+BIGTYPE
+vm_convert_to_signed(BIGTYPE value, int nbits)
 {
-    unsigned long long firstbit = 1 << (nbits - 1);
+    BIGTYPE firstbit = 1 << (nbits - 1);
     
     if (value & firstbit) {
         /* first bit is set, convert to signed */
@@ -660,7 +681,7 @@ vm_convert_to_signed(unsigned long long value, int nbits)
         return -firstbit + value; 
     } else {
         /* no need to do conversion, the first bit is not set */
-        return (long long) value;
+        return value;
     }
 }
 
@@ -678,8 +699,7 @@ disassemble(OPCODE_TYPE *assembly, size_t assembly_length)
         char *name;
         OPCODE_TYPE instruction = assembly[i];
         
-        vm_convert_to_host_endianness((char *) &instruction, 
-                                      sizeof(instruction));
+        vm_convert_endianness((char *) &instruction, sizeof(instruction));
         
         for (j = 0; opcode_handlers[j].opcode_name; ++j) {
             op_handler = &opcode_handlers[j];
@@ -727,6 +747,23 @@ disassemble(OPCODE_TYPE *assembly, size_t assembly_length)
 error:
     free(result);
     return NULL;
+}
+
+Opcode *
+get_opcode(VMState *state, PC_TYPE pc)
+{
+    if (pc < state->executable_segment_offset || 
+        pc >= state->instructions_size) {
+        vm_seterrno(VM_PC_OUT_OF_BOUNDS);
+#ifdef VM_DEBUG
+        printf(LOCATION " pc: %lu max pc: %lu\n", 
+               (unsigned long) pc, 
+               (unsigned long) state->instructions_size - 1);
+#endif
+        return NULL;
+    }
+
+    return state->instructions + pc;
 }
 
 #include "readelf.c"

@@ -121,10 +121,6 @@ def parse_nsteps_decorator(func):
     return CreateClosure(parse_nsteps_wrapper, func)
     
 
-def getpc(sim):
-    offset = sim.registers['pc']
-    return (<Simulator> sim.simulator).state.registers[offset]
-
 cdef class Simulator(object):
     cdef VMState *state
     cdef VMStateDiff *diff, *firstdiff
@@ -216,7 +212,8 @@ class SimulatorCLI(cmd.Cmd, object):
         self.vm_info_type = {
             'register': VM_INFO_REGISTER,
             'ram'     : VM_INFO_RAM,
-            'pin'     : VM_INFO_PIN,
+            'io'      : VM_INFO_IO,
+            'chunk'   : VM_INFO_CHUNK,
         }
         
         # indicates whether the 'run' command has been called. If it has been
@@ -354,7 +351,7 @@ class SimulatorCLI(cmd.Cmd, object):
     
     def info_registers(self, Simulator sim, about):
         for i in range(nregisters):
-            val = sim.state.registers[registers[i].offset]
+            val = sim.state.chunk[registers[i].offset]
             print self.register_fmt % (registers[i].name, 
                                        sizeof(OPCODE_TYPE) * 2,
                                        val)
@@ -369,7 +366,7 @@ class SimulatorCLI(cmd.Cmd, object):
         cdef OPCODE_TYPE value
         
         if not about:
-            print 'Ramsize: 0x%x' % ramsize
+            print 'Ramsize: 0x%x' % (RAM_END - RAM_OFFSET)
         else:
             try:
                 address = int(about, 0)
@@ -386,6 +383,9 @@ class SimulatorCLI(cmd.Cmd, object):
                     print value
     
     def info_register(self, Simulator sim, about):
+        cdef bint error = False
+        cdef BIGTYPE value
+        
         offset = self.registers.get(about.lower())
         if offset is None:
             raise ErrorMessage('No such register: %r' % about)
@@ -393,29 +393,31 @@ class SimulatorCLI(cmd.Cmd, object):
         if about.lower() == 'pc':
             print '%-15s 0x%-x address: 0x%-x' % (
                 about, 
-                sim.state.registers[offset], 
-                sim.state.registers[offset] * 2)
+                GETPC(sim.state),
+                GETPC(sim.state) * 2)
         else:
-            print self.register_fmt % (about, 
-                                       sizeof(OPCODE_TYPE) * 2,
-                                       sim.state.registers[offset])
+            value = vm_info(sim.state, VM_INFO_CHUNK, offset, <bool *> &error)
+            if error:
+                raise ErrorMessage()
+                
+            print self.register_fmt % (about, sizeof(OPCODE_TYPE) * 2, value)
         
     def info_instruction(self, Simulator sim, about, pc=None):
         cdef Opcode *op
         
         if pc is None:
-            pc = sim.state.registers[PC]
+            pc = GETPC(sim.state)
         
-        if not 0 <= pc < sim.state.instructions_size:
-            raise ErrorMessage('PC out of bounds: %r' % (pc,))
+        op = get_opcode(sim.state, pc)
+        if not op:
+            raise ErrorMessage()
         
-        op = &sim.state.instructions[pc]
         print '%10s 0x%-*x pc: 0x%x address: 0x%x' % (
             opcode_handlers[op.opcode_index].opcode_name,
             sizeof(OPCODE_TYPE) * 2,
             op.instruction, 
-            getpc(self),
-            getpc(self) * 2)
+            GETPC(sim.state),
+            GETPC(sim.state) * 2)
 
         _print_diff(sim.state, sim.diff)
     

@@ -4,9 +4,9 @@ cdef extern from "vm.h":
         true
         false
 
+    ctypedef long BIGTYPE
     ctypedef int OPCODE_TYPE
-    cdef extern OPCODE_TYPE PC
-    cdef extern size_t ramsize
+    ctypedef OPCODE_TYPE PC_TYPE
     
     ctypedef enum VMInterruptPolicy:
         VM_POLICY_INTERRUPT_NEVER
@@ -22,7 +22,8 @@ cdef extern from "vm.h":
     ctypedef enum VMInfoType:
         VM_INFO_REGISTER
         VM_INFO_RAM
-        VM_INFO_PIN
+        VM_INFO_IO
+        VM_INFO_CHUNK
     
     ctypedef struct VMIterable:
         VMIterable *next
@@ -67,15 +68,22 @@ cdef extern from "vm.h":
         size_t executable_segment_offset
         VMBreakpoint *breakpoints
         unsigned int cycles
-        OPCODE_TYPE *ram
-        OPCODE_TYPE *registers
-        OPCODE_TYPE *pins
+        char *chunk
+        # OPCODE_TYPE *ram
+        # OPCODE_TYPE *registers
+        # OPCODE_TYPE *pins
         bint stopped_running
         VMInterruptCallable *interrupt_callables
+    
+    BIGTYPE GETPC(VMState *state)
+    void SETPC(VMState *state, BIGTYPE pc)
+    Opcode *get_opcode(VMState *state, PC_TYPE pc)
     
     cdef extern OpcodeHandler opcode_handlers[]
     cdef extern Register registers[]
     cdef extern int nregisters
+    cdef extern unsigned long RAM_OFFSET
+    cdef extern unsigned long RAM_END
     
     VMState *vm_newstate(void *instructions, 
                          size_t instructions_size, 
@@ -92,8 +100,8 @@ cdef extern from "vm.h":
     void vm_break_async_from_signal(VMState *state)
     void vm_break_async_from_thread(VMState *state)
     bint vm_interrupt(VMState *state, VMInterruptType type, ...)
-    OPCODE_TYPE vm_info(VMState *state, VMInfoType type, size_t vmaddr, 
-                        bool *result)
+    BIGTYPE vm_info(VMState *state, VMInfoType type, size_t vmaddr, 
+                    bool *errorp)
     
     void _print_diff(VMState *state, VMStateDiff *diff)
 

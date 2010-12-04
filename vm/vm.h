@@ -25,9 +25,6 @@
 #   define RELEASE_STATE(state) do {} while (0)
 #endif
 
-#define GETPC(state) state->registers[PC]
-#define OPCODE(state) (state->instructions + GETPC(state))
-
 #define STRINGIFY(msg) #msg
 #define TOSTRING(msg) STRINGIFY(msg)
 #define LOCATION __FILE__ ":" TOSTRING(__LINE__)
@@ -45,6 +42,34 @@
     }
 
 #define err_malloc(result) err(result, "malloc", VM_NO_MEMORY)
+
+#ifndef CHUNK_OFFSET
+
+#define CHUNK_OFFSET 0
+#define CHUNK_END ROM_END
+#define SIZEOF_CHUNK 1
+
+#define REGISTER_OFFSET 0
+#define REGISTER_END IO_END
+#define SIZEOF_REGISTER 1
+
+#define RAM_OFFSET 0x60
+#define RAM_END (RAM_OFFSET + 1024)
+#define SIZEOF_RAM 1
+
+#define ROM_OFFSET (RAM_END + SIZEOF_PC)
+#define ROM_END (ROM_OFFSET + 0xFFFFFF)
+#define SIZEOF_ROM 2
+
+#define IO_OFFSET REGISTER_END
+#define IO_END 0x60
+#define SIZEOF_IO 1
+
+#define PC_OFFSET RAM_END
+#define SIZEOF_PC 2
+
+//#error
+#endif
 
 /*! \mainpage
 \section VMMainPage Microcontroller simulator API
@@ -99,9 +124,13 @@ typedef enum {
 /*! Flags indicating which part of the VM we want to know something 
     about/do something with */
 typedef enum {
+    VM_INFO_CHUNK,
     VM_INFO_REGISTER,
     VM_INFO_RAM,
-    VM_INFO_PIN
+    VM_INFO_ROM,
+    VM_INFO_IO,
+    VM_INFO_PC,
+    VM_INFO_NTYPES,
 } VMInfoType;
 
 struct VMState;
@@ -144,15 +173,11 @@ typedef struct VMState {
     Opcode *instructions;
     /*! Size of the instructions array */
     size_t instructions_size;
-    /*! Program counter (this attribute is obsoleted by state->registers[PC])*/
-    size_t pc;
     /*! Offset of the executable segment (in bytes) */
     size_t executable_segment_offset;
     /*! Number of executed cycles */
     unsigned int cycles;
-    OPCODE_TYPE *ram;
-    OPCODE_TYPE *registers;
-    OPCODE_TYPE *pins;
+    char *chunk;
     VMInterruptPolicy interrupt_policy;
     struct VMInterruptItem *interrupts;
     struct VMInterruptCallable *interrupt_callables;
@@ -184,19 +209,11 @@ typedef struct VMSingleStateDiff {
     size_t oldval;
     VMInfoType type;
     size_t location;
+    int nbytes;
 #ifdef VM_DEBUG
     size_t newval;
 #endif
 } VMSingleStateDiff;
-
-/*! Represents a difference in state between two consecutive steps.
-    This means it has a list of "single differences" in the state. */
-typedef struct VMStateDiff {
-    VMIterable_Head(VMStateDiff);
-    VMSingleStateDiff *singlediff;
-    OPCODE_TYPE pc;
-    unsigned int cycles;
-} VMStateDiff;
 
 /*! Item in the interrupt queue. */
 typedef struct VMInterruptItem {
@@ -220,11 +237,24 @@ typedef struct VMInterruptCallable {
 } VMInterruptCallable;
 
 /*! Represents a single register holding the name of the register and the 
-    offset in the register file */
+    offset in the chunk. This means it does not have to be an actual register.
+*/
 typedef struct {
    char *name;
    size_t offset;
 } Register;
+
+/* include the private API specification */
+#include "simulator.h"
+
+/*! Represents a difference in state between two consecutive steps.
+    This means it has a list of "single differences" in the state. */
+typedef struct VMStateDiff {
+    VMIterable_Head(VMStateDiff);
+    VMSingleStateDiff *singlediff;
+    PC_TYPE pc;
+    unsigned int cycles;
+} VMStateDiff;
 
 
 /* @} */
@@ -323,14 +353,19 @@ bool vm_register_interrupt_callable(VMState *, interrupt_callable *, void *);
 /*! Query the VM for information. 
     \param[out] errorp if not NULL, indicates whether there was an error during
 		the operation. */
-OPCODE_TYPE vm_info(VMState *state, VMInfoType type, size_t vmaddr, bool *errorp);
+BIGTYPE vm_info(VMState *state, VMInfoType type, size_t vmaddr, bool *errorp);
 /*! Write a value to a destination of type 'type' at addr 'destaddr'. 
     This function updates 'state' and 'diff' appropriately. 
     On error, this function returns 'false' with the VM errno set 
     appropriately (opcode handlers can just propagate this error by returning
     'false'). */
 bool vm_write(VMState *state, VMStateDiff *diff, VMInfoType type, 
-              size_t destaddr, OPCODE_TYPE value);
+              size_t destaddr, BIGTYPE value);
+
+BIGTYPE vm_info_nbytes(VMState *state, VMInfoType type, size_t vmaddr, 
+                       bool *errorp, int nbytes);
+bool vm_write_nbytes(VMState *state, VMStateDiff *diff, VMInfoType type, 
+                     size_t destaddr, BIGTYPE value, int nbytes);
 
 /*! \defgroup VMERRNO Error Reporting */
 /* @{ */
@@ -351,10 +386,12 @@ VMIterable *vm_reversed_it(VMIterable *it);
 
 /*! Convert value from the MCU's architecture to the host architecture.
     Modifies in-place. */
-void vm_convert_to_host_endianness(char *value, size_t length);
+void vm_convert_endianness(char *value, size_t length);
 
 /*! Convert unsigned two-complement's value of nbits to signed. */
-long long vm_convert_to_signed(unsigned long long value, int nbits);
+BIGTYPE vm_convert_to_signed(BIGTYPE value, int nbits);
+
+Opcode *get_opcode(VMState *state, PC_TYPE pc);
 
 /*! \defgroup User-written code */
 /* @{ */
@@ -362,9 +399,5 @@ long long vm_convert_to_signed(unsigned long long value, int nbits);
 bool set_interrupt(VMState *state, VMStateDiff *diff);
 bool handle_interrupt(VMState *state, VMStateDiff *diff);
 /* @} */
-
-
-/* include the private API specification */
-#include "simulator.h"
 
 #endif /* vm.h */

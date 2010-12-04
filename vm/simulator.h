@@ -4,9 +4,26 @@
 #include "generated_simulator.h"
 #include "vm.h"
 
+#define BIGTYPE int64_t
+#define UBIGTYPE uint64_t
+
 #ifndef OPCODE_TYPE
 #   error The generator should #define OPCODE_TYPE
 #endif
+
+#if SIZEOF_PC == 1
+#   define PC_TYPE uint8_t
+#elif SIZEOF_PC == 2
+#   define PC_TYPE uint16_t
+#elif SIZEOF_PC <= 4
+#   define PC_TYPE uint32_t
+#else
+#   define PC_TYPE uint64_t
+#endif
+
+#define GETPC(state) ((PC_TYPE) vm_info(state, VM_INFO_PC, PC_OFFSET, NULL))
+#define SETPC(state, value) vm_write(state, NULL, VM_INFO_PC, PC_OFFSET, \
+                                     value)
 
 /*! All these variables must be set by the generated simulator.
     Additionally the generator should overwrite the file generated_simulator.h
@@ -22,11 +39,14 @@
     Examples:
     \code
         bool square(VMState *state, VMStateDiff *diff, OPCODE_TYPE opcode) {
-            OPCODE_TYPE result;
+            BIGTYPE result;
             size_t register_dest;
+            bool error = false;
             
             register_dest = extract register parameter from opcode;
-            if (!vm_info(state, VM_INFO_REGISTER, register_dest, &result))
+            result = vm_info(state, VM_INFO_REGISTER, register_dest, &error))
+            
+            if (error)
                 return false;
             
             return vm_write(state, diff, VM_INFO_REGISTER, 
@@ -35,8 +55,6 @@
     
         nbits_cpu = 16;
         register_names = {
-            "V",
-            "C",
             "R0",
         };
         
@@ -55,30 +73,15 @@
 /*! \defgroup VMPrivateAPI Private API */
 /* @{ */
 
-/*! n-bit instruction set */
-extern int nbits_cpu;
-
-/*! Table holding the names of the registers */
-extern char *register_names[];
-
-/*! Amount of registers in the microcontroller */
-extern int nregisters;	// FIXME n_registers
-
-/*! Array holding the names of the pins */
-extern char *pin_names[];
- /*! Amount of pins in the microcontroller */
-extern int npins;
-
-/*! Offset of the pins in the RAM */
-extern size_t pinoffset;
-
-/*! Size of RAM available in the microcontroller */
-extern size_t ramsize;         
-
 /*! NULL-terminated list of opcode handlers. */
 extern OpcodeHandler opcode_handlers[];
 
-/*! Holds the register names and offsets */
+/*! Amount of registers (or other variables like PC and SP) in the 
+    microcontroller */
+extern int nregisters;
+
+/*! Holds the register/variable names and offsets.
+    offsets are specified in CHUNK addressing mode. */
 extern Register registers[];
 
 /*! Indicates the endianness of the MCU */
