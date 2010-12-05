@@ -4,7 +4,7 @@ OBJECTS=vm.o generated_simulator.o interrupt_handler.o
 PROFILE_OBJECTS=$(OBJECTS) runtest.o
 PATH := $(PWD)/cython/bin:${PATH}
 PYTHON_DEBUG=`cython 2>&1 | grep -q '\--debug' && echo --pyrex-debug`
-PYTHON=python #`which python-dbg || which python`
+PYTHON=`which python-dbg || which python`
 PYTHONPATH := $(PWD)/cython:${PYTHONPATH}
 
 TESTFILE1=../code-samples/factorial

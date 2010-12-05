@@ -43,34 +43,6 @@
 
 #define err_malloc(result) err(result, "malloc", VM_NO_MEMORY)
 
-#ifndef CHUNK_OFFSET
-
-#define CHUNK_OFFSET 0
-#define CHUNK_END ROM_END
-#define SIZEOF_CHUNK 1
-
-#define REGISTER_OFFSET 0
-#define REGISTER_END IO_END
-#define SIZEOF_REGISTER 1
-
-#define RAM_OFFSET 0x60
-#define RAM_END (RAM_OFFSET + 1024)
-#define SIZEOF_RAM 1
-
-#define ROM_OFFSET (RAM_END + SIZEOF_PC)
-#define ROM_END (ROM_OFFSET + 0xFFFFFF)
-#define SIZEOF_ROM 2
-
-#define IO_OFFSET REGISTER_END
-#define IO_END 0x60
-#define SIZEOF_IO 1
-
-#define PC_OFFSET RAM_END
-#define SIZEOF_PC 2
-
-//#error
-#endif
-
 /*! \mainpage
 \section VMMainPage Microcontroller simulator API
 \subsection VMMainPublicAPI The public API that will be exposed by the Simulator

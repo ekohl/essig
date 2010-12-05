@@ -793,10 +793,11 @@ _read_elf(VMState *state, char *program, size_t program_size)
         (elfclass = ehdr->e_ident[EI_CLASS]) != ELFCLASSNONE) 
     {
         /* valid ELF file */
-        if (elfclass == ELFCLASS32)
+        if (elfclass == ELFCLASS32) {
             return _elf32_read(state, program, program_size);
-        else
+        } else {
             return _elf64_read(state, program, program_size);
+        }
     } else {
         vm_seterrno(VM_NOT_ELF);
         return false;

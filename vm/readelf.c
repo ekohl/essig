@@ -56,8 +56,8 @@ _elf32_read(VMState *state, char *program, size_t program_size)
                 state->executable_segment_offset = LOAD_ADDRESS;
             }
             
-            if (startaddr + phdr->p_memsz > rom + rommapping->size ||
-                startaddr + phdr->p_memsz < rom) {
+            if (LOAD_ADDRESS + phdr->p_memsz > 
+                rommapping->end - rommapping->offset) {
                 vm_seterrno(VM_ERROR_PROGRAM_TOO_BIG);
                 return false;
             }

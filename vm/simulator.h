@@ -2,10 +2,37 @@
 #define SIMULATOR_H
 
 #include "generated_simulator.h"
-#include "vm.h"
 
 #define BIGTYPE int64_t
 #define UBIGTYPE uint64_t
+
+#ifndef CHUNK_OFFSET
+
+#define CHUNK_OFFSET 0
+#define CHUNK_END ROM_END
+#define SIZEOF_CHUNK 1
+
+#define REGISTER_OFFSET 0
+#define REGISTER_END IO_END
+#define SIZEOF_REGISTER 1
+
+#define RAM_OFFSET 0x60
+#define RAM_END (RAM_OFFSET + 1024)
+#define SIZEOF_RAM 1
+
+#define ROM_OFFSET (RAM_END + SIZEOF_PC)
+#define ROM_END (ROM_OFFSET + 0xFFFFFF)
+#define SIZEOF_ROM 2
+
+#define IO_OFFSET REGISTER_END
+#define IO_END 0x60
+#define SIZEOF_IO 1
+
+#define PC_OFFSET RAM_END
+#define SIZEOF_PC 2
+
+//#error
+#endif
 
 #ifndef OPCODE_TYPE
 #   error The generator should #define OPCODE_TYPE
@@ -22,8 +49,9 @@
 #endif
 
 #define GETPC(state) ((PC_TYPE) vm_info(state, VM_INFO_PC, PC_OFFSET, NULL))
-#define SETPC(state, value) vm_write(state, NULL, VM_INFO_PC, PC_OFFSET, \
-                                     value)
+#define SETPC(state, value) vm_write(state, NULL, VM_INFO_PC, 0, value)
+
+#include "vm.h"
 
 /*! All these variables must be set by the generated simulator.
     Additionally the generator should overwrite the file generated_simulator.h
