@@ -32,20 +32,27 @@ atmel {
 		RZ = R31:R30;
 	}
 
+	maps {
+		chunk		(0, 0xFFFF);
+		registers	(0, 0x1F);
+		io		(0x20, 0x5F);
+		ram		(0, 0x460);
+	}
+
 	instructions {
 
 		noop "0000 0000 0000 0000" {
 			PC = PC + 1;
 		}
 
-		/* Add with Carry */
+		/* Add with Carry */ //Checked
 		adc "0001 11rd dddd rrrr" Rd, Rr {
 			Rd = Rd + Rr + C;
 
 			H = Rd3 & Rr3 | Rr3 & !R3 | !R3 & Rd3;
-			S = N ^ V;
 			V = Rd7 & Rr7 & !R7 | !Rd7 & !Rr7 & R7;
 			N = R7;
+			S = N ^ V;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
 			C = Rd7 & Rr7 | Rr7 & !R7 | !R7 & Rd7;
 
@@ -53,14 +60,14 @@ atmel {
 
 		}
 
-		/* Add without Carry */
+		/* Add without Carry */ //Checked
 		add "0000 11rd dddd rrrr" Rd, Rr {
 			Rd = Rd + Rr;
 
 			H = Rd3 & Rr3 | Rr3 & !R3 | !R3 & Rd3;
-			S = N ^ V;
 			V = Rd7 & Rr7 & !R7 | !Rd7 & !Rr7 & R7;
 			N = R7;
+			S = N ^ V;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
 			C = Rd7 & Rr7 | Rr7 & !R7 | !R7 & Rd7;
 
@@ -68,49 +75,50 @@ atmel {
 		}
 
 		/* Add Immediate to Word */
-		adiw "1001 0110 KKdd KKKK" Rd, K {
+		adiw "1001 0110 KKdd KKKK", clock=2 Rd, K {
 			// d = {24,26,28,30}
 			$d = 24 + $d * 2;
-			R = [R($d+1):R($d)] + $K;
-			[R($d+1):R($d)] = R;
+			//R = [R($d+1):R($d)] + $K;
+			//[R($d+1):R($d)] = R;
 
-			S = N ^ V;
+			$d = $d + 1; // Set Rd to the high byte // TODO
 			V = !Rd7(h) & R15; //TODO High byte.. maybe iets van R($d+1)7 ipv de h te gebruiken
 			N = R15;
+			S = N ^ V;
 			Z = !R15 & !R14 & !R13 & !R12 & !R11 & !R10 & !R9 & !R8 & !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
 			C = !R15 & Rd7(h); //TODO High byte.. maybe iets van R($d+1)7 ipv de h te gebruiken
 
 			PC = PC + 1;
 		}
 
-		/* Logical AND */
+		/* Logical AND */ //Checked
 		and "0010 00rd dddd rrrr" Rd, Rr {
 			/* 0 <= d <= 31, 0 <= r 31 */
 			Rd = Rd & Rr;
 
-			S = N ^ V;
 			V = 0;
 			N = R7;
+			S = N ^ V;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
 
 			PC = PC + 1;
 		}
 
-  		/* Logical AND with Immediate */
+  		/* Logical AND with Immediate */ //Checked
                 andi "0111 KKKK dddd KKKK" Rd, K {
                         /* 16 <= d <= 31, 0 <= K <= 255 */
 			$d = 16 + $d;
                         Rd = Rd & $K;
 
-                        S = N ^ V;
                         V = 0;
                         N = R7;
+                        S = N ^ V;
                         Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
 
                         PC = PC + 1;
                 }
 
-		/* Branch if Carry Cleared */
+		/* Branch if Carry Cleared */ // Checked
 		brcc "1111 01kk kkkk k000" ~k {
 			if C == 0 {
 				PC = PC + $k + 1;
@@ -119,7 +127,7 @@ atmel {
 			}
 		}
 
-		/* Branch if Carry Set */
+		/* Branch if Carry Set */ // Checked
 		brcs "1111 00kk kkkk k000" ~k {
 			if C == 1 {
 				PC = PC + $k + 1;
@@ -128,7 +136,7 @@ atmel {
 			}
 		}
 
-		/* Branch if T Flag is Cleared */
+		/* Branch if T Flag is Cleared */ // Checked
 		brtc "1111 01kk kkkk k110" ~k {
 			if T == 0 {
 				PC = PC + $k + 1;
@@ -137,7 +145,7 @@ atmel {
 			}
 		}
 
-		/* Branch if Equal */
+		/* Branch if Equal */ //Checked
 		breq "1111 00kk kkkk k001" ~k {
 			if Z == 1 {
 				PC = PC + $k + 1;
@@ -146,16 +154,16 @@ atmel {
 			}
 		}
 
-		/* Branch if Greater or Equal (Signed) */
+		/* Branch if Greater or Equal (Signed) */ // Checked
 		brge "1111 01kk kkkk k100" ~k {
-			if (N ^ V) == 0 {
+			if S == 0 {
 				PC = PC + $k + 1;
 			} else {
 				PC = PC + 1;
 			}
 		}
 
-		/* Branch if Not Equal */
+		/* Branch if Not Equal */ //Checked
 		brne "1111 01kk kkkk k001" ~k {
 			if Z == 0 {
 				PC = PC + $k + 1;
@@ -172,58 +180,70 @@ atmel {
 		}
 
 		/* Clear the T Flag in SREG */
-		clt "1001 0100 1110 1000" {
+		clt "1001 0100 1110 1000" { // Checked
 			T = 0;
 
 			PC = PC + 1;
 		}
 
-		/* Compare */
+		/* One's complement */ // Checked
+		com "1001 010d dddd 0000" Rd, K { 
+			Rd = 255 - Rd;
+
+			V = 0;
+			N = R7;
+			S = N ^ V;
+			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
+			C = 1;
+
+			PC = PC + 1;
+		}
+
+		/* Compare */ // Checked
 		cp "0001 01rd dddd rrrr" Rd, Rr {
 			R = Rd - Rr;
 
-			H = !Rd3 & Rr3 | Rr3 &R3 | R3 & !Rd3;
-			S = N ^ V;
+			H = !Rd3 & Rr3 | Rr3 & R3 | R3 & !Rd3;
 			V = Rd7 & !Rr7 & !R7 | !Rd7 & Rr7 & R7;
 			N = R7;
-			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0 & Z;
+			S = N ^ V;
+			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
 			C = !Rd7 & Rr7 | Rr7 & R7 | R7 & !Rd7;
 
 			PC = PC + 1;
 		}
 
-		/* Compare with Carry */
-		cpc "0000 01rd dddd rrrr" Rd, Rr {
+		/* Compare with Carry */ // Checked
+		cpc "0000 01rd dddd rrrr" Rd, Rr { 
 			R = Rd - Rr - C;
 
 			H = !Rd3 & Rr3 | Rr3 & R3 | R3 & !Rd3;
-			S = N ^ V;
 			V = Rd7 & !Rr7 & !R7 | !Rd7 & Rr7 & R7;
 			N = R7;
+			S = N ^ V;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0 & Z;
 			C = !Rd7 & Rr7 | Rr7 & R7 | R7 & !Rd7;
 
 			PC = PC + 1;
 		}
 
-		/* Compare with Immediate */
+		/* Compare with Immediate */ // Checked
 		cpi "0011 KKKK dddd KKKK" Rd, K {
-			// Checked
 			/* 16 <= d <= 31 */
 			$d = 16 + $d;
 			R = Rd - $K;
 
 			H = !Rd3 & $K3 | $K3 & R3 | R3 & !Rd3;
-			S = N ^ V;
 			V = Rd7 & !$K7 & !R7 | !Rd7 & $K7 & R7;
 			N = R7;
+			S = N ^ V;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
 			C = !Rd7 & $K7 | $K7 & R7 | R7 & !Rd7;
 
 			PC = PC + 1;
 		}
 
-		/* Compare Skip if Equal */
+		/* Compare Skip if Equal */ // Checked
 		cpse "0001 00rd dddd rrrr" Rd, Rr {
 			if Rr == Rd {
 				PC = PC + 2;
@@ -232,78 +252,69 @@ atmel {
 			}
 		}
 
-		/* Compare with Immediate */
-		com "1001 010d dddd 0000" Rd, K {
-			Rd = 255 - Rd;
-
-			S = N ^ V;
-			V = 0;
-			N = R7;
-			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
-			C = 1;
-
-			PC = PC + 1;
-		}
-
 		/* Decrement */
-		dec "1001 010d dddd 1010" Rd {
+		dec "1001 010d dddd 1010" Rd { // Checked
 			Rd = Rd - 1;
 
-			S = N^V;
 			V = !R7 & R6 & R5 & R4 & R3 & R2 & R1 & R0;
 			N = R7;
+			S = N ^ V;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
 
 			PC = PC + 1;
 		}
 
 		/* Exclusive Or */
-		eor "0010 01rd dddd rrrr" Rd, Rr {
+		eor "0010 01rd dddd rrrr" Rd, Rr { // Checked
 			Rd = Rd ^ Rr;
 
-			S = N ^ V;
 			V = 0;
 			N = R7;
+			S = N ^ V;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
 
 			PC = PC + 1;
 		}
 
-		icall "1001 0101 0000 1001" {
-			PC = [R(31):R(30)]; //TODO should be RZ
+		icall "1001 0101 0000 1001" { // Checked
+			R = [R(31):R(30)]; //TODO should be RZ
 			// Stack <- PC + 1
 			ram(SP) = PC + 1;
 			// SP = SP - 2 (or 3 if its 3 bytes)
 			SP = SP - 2;
+			PC = R;
 		}
 
 		/* Long Call to a Subroutine */
-		call "1001 010k kkkk 111k", "kkkk kkkk kkkk kkkk", clock=4 k {
+		call "1001 010k kkkk 111k", "kkkk kkkk kkkk kkkk", clock=4 k { // Checked
 			/* 0 <= k < 64K */
-			PC = $k;
+			R = $k;
 			ram(SP) = PC + 2;
 			SP = SP - 2;
+			PC = R;
 		}
 
 		/* Indirect Jump */
-		ijmp "1001 0100 0000 1001", clock=2{
+		ijmp "1001 0100 0000 1001", clock=2 { // Checked
 			PC = [R(31):R(30)]; //TODO should be RZ
+			PC = R[31..30];
 		}
 
 		/* Load an I/O Location to Register */
-		in "1011 0AAd dddd AAAA" Rd, A {
-			A = Rd;
+		in "1011 0AAd dddd AAAA" Rd, A { // TODO: Check me
+			// FIXME: I/O port
+			Rd = ram(A+32);
 
 			PC = PC + 1;
 		}
 
 		/* Increment */
-		inc "1001 010d dddd 0011" Rd {
+		inc "1001 010d dddd 0011" Rd { // Checked
 			R = Rd + 1;
 
-			S = N ^ V;
 			V = R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
 			N = R7;
+			S = N ^ V;
 			Z = !R;
 			Rd = R;
 
@@ -311,19 +322,19 @@ atmel {
 		}
 
 		/* Jump */
-		jmp "1001 010k kkkk 110k", "kkkk kkkk kkkk kkkk" ~k {
+		jmp "1001 010k kkkk 110k", "kkkk kkkk kkkk kkkk" k { // Checked
 			PC = $k;
 		}
 
 		/* Load indirect from X */
-		ld "1001 000d dddd 1100" Rd, c {
+		ld "1001 000d dddd 1100" Rd { // Checked
 			Rd = ram([R(27):R(26)]); // TODO should be RX
 
 			PC = PC + 1;
 		}
 
 		/* Load indirect from X. Post increment X */
-		ldxplus "1001 000d dddd 1101" Rd, c {
+		ldxplus "1001 000d dddd 1101" Rd { // Checked
 			Rd = ram([R(27):R(26)]); // TODO Should be RX
 			[R(27):R(26)] = [R(27):R(26)] + 1; // TODO Should be RX
 
@@ -331,7 +342,7 @@ atmel {
 		}
 
 		/* Load indirect from X. Pre decrement X */
-		ldminx "1001 000d dddd 1110" Rd, c {
+		ldminx "1001 000d dddd 1110" Rd { // Checked
 			[R(27):R(26)] = [R(27):R(26)] - 1; // TODO Should be RX
 			Rd = ram([R(27):R(26)]); // TODO Should be RX
 
@@ -339,7 +350,7 @@ atmel {
 		}
 
 		/* Load Immediate */
-		ldi "1110 KKKK dddd KKKK" Rd, K {
+		ldi "1110 KKKK dddd KKKK" Rd, K { // Checked
 			/* 16 <= d <= 31 */
 			$d = 16 + $d;
 			Rd = $K;
@@ -348,14 +359,14 @@ atmel {
 		}
 
 		/* Load Indirect from Data Space to Register using Index Y+ */
-		lddyplus "10q0 qq0d dddd 1qqq" Rd, q {
+		lddyplus "10q0 qq0d dddd 1qqq" Rd, q { // Checked
 			Rd = ram([R(29):R(28)]+$q); //TODO Should be RX
 
 			PC = PC + 1;
 		}
 
 		/* Load Indirect from Data Space to Register using Index -Z */
-		lddzmin "1001 000d dddd 0010" Rd {
+		lddzmin "1001 000d dddd 0010" Rd { // Checked
 			[R(31):R(30)] = [R(31):R(30)] - 1;
 			Rd = ram([R(31):R(30)]); //TODO Should be RZ
 
@@ -363,7 +374,7 @@ atmel {
 		}
 
 		/* Load Indirect from Data Space to Register using Index Z+ */
-		lddzplus "1001 000d dddd 0001" Rd {
+		lddzplus "1001 000d dddd 0001" Rd { // Checked
 			Rd = ram([R(31):R(30)]); //TODO Should be RZ
 			[R(31):R(30)] = [R(31):R(30)] + 1; //TODO should be RZ
 
@@ -371,35 +382,36 @@ atmel {
 		}
 
 		/* Load Indirect from Data Space to Register using Index Z+q */
-		lddzq "10q0 qq0d dddd 0qqq" Rd, q {
+		lddzq "10q0 qq0d dddd 0qqq" Rd, q { // Checked
 			Rd = ram([R(31):R(30)]+$q); //TODO Should be RZ
 
 			PC = PC + 1;
 		}
 
 		/* Load Direct from Data Space */
-		lds "1001 000d dddd 0000","kkkk kkkk kkkk kkkk" Rd, k{
+		lds "1001 000d dddd 0000","kkkk kkkk kkkk kkkk", clock=2 Rd, k { // Checked
 			Rd = ram(k);
 
 			PC = PC + 2;
 		}
 
 		/* Logical Shift Right */
-		lsr "1001 010d dddd 0110" Rd {
+		lsr "1001 010d dddd 0110" Rd { // Checked
 
 			C = Rd0;
-			Rd = Rd >> 1;
+			R = Rd >> 1;
 
-			S = N ^ V;
-			V = N ^ C;
 			N = 0;
+			V = N ^ C;
+			S = N ^ V;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
+			Rd = R;
 			
 			PC = PC + 1;
 		}
 
 		/* Load Program Memory */
-		lpm "1001 0101 1100 1000", clock=3 {
+		lpm "1001 0101 1100 1000", clock=3 { // TODO: Check me
 			// FIXME something with RAMPXYZ
 			//R(0) = [R(31):R(30)]; // TODO should be RZ
 
@@ -407,7 +419,7 @@ atmel {
 		}
 
 		/* Load Program Memory */
-		lpmz "1001 000d dddd 0100", clock=3 d {
+		lpmz "1001 000d dddd 0100", clock=3 d { // TODO: Check me
 			// FIXME implement me
 			//Rd = RZ; // TODO something with RAMPXYZ
 
@@ -415,7 +427,7 @@ atmel {
 		}
 
 		/* Load Program Memory */
-		lpmzplus "1001 000d dddd 0101", clock=3 d {
+		lpmzplus "1001 000d dddd 0101", clock=3 d { // TODO: Check me
 			// FIXME something with RAMPXYZ
 			//R0 = RZ; // TODO
 			//RZ = RZ + 1;
@@ -424,13 +436,13 @@ atmel {
 		}
 
 		/* Copy Register */
-		mov "0010 11rd dddd rrrr" Rd, Rr {
+		mov "0010 11rd dddd rrrr" Rd, Rr { // Checked
 			Rd = Rr;
 
 			PC = PC + 1;
 		}
 
-		movw "0000 0001 dddd rrrr" Rd, Rr {
+		movw "0000 0001 dddd rrrr" Rd, Rr { // TODO: Check me
 			/* r in 0,2,..,30 */
 			$r = $r * 2;
 			/* d in 0,2,..,30 */
@@ -441,7 +453,7 @@ atmel {
 		}
 
 		/* Multiply Unsigned */
-		mul "1001 11rd dddd rrrr", clock=2 Rd, Rr {
+		mul "1001 11rd dddd rrrr", clock=2 Rd, Rr { // TODO: Check me
 			[R(1):R(0)] = Rd * Rr;
 			R = [R(1):R(0)];
 
@@ -451,7 +463,7 @@ atmel {
 			PC = PC + 1;
 		}
 
-		neg "1001 010d dddd 0001" Rd {
+		neg "1001 010d dddd 0001" Rd { // TODO: Check me
 			R = 0 - Rd;
 
 			H = R3 | Rd3;
@@ -468,13 +480,14 @@ atmel {
 		}
 
 		/* Store Register to I/O Location */
-		out "1011 1AAr rrrr AAAA" A, Rr {
-			A = Rr;
+		out "1011 1AAr rrrr AAAA" A, Rr { // TODO: Check me
+			// FIXME I/O
+			ram(A) = Rr - 32;
 
 			PC = PC + 1;
 		}
 
-		or "0010 10rd dddd rrrr" Rd,Rr {
+		or "0010 10rd dddd rrrr" Rd,Rr { // TODO: Check me
 			Rd = Rd | Rr;
 
 			S = N ^ V;
@@ -485,7 +498,7 @@ atmel {
 			PC = PC + 1;
 		}
 
-		ori "0110 KKKK dddd KKKK" Rd, K {
+		ori "0110 KKKK dddd KKKK" Rd, K { // TODO: Check me
 			/* 16 <= d <= 31 */
 			$d = 16 + $d;
 			Rd = Rd | $K;
@@ -499,8 +512,7 @@ atmel {
 		}
 
 		/* Push Register on Stack */
-		push "1001 001r rrrr 1111" Rr {
-			// FIXME check if its correct
+		push "1001 001r rrrr 1111" Rr { // TODO: Check me
 			ram(SP) = Rr;
 			SP = SP - 1;
 
@@ -508,8 +520,7 @@ atmel {
 		}
 
 		/* Pop Register from Stack */
-		pop "1001 000d dddd 1111" Rd {
-			// FIXME check if its correct
+		pop "1001 000d dddd 1111" Rd { // TODO: Check me
 			SP = SP + 1;
 			Rd = ram(SP);
 
@@ -517,15 +528,13 @@ atmel {
 		}
 
 		/* Return from Subroutine */
-		ret "1001 0101 0000 1000" {
+		ret "1001 0101 0000 1000" { // TODO: Check me
 			SP = SP + 2; // TODO not sure if this should be done after or before reading form stack.
-			PC = ram(SP);
-			// FIXME: Something like
-			//PC = [ram(SP+1):ram(SP)];
+			PC = ram[SP+1..SP];
 		}
 
 		/* Relative Call to Subroutine */
-		rcall "1101 kkkk kkkk kkkk" ~k {
+		rcall "1101 kkkk kkkk kkkk" ~k { // TODO: Check me
 			PC = PC + $k + 1;
 			// FIXME
 			ram(SP) = PC + 1;
@@ -533,7 +542,7 @@ atmel {
 		}
 
 		/* Relative Jump */
-		rjmp "1100 kkkk kkkk kkkk" ~k {
+		rjmp "1100 kkkk kkkk kkkk" ~k { // TODO: Check me
 			if $k == -1 {
 				HALT;
 			} else {
@@ -542,7 +551,7 @@ atmel {
 		}
 
 		/* Rotate Right through Carry */
-		ror "1001 010d dddd 0111" Rd {
+		ror "1001 010d dddd 0111" Rd { // TODO: Check me
 			C = Rd0;
 	
 			R = Rd >> 1 | C << 8;
@@ -550,15 +559,21 @@ atmel {
 			V = N ^ C;
 			N = R7;
 			Z = !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
+			Rd = R;
 
 			PC = PC + 1;
 		}
 
 		/* Subtract Immediate from Word */
-		sbiw "1001 0111 KKdd KKKK" Rd, K {
-			R = [R($d+1):R(d)] - $K;
+		sbiw "1001 0111 KKdd KKKK" Rd, K { // TODO: Check me
+			/* d = {24,26,28,30} */
+			$d = 24 + $d * 2;
+			//R = [R($d+1):R(d)] - $K;
+			R = R[$d+1..d] - $K;
+
 			[R($d+1):R($d)] = $R;
 
+			$d = $d + 1; // TODO (== high bit)
 			S = N ^ V;
 			V = Rd7(h) & !R15;
 			N = R15;
@@ -570,8 +585,7 @@ atmel {
 		}
 
 		/* Skip if Bit in Register is Set */
-		sbrs "1111 111r rrrr 0bbb" Rr, b {
-			/* If Rr(b) = 1 then PC ? PC + 2 (or 3) else PC ? PC + 1 */
+		sbrs "1111 111r rrrr 0bbb" Rr, b { // TODO: Check me
 			if Rr(b) == 1 {
 				PC = PC + 2;
 			} else {
@@ -579,6 +593,7 @@ atmel {
 			}
 		}
 
+		/* Set Carry Flag */
 		sec "1001 0100 0000 1000" {
 			C = 1;
 
@@ -586,7 +601,7 @@ atmel {
 		}
 
 		/* Store Indirect From Register to Data Space using Index X+ */
-		stxplus "1001 001r rrrr 1101", clock=2 X, Rr {
+		stxplus "1001 001r rrrr 1101", clock=2 X, Rr { // TODO: Check me
 			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
 			ram([R(27):R(26)]) = Rr; //TODO Should be RX registers
 			[R(27):R(26)] = [R(27):R(26)] + 1; //TODO Should be RX
@@ -596,7 +611,7 @@ atmel {
 
 
 		/* Store Indirect From Register to Data Space using Index Y+ */
-		stdyplus "1000 001r rrrr 1000" Rr {
+		stdyplus "1000 001r rrrr 1000" Rr { // TODO: Check me
 			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
 			ram([R(29):R(28)]) = Rr; //TODO Should be RY
 			[R(29):R(28)] = [R(29):R(28)] + 1; // Should be RY
@@ -612,7 +627,7 @@ atmel {
 		}
 
 		/* Store Indirect From Register to Data Space using Index Z+q*/
-		stdzplusq "10q0 qq1r rrrr 0qqq" q, Rr {
+		stdzplusq "10q0 qq1r rrrr 0qqq" q, Rr { // TODO: Check me
 			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
 			ram([R(31):R(30)] + $q) = Rr; //TODO Should be RZ
 
@@ -620,7 +635,7 @@ atmel {
 		}
 
 		/* Store Indirect From Register to Data Space using Index Z+ */
-		stdzplus "1001 001r rrrr 0001" Rr {
+		stdzplus "1001 001r rrrr 0001" Rr { // TODO: Check me
 			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
 			ram([R(31):R(30)]) = Rr; //TODO Should be RZ
 			[R(31):R(30)] = [R(31):R(30)] + 1; // TODO Should be RZ
@@ -628,6 +643,7 @@ atmel {
 			PC = PC + 1;
 		}
 
+		/* Subtract with Carry */
 		sbc "0000 10rd dddd rrrr" Rd, Rr {
 			Rd = Rd - Rr - C;
 
@@ -641,14 +657,16 @@ atmel {
 			PC = PC + 1;
 		}
 
+		/* Set T Flag */
 		set "1001 0100 0110 1000" {
 			T = 1;
 
 			PC = PC + 1;
 		}
 
-		sub "001 10rd dddd rrrr" Rd, Rr {
-			/* 0 <= d <= 31 */
+		/* Subtract without Carry */
+		sub "0011 0rd dddd rrrr" Rd, Rr {
+			/* 0 <= d <= 31, 0 <= r <= 31 */
 			Rd = Rd - Rr;
 
 			H = !Rd3 & Rr3 | Rr3 & R3 | R3 & Rd3;
@@ -662,7 +680,6 @@ atmel {
 		}
 
 		subi "0101 KKKK dddd KKKK" Rd, K {
-			// Checked
 			/* 0 <= K <= 255 */
 			/* 16 <= d <= 31 */
 			$d = 16 + $d;
@@ -678,7 +695,7 @@ atmel {
 			PC = PC + 1;
 		}
 
-		sbci "0100 KKKK dddd KKKK" Rd, K {
+		sbci "0100 KKKK dddd KKKK" Rd, K { // TODO: Check me
 			/* 0 <= K <= 255 */
 			/* 16 <= d <= 31 */
 			$d = 16 + $d;
@@ -694,8 +711,10 @@ atmel {
 			PC = PC + 1;
 		}
 
-		sbrc "1111 110r rrrr 0bbb" Rr, b {
-			if Rr(b) == 0 {
+		sbrc "1111 110r rrrr 0bbb" Rr, b { // TODO: Check me
+			// FIXME: this doesn't translate into GetBit(Rr, b), but it should
+			//R = Rr;
+			if Rb == 0 {
 				PC = PC + 2;
 			} else {
 				PC = PC + 1;

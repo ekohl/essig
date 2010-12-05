@@ -45,7 +45,7 @@ tokens {
 
 // Parser
 //
-microcontroller:	IDENTIFIER^ LBRACK! parameters registers instructions RBRACK! EOF!
+microcontroller:	IDENTIFIER^ LBRACK! parameters registers maps instructions RBRACK! EOF!
 	;
 
 parameters:		PARAMETERS^ LBRACK! (parameter LINE_SEPERATOR!)+ RBRACK!
@@ -66,6 +66,7 @@ parameter:		RAM^ NUMBER
 registers:		REGISTERS^ LBRACK! (register LINE_SEPERATOR!)+ RBRACK! {
 			// Hack in the general purpose registers
 			for(int i=0; i < gprs; i++) {
+				// -> IDENTIFIER^ NUMBER[Ri]
 				CommonTree reg = (CommonTree) adaptor.create(IDENTIFIER, "R" + Integer.toString(i));
 				adaptor.becomeRoot($REGISTERS.tree, reg);
 				adaptor.addChild(reg, adaptor.create(NUMBER, Integer.toString(gprs_offset + i)));
@@ -77,6 +78,12 @@ register:		IDENTIFIER^ ASSIGN! (NUMBER | multiword_register)
 	;
 
 multiword_register : 	IDENTIFIER^ (COLON! IDENTIFIER)+;
+
+maps:			MAPS^ LBRACK! (map LINE_SEPERATOR!)+ RBRACK!
+	;
+
+map:			(CHUNK | REGISTERS | IO | RAM)^ LPAREN! NUMBER ARG_SEPERATOR! NUMBER RPAREN!
+	;
 
 instructions:		INSTRUCTIONS^ LBRACK! instruction+ RBRACK!
 	;
@@ -121,8 +128,15 @@ word	:		NOT? CONSTANT? IDENTIFIER^
 	|		multi_register
 	;
 
-multi_register : LBRACE IDENTIFIER LPAREN operatorExpr RPAREN COLON IDENTIFIER LPAREN operatorExpr RPAREN RBRACE
-			-> ^(MULTI_REG IDENTIFIER operatorExpr IDENTIFIER operatorExpr);
+multi_register : 	multi_identifier LBRACE operatorExpr INTERVAL operatorExpr RBRACE
+				-> ^(MULTI_REG multi_identifier operatorExpr operatorExpr)
+		|	multi_register2;
+
+multi_identifier : IDENTIFIER | RAM;
+
+multi_register2 : LBRACE i=IDENTIFIER LPAREN operatorExpr RPAREN COLON IDENTIFIER LPAREN operatorExpr RPAREN RBRACE { System.out.println("regel aanpassen!:" + $LBRACE.getLine());}
+			-> ^(MULTI_REG IDENTIFIER operatorExpr IDENTIFIER operatorExpr)
+	;
 
 comparison:		EQUALS | LT | LTE | GT | GTE
 	;

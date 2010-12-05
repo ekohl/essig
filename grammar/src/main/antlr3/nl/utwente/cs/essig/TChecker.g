@@ -39,9 +39,10 @@ options {
 microcontroller:
 		^(IDENTIFIER
 			{ symbolTable.openScope(); }
-			^(PARAMETERS parameter*)
-			^(REGISTERS register*)
-			^(INSTRUCTIONS instruction*)
+			^(PARAMETERS parameter+)
+			^(REGISTERS register+)
+			^(MAPS map+)
+			^(INSTRUCTIONS instruction+)
 			{ symbolTable.closeScope(); }
 		)
 	;
@@ -61,7 +62,14 @@ register:
 		}
 	;
 
-multiword_register : 	^(IDENTIFIER IDENTIFIER+);
+multiword_register:
+		^(IDENTIFIER IDENTIFIER+)
+	;
+
+map:
+		// FIXME Check if maps aren't duplicated
+		^((CHUNK | REGISTERS | IO | RAM) NUMBER NUMBER)
+	;
 
 instruction:
 		^(
@@ -134,8 +142,10 @@ word:
 	;
 
 multi_register:
-	^(MULTI_REG IDENTIFIER operatorExpr IDENTIFIER operatorExpr)
+	^(MULTI_REG multi_identifier operatorExpr IDENTIFIER? operatorExpr)
 	;
+
+multi_identifier : IDENTIFIER | RAM;
 
 comparison:
 		EQUALS | LT | LTE | GT | GTE

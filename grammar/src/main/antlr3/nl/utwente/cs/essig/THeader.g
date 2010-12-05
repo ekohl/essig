@@ -29,10 +29,11 @@ microcontroller:
 			^(
 				IDENTIFIER
 				^(PARAMETERS (p+=parameter)+)
-				^(REGISTERS (r+=register)*)
-				^(INSTRUCTIONS instruction*)
+				^(REGISTERS (r+=register)+)
+				^(MAPS (m+=map+))
+				^(INSTRUCTIONS instruction+)
 			)
-		-> header(parameters={$p},registers={$r})
+		-> header(parameters={$p},registers={$r},maps={$m})
 	;
 
 parameter:
@@ -51,6 +52,10 @@ multiword_register:
 			^(IDENTIFIER IDENTIFIER+)
 	;
 
+
+map:			^((t=CHUNK | t=REGISTERS | t=IO | t=RAM) b=NUMBER e=NUMBER)
+		-> map(type={($t.text).toUpperCase()}, begin={$b}, end={$e})
+	;
 
 instruction:
 			^(
@@ -108,7 +113,7 @@ word:
 			NUMBER
 	|		^(IDENTIFIER NOT? CONSTANT? (IDENTIFIER|NUMBER)?)
 	|		^(RAM operatorExpr)
-	|		^(MULTI_REG IDENTIFIER operatorExpr IDENTIFIER operatorExpr)
+	|		^(MULTI_REG (IDENTIFIER|RAM) operatorExpr IDENTIFIER? operatorExpr)
 	;
 
 comparison:

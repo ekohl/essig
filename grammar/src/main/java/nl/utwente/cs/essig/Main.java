@@ -107,7 +107,7 @@ public class Main {
 
 			// Ensure the directory exists
 			File dir = new File(sourceName);
-			if(!dir.isDirectory() && dir.mkdirs()) {
+			if(!dir.isDirectory() && !dir.mkdirs()) {
 				throw new Exception("Could not create directory " + sourceName);
 			}
 

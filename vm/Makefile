@@ -19,7 +19,6 @@ export PATH
 export PYTHONPATH
 
 run: cli
-	echo $(PATH)
 	$(PYTHON) simulator.py $(TESTFILE)
 
 run-debug: cli

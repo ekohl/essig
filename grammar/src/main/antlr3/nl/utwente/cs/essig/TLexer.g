@@ -23,10 +23,11 @@ options {
 REGISTERS	:	'registers';
 PARAMETERS	:	'parameters';
 INSTRUCTIONS	:	'instructions';
+MAPS		:	'maps';
 IF		:	'if';
 ELSE		:	'else';
-
-// Parameters
+CHUNK		:	'chunk';
+IO		:	'io';
 RAM		:	'ram';
 GPRS		:	'gprs';
 CLOCK		:	'clock';
@@ -37,7 +38,11 @@ CONSTANT	:	'$';
 
 IDENTIFIER		:	LETTER (LETTER | DIGIT)* ;
 
-NUMBER			:	MINUS? DIGIT+;
+NUMBER			:	(NUM | HEX_NUM);
+
+fragment NUM		:	MINUS? DIGIT+;
+
+fragment HEX_NUM	:	'0' 'x' (DIGIT | HEX_LETTER)+;
 
 WHITESPACE		:	( '\t' | ' ' | '\r' | '\n'| '\u000C' )+ 	{ $channel = HIDDEN; } ;
 
@@ -52,6 +57,8 @@ fragment DIGIT		:	'0'..'9';
 
 fragment LETTER		:	('a'..'z'|'A'..'Z');
 
+fragment HEX_LETTER	:	('a'..'f'|'A'..'F');
+
 LBRACK		:	'{';
 RBRACK		:	'}';
 LBRACE		:	'[';
@@ -62,6 +69,7 @@ ASSIGN		:	'=';
 LINE_SEPERATOR	:	';';
 COLON		:	':';
 ARG_SEPERATOR	:	',';
+INTERVAL	:	'..';
 EQUALS		:	'==';
 QUOTE		:	'"';
 
