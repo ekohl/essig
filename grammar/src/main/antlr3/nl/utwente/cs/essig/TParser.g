@@ -133,11 +133,8 @@ constant:		CONSTANT IDENTIFIER
 		-> CONSTANT[$IDENTIFIER.text]
 	;
 
-register:		IDENTIFIER
-	;
-
 variable:		constant
-	|		register
+	|		IDENTIFIER
 	|		map_type^ LPAREN! operatorExpr RPAREN!
 	|		multi_register
 	;
