@@ -100,36 +100,30 @@ expr	:	assignExpr
 	-> halt()
 	;
 
-assignExpr:	^(ASSIGN CONSTANT? IDENTIFIER (LPAREN op=operatorExpr RPAREN)? o=operatorExpr)
-			{
-				Variable var = new Variable($IDENTIFIER.text + ($op.st!=null ? $op.st:""));
-				if ($CONSTANT!=null)
-					var.setConstant();
-				if (var.getName().equals("R")) {
-					var.setConstant(false);
-					var.setResult();
-				}
-				if ($op.st!=null) {
-					var.setConstant(false);
-					var.setResult(false);
-				}
-			}
-	-> assignExpr(var={var},type={var.getType()},value={$o.st},comment={var + " = " + $o.comment}, is_result={var.isResult()},constant={var.getConstant()})
+assignExpr:	^(ASSIGN IDENTIFIER o=operatorExpr)
+			{ Variable var = new Variable($IDENTIFIER.text); }
+	-> assignExpr(var={var},type={var.getType()},value={$o.st},comment={var + " = " + $o.comment}, is_result={"R".equals(var.getName())})
+
+	|	^(ASSIGN CONSTANT o=operatorExpr)
+	-> assignConstant(var={$CONSTANT.text},value={$o.st},comment={$o.comment})
+
 	|	^(ASSIGN ^(m=map_type o1=operatorExpr) o2=operatorExpr)
 	-> assignExpr(var={$o1.st},type={$m.st},value={$o2.st},comment={$m.st + "(" + $o1.comment + ") = " + $o.comment})
-	|	^(MULTI_REG i1=IDENTIFIER o1=operatorExpr i2=IDENTIFIER o2=operatorExpr o3=operatorExpr)
-	-> multiRegisterAssignExpr(low={$o1.st},high={$o2.st},value={$o3.st})
-	;
 
+	|	^(ASSIGN ^(MULTI_REG t=multi_identifier o1=operatorExpr o2=operatorExpr) o3=operatorExpr)
+	-> multiRegisterAssignExpr(type={$t.st},low={$o1.st},high={$o2.st},value={$o3.st})
+	;
 
 ifExpr	:	^(IF condition (i+=expr)+ (ELSE (e+=expr)+)?)
 	-> ifExpr(condition={$condition.st},ifExpr={$i},elseExpr={$e})
 	;
 
-operatorExpr returns [String comment = ""] :
-		word  {$comment = $word.comment;}
+operatorExpr returns [String comment]:
+		word
+			{$comment = $word.comment;}
 	-> {$word.st}
-	|	^(o=operator w=word e=operatorExpr) {$comment = $w.comment + " " +  $o.st + " " + $e.comment +  " ";}
+	|	^(o=operator w=word e=operatorExpr)
+			{$comment = $w.comment + " " +  $o.st + " " + $e.comment +  " ";}
 	-> operatorExpr(operator={$o.st},word={$w.st},expression={$e.st})
 	;
 
@@ -137,28 +131,37 @@ condition:	^(c=comparison l=operatorExpr r=word)
 	-> condition(left={$l.st},comparison={$c.st},right={$r.st})
 	;
 
-word returns [String comment = ""]:
+word returns [String comment]:
 		NUMBER {$comment = $NUMBER.text;}
 	-> template (number={$NUMBER}) "<number>"
-	|	^( v=IDENTIFIER NOT? CONSTANT? (IDENTIFIER|NUMBER)? )
+	|	variable {$comment = $variable.comment; }
+	-> {$variable.st}
+	|	^(NOT w=word) { $comment = $NOT.text + $w.comment; }
+	-> not(value={$w.st})
+	|	^(BIT variable (b=NUMBER|b=CONSTANT))
+		{ $comment = $variable.comment + $BIT.text + $b.text; }
+	-> bit(var={$variable.st}, bit={$b.text})
+	;
+
+variable returns [String comment]:
+		CONSTANT
+		{ $comment = $CONSTANT.text; }
+	-> template(constant={$CONSTANT.text}) "<constant>"
+	|	v=IDENTIFIER
 		{
-			Variable var;
-			if ($NUMBER == null ) {
-				var = new Variable($v.text);
-			} else {
-				var = new Variable($v.text + $NUMBER.text,Variable.VariableType.REGISTER);
-			}
-			if ($CONSTANT!=null) var.setConstant();
-			
-			$comment = (($NOT != null) ? $NOT.text : "") + $v.text;
-			
+			Variable var = new Variable($v.text);
+			$comment = $v.text;
 		}
-	// FIXME: Also handle $i
-	-> wordVariable (variable={var.getName()},bit={var.getNumber()},type={var.getType()},not={$NOT != null},constant={var.getConstant()})
+	-> wordVariable(variable={var.getName()}, bit={var.getNumber()},type={var.getType()})
 	|	^(map_type operatorExpr)
-		{ $comment = $map_type.comment + "(" + $operatorExpr.comment + ")"; }
+			{ $comment = $map_type.comment + "(" + $operatorExpr.comment + ")"; }
 	-> wordVariable(variable={$operatorExpr.st}, type={$map_type.st})
-	|	^(MULTI_REG multi_identifier o1=operatorExpr IDENTIFIER? o2=operatorExpr)
+	|	multi_register
+	-> {$multi_register.st}
+	;
+
+multi_register:
+		^(MULTI_REG multi_identifier o1=operatorExpr o2=operatorExpr)
 	-> multiRegister(r1={$o1.st},r2={$o2.st},type={$multi_identifier.st})
 	;
 

@@ -111,11 +111,7 @@ expr	:		assignExpr LINE_SEPERATOR!
 	|		HALT LINE_SEPERATOR!
 	;
 
-assignExpr:		CONSTANT? IDENTIFIER (LPAREN operatorExpr RPAREN)? ASSIGN^ operatorExpr
-	|		map_type LPAREN operatorExpr RPAREN ASSIGN operatorExpr
-		-> ^(ASSIGN ^(map_type operatorExpr) ^(operatorExpr))
-	|		LPAREN! operatorExpr RPAREN! ASSIGN^ operatorExpr
-	|		multi_register^ ASSIGN! operatorExpr
+assignExpr:		variable ASSIGN^ operatorExpr
 	;
 
 ifExpr:			IF^ condition LBRACK! expr+ RBRACK! (ELSE LBRACK! expr+ RBRACK!)?
@@ -128,22 +124,29 @@ condition:		word comparison^ word
 	|		LPAREN! operatorExpr RPAREN! comparison^ word
 	;
 
-word	:		NOT? CONSTANT? IDENTIFIER^
-				(LPAREN! (operatorExpr) RPAREN!)?
+word	:		variable (BIT^ (NUMBER|constant))?
 	|		NUMBER
-	|		RAM^ LPAREN! operatorExpr RPAREN!
+	|		NOT^ word
+	;
+
+constant:		CONSTANT IDENTIFIER
+		-> CONSTANT[$IDENTIFIER.text]
+	;
+
+variable:		constant
+	|		IDENTIFIER
+	|		map_type^ LPAREN! operatorExpr RPAREN!
 	|		multi_register
 	;
 
-multi_register : 	multi_identifier LBRACE operatorExpr INTERVAL operatorExpr RBRACE
+multi_register: 	multi_identifier LBRACE operatorExpr INTERVAL operatorExpr RBRACE
 				-> ^(MULTI_REG multi_identifier operatorExpr operatorExpr)
-		|	multi_register2;
+		;
 
-multi_identifier : IDENTIFIER | RAM;
-
-multi_register2 : LBRACE i=IDENTIFIER LPAREN operatorExpr RPAREN COLON IDENTIFIER LPAREN operatorExpr RPAREN RBRACE { System.out.println("regel aanpassen (oude manier van multireg, moet zijn R[x..y]):" + $LBRACE.getLine());}
-			-> ^(MULTI_REG IDENTIFIER operatorExpr IDENTIFIER operatorExpr)
-	;
+multi_identifier:
+			IDENTIFIER
+		|	map_type
+		;
 
 comparison:		EQUALS | LT | LTE | GT | GTE
 	;
