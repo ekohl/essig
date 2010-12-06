@@ -137,7 +137,7 @@ word:
 			Variable var = new Variable($id.text);
 			symbolTable.getDeclaration(var.getName(), $id);
 		}
-	|	^(RAM operatorExpr)
+	|	^(map_type operatorExpr)
 	|	multi_register
 	;
 
@@ -145,7 +145,7 @@ multi_register:
 	^(MULTI_REG multi_identifier operatorExpr IDENTIFIER? operatorExpr)
 	;
 
-multi_identifier : IDENTIFIER | RAM;
+multi_identifier : IDENTIFIER | map_type;
 
 comparison:
 		EQUALS | LT | LTE | GT | GTE
