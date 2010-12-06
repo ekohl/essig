@@ -26,14 +26,15 @@ INSTRUCTIONS	:	'instructions';
 MAPS		:	'maps';
 IF		:	'if';
 ELSE		:	'else';
+GPRS		:	'gprs';
+CLOCK		:	'clock';
+OP_SIZE		:	'opcode-size';
+
 CHUNK		:	'chunk';
 IO		:	'io';
 RAM		:	'ram';
 ROM		:	'rom';
 REGISTER	:	'register';
-GPRS		:	'gprs';
-CLOCK		:	'clock';
-OP_SIZE		:	'opcode-size';
 
 HALT		:       'HALT';
 CONSTANT	:	'$';

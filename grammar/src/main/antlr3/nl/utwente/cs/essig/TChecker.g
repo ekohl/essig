@@ -72,7 +72,7 @@ map:
 	;
 
 map_type:
-		CHUNK | REGISTERS | IO | ROM | RAM
+		CHUNK | REGISTER | IO | ROM | RAM
 	;
 
 instruction:

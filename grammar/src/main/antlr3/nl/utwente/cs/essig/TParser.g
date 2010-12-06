@@ -86,7 +86,7 @@ map:			map_type^ LPAREN! NUMBER ARG_SEPERATOR! NUMBER RPAREN!
 	;
 
 map_type:
-			CHUNK | REGISTERS | IO | ROM | RAM
+			CHUNK | REGISTER | IO | ROM | RAM
 	;
 
 instructions:		INSTRUCTIONS^ LBRACK! instruction+ RBRACK!

@@ -59,7 +59,7 @@ map:		^(map_type NUMBER NUMBER)
 	;
 
 map_type:
-			(t=CHUNK | t=REGISTERS | t=IO | t=ROM | t=RAM)
+			(t=CHUNK | t=REGISTER | t=IO | t=ROM | t=RAM)
 		-> template(type={($t.text).toUpperCase()}) "<type>"
 	;
 
