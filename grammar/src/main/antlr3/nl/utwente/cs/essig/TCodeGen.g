@@ -58,8 +58,9 @@ multiword_register: 	^(IDENTIFIER IDENTIFIER+)
 map:		^(map_type NUMBER NUMBER)
 	;
 
-map_type:
+map_type returns [String comment]:
 			(t=CHUNK | t=REGISTER | t=IO | t=ROM | t=RAM)
+				{ $comment = $t.text; }
 		-> template(type={($t.text).toUpperCase()}) "<type>"
 	;
 
@@ -154,16 +155,17 @@ word returns [String comment = ""]:
 		}
 	// FIXME: Also handle $i
 	-> wordVariable (variable={var.getName()},bit={var.getNumber()},type={var.getType()},not={$NOT != null},constant={var.getConstant()})
-	|	^(RAM operatorExpr)
-		{ $comment = $RAM + "(" + $operatorExpr.comment + ")"; }
-	-> wordVariable(variable={$operatorExpr.st}, type={"RAM"})
+	|	^(map_type operatorExpr)
+		{ $comment = $map_type.comment + "(" + $operatorExpr.comment + ")"; }
+	-> wordVariable(variable={$operatorExpr.st}, type={$map_type.st})
 	|	^(MULTI_REG multi_identifier o1=operatorExpr IDENTIFIER? o2=operatorExpr)
 	-> multiRegister(r1={$o1.st},r2={$o2.st},type={$multi_identifier.st})
 	;
 
 multi_identifier : 
-	IDENTIFIER ->  template(var={"REGISTER"}) "<var>"
-	|	RAM ->  template(var={"RAM"}) "<var>";
+		IDENTIFIER -> template(var={"REGISTER"}) "<var>"
+	|	map_type -> {$map_type.st}
+	;
 
 comparison:		(c=EQUALS | c=LT | c=LTE | c=GT | c=GTE)
 	-> template(c={$c}) "<c>"
