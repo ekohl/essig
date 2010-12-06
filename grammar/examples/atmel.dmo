@@ -33,11 +33,11 @@ atmel {
 	}
 
 	maps {
-		chunk		(0, 0xFFFF);
+		chunk		(0, 0xFFFFFFF);
 		register	(0, 0x1F);
 		io		(0x20, 0x5F);
 		ram		(0, 0x460);
-		rom		(0x464,0x4464);
+		rom		(0x464,0xFFFFFF);
 	}
 
 	instructions {
