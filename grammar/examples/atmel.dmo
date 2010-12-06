@@ -37,7 +37,7 @@ atmel {
 		register	(0, 0x1F);
 		io		(0x20, 0x5F);
 		ram		(0, 0x460);
-		
+		rom		(0x464,0x4464);
 	}
 
 	instructions {
