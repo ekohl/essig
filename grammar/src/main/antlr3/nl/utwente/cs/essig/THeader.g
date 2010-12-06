@@ -31,7 +31,7 @@ microcontroller:
 				^(PARAMETERS (p+=parameter)+)
 				^(REGISTERS (r+=register)+)
 				^(MAPS (m+=map+))
-				^(INSTRUCTIONS instruction+)
+				^(INSTRUCTIONS .+)
 			)
 		-> header(parameters={$p},registers={$r},maps={$m})
 	;
@@ -60,65 +60,4 @@ map:			^(t=map_type b=NUMBER e=NUMBER)
 map_type:
 			(t=CHUNK | t=REGISTER | t=IO | t=ROM | t=RAM)
 		-> template(type={($t.text).toUpperCase()}) "<type>"
-	;
-
-instruction:
-			^(
-				IDENTIFIER
-				^(PARAMS
-					opcode+
-					(^(CLOCK NUMBER))?
-				)
-				^(ARGUMENTS argument*)
-				^(EXPR expr+)
-			)
-	;
-
-opcode:
-			OPCODE
-	;
-
-argument:
-			SIGNED? IDENTIFIER
-	;
-
-expr:
-			assignExpr
-	|		ifExpr
-	|		HALT
-	;
-
-assignExpr:
-			^(ASSIGN CONSTANT? IDENTIFIER operatorExpr)
-	|		^(ASSIGN ^(map_type operatorExpr) operatorExpr)
-	|		^(MULTI_REG IDENTIFIER operatorExpr IDENTIFIER operatorExpr operatorExpr)
-	;
-
-
-ifExpr:
-			^(IF condition expr+ (ELSE expr+)?)
-	;
-
-operatorExpr:
-			word
-	|		^(operator word operatorExpr)
-	;
-
-condition:
-			^(comparison operatorExpr word)
-	;
-
-word:
-			NUMBER
-	|		^(IDENTIFIER NOT? CONSTANT? (IDENTIFIER|NUMBER)?)
-	|		^(RAM operatorExpr)
-	|		^(MULTI_REG (IDENTIFIER|RAM) operatorExpr IDENTIFIER? operatorExpr)
-	;
-
-comparison:
-			EQUALS | LT | LTE | GT | GTE
-	;
-
-operator:
-			(AND | OR | XOR | ADD | MINUS | MULT | SHIFT)
 	;
