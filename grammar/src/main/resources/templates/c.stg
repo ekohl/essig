@@ -117,14 +117,9 @@ operatorExpr(word,operator,expression) ::= <<
 >>
 
 
-assignExpr(var,type,value,comment,is_result,constant) ::= <<
+assignExpr(var,type,value,comment,is_result) ::= <<
 // <comment>
 // Calculate expressions for the result var
-<if (constant)>
-<var> = <value>;
-<endif>
-
-<if (!constant)>
 result = <value>;
 // Check if there was an error in the calculation of the result
 if (error)
@@ -134,10 +129,14 @@ if (error)
 if(!vm_write(state, diff, VM_INFO_<type>, <var>, result))
 	return false;
 <endif>
-<endif>
 >>
 
-multiRegisterAssignExpr(low,high,value) ::= <<
+assignConstant(var,value,comment) ::= <<
+<if (comment)>// <var> = <comment><endif>
+<var> = <value>;
+>>
+
+multiRegisterAssignExpr(type,low,high,value) ::= <<
 //======MULTI WORD BEGIN
 // Low Byte
 vm_write(state,diff,VM_INFO_REGISTER,<low>,(<value>&&0xFF));
@@ -154,8 +153,8 @@ condition(left,comparison,right) ::= <<
 <left> <comparison> <right>
 >>
 
-wordVariable(variable, bit, type, not,constant) ::= <<
-<if(not)>(!<endif><if(bit)>GetBit(<endif><if(!constant)>vm_info(state,VM_INFO_<type>,<endif><variable><if(!constant)>,&error)<endif><if(bit)>, <bit>)<endif><if(not)>)<endif> 
+wordVariable(variable, bit, type) ::= <<
+<if(bit)>GetBit(<endif> vm_info(state,VM_INFO_<type>,<variable>,&error) <if(bit)>, <bit>)<endif>
 >>
 
 halt() ::= <<
@@ -165,4 +164,8 @@ halt() ::= <<
 
 multiRegister(r1,r2,type) ::= <<
 ((vm_info(state,VM_INFO_<type>,<r1>,&error) \<\<8) + vm_info(state,VM_INFO_<type>,<r2>,&error))
+>>
+
+not(value) ::= <<
+(!(<value>))
 >>

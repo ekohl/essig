@@ -112,9 +112,7 @@ expr:
 	;
 
 assignExpr:
-		^(ASSIGN CONSTANT? IDENTIFIER (LPAREN operatorExpr RPAREN)? operatorExpr)
-	|	^(ASSIGN ^(map_type operatorExpr) operatorExpr)
-	|	^(MULTI_REG IDENTIFIER operatorExpr IDENTIFIER operatorExpr operatorExpr)
+		^(ASSIGN variable operatorExpr)
 	;
 
 ifExpr:
@@ -131,21 +129,34 @@ condition:
 	;
 
 word:
-		NUMBER
-	|	^(id=IDENTIFIER NOT? CONSTANT? )
+		variable
+	|	NUMBER
+	|	^(NOT word)
+	;
+
+variable:
+		CONSTANT
+		{
+			//symbolTable.getDeclaration($CONSTANT.text, $CONSTANT);
+		}
+	|	id=IDENTIFIER
 		{
 			Variable var = new Variable($id.text);
-			symbolTable.getDeclaration(var.getName(), $id);
+			// FIXME: re-enable
+			//symbolTable.getDeclaration(var.getName(), $id);
 		}
 	|	^(map_type operatorExpr)
 	|	multi_register
 	;
 
 multi_register:
-	^(MULTI_REG multi_identifier operatorExpr IDENTIFIER? operatorExpr)
+		^(MULTI_REG multi_identifier operatorExpr operatorExpr)
 	;
 
-multi_identifier : IDENTIFIER | map_type;
+multi_identifier:
+		IDENTIFIER
+	|	map_type
+	;
 
 comparison:
 		EQUALS | LT | LTE | GT | GTE
