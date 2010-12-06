@@ -48,7 +48,7 @@
 #   define PC_TYPE uint64_t
 #endif
 
-#define GETPC(state) ((PC_TYPE) vm_info(state, VM_INFO_PC, PC_OFFSET, NULL))
+#define GETPC(state) ((PC_TYPE) vm_info(state, VM_INFO_PC, 0, NULL))
 #define SETPC(state, value) vm_write(state, NULL, VM_INFO_PC, 0, value)
 
 #include "vm.h"
