@@ -55,7 +55,7 @@ register:	^(IDENTIFIER NUMBER) -> register(name={$IDENTIFIER},offset={$NUMBER})
 multiword_register: 	^(IDENTIFIER IDENTIFIER+)
 	;
 
-map:		^((CHUNK | REGISTERS | IO | RAM) NUMBER NUMBER)
+map:		^((CHUNK | REGISTER | IO | RAM | ROM) NUMBER NUMBER)
 	;
 
 instruction:	^(

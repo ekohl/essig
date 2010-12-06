@@ -53,7 +53,7 @@ multiword_register:
 	;
 
 
-map:			^((t=CHUNK | t=REGISTERS | t=IO | t=RAM) b=NUMBER e=NUMBER)
+map:			^((t=CHUNK | t=REGISTER | t=IO | t=RAM | t=ROM) b=NUMBER e=NUMBER)
 		-> map(type={($t.text).toUpperCase()}, begin={$b}, end={$e})
 	;
 

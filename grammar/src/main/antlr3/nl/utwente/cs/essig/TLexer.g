@@ -29,6 +29,8 @@ ELSE		:	'else';
 CHUNK		:	'chunk';
 IO		:	'io';
 RAM		:	'ram';
+ROM		:	'rom';
+REGISTER	:	'register';
 GPRS		:	'gprs';
 CLOCK		:	'clock';
 OP_SIZE		:	'opcode-size';

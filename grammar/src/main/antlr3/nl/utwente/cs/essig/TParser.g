@@ -82,7 +82,7 @@ multiword_register : 	IDENTIFIER^ (COLON! IDENTIFIER)+;
 maps:			MAPS^ LBRACK! (map LINE_SEPERATOR!)+ RBRACK!
 	;
 
-map:			(CHUNK | REGISTERS | IO | RAM)^ LPAREN! NUMBER ARG_SEPERATOR! NUMBER RPAREN!
+map:			(CHUNK | REGISTER | IO | RAM | ROM)^ LPAREN! NUMBER ARG_SEPERATOR! NUMBER RPAREN!
 	;
 
 instructions:		INSTRUCTIONS^ LBRACK! instruction+ RBRACK!
@@ -134,7 +134,7 @@ multi_register : 	multi_identifier LBRACE operatorExpr INTERVAL operatorExpr RBR
 
 multi_identifier : IDENTIFIER | RAM;
 
-multi_register2 : LBRACE i=IDENTIFIER LPAREN operatorExpr RPAREN COLON IDENTIFIER LPAREN operatorExpr RPAREN RBRACE { System.out.println("regel aanpassen!:" + $LBRACE.getLine());}
+multi_register2 : LBRACE i=IDENTIFIER LPAREN operatorExpr RPAREN COLON IDENTIFIER LPAREN operatorExpr RPAREN RBRACE { System.out.println("regel aanpassen (oude manier van multireg, moet zijn R[x..y]):" + $LBRACE.getLine());}
 			-> ^(MULTI_REG IDENTIFIER operatorExpr IDENTIFIER operatorExpr)
 	;
 

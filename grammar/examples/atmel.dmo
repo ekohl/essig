@@ -22,9 +22,9 @@ atmel {
 		I	= 39; /* Global Interrupt Enable/Disable Flag */
 
 		/* -- Rest -- */
-		PC	= 41; //8; /* Program counter */
+		PC	= 0x462; /*(Size=2) Program counter */
 		// FIXME: SPL = $3D ($5D), SPH = $3E ($5E)
-		SP	= 42; //93; /* Stack Pointer */
+		SP	= 0x3D; /* (Size=2) Stack Pointer */
 
 		/** X,Y,Z registers */
 		RX = R27:R26;
@@ -34,9 +34,10 @@ atmel {
 
 	maps {
 		chunk		(0, 0xFFFF);
-		registers	(0, 0x1F);
+		register	(0, 0x1F);
 		io		(0x20, 0x5F);
 		ram		(0, 0x460);
+		
 	}
 
 	instructions {

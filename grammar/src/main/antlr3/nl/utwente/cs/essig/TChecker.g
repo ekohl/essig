@@ -68,7 +68,7 @@ multiword_register:
 
 map:
 		// FIXME Check if maps aren't duplicated
-		^((CHUNK | REGISTERS | IO | RAM) NUMBER NUMBER)
+		^((CHUNK | REGISTER | IO | RAM | RAM) NUMBER NUMBER)
 	;
 
 instruction:

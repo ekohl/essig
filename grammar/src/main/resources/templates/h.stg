@@ -20,6 +20,7 @@ opcode_size(bits) ::= <<
 map(type, begin, end) ::= <<
 #define <type>_OFFSET <begin>
 #define <type>_END <end>
+#define SIZEOF_<type> 1
 >>
 
 register(name, offset) ::= <<
