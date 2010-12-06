@@ -294,11 +294,13 @@ void vm_rcont(VMState *state, VMStateDiff **diff, bool *hit_bp);
     Then the diff list can be unwound until the first diff is encountered, 
     in which case in can be unwound no further.
 */
-bool vm_step(VMState *state, int nsteps, VMStateDiff **diff, bool *hit_bp);
+bool vm_step(VMState *state, unsigned long nsteps, VMStateDiff **diff, 
+             bool *hit_bp);
 /*! Reverse step. The list of diffs must be in reverse order and must be at 
     least as long as nsteps. This function cleans diffs that are used during the 
     reverse stepping and returns a pointer to the current VMStateDiff. */
-void vm_rstep(VMState *state, int nsteps, VMStateDiff **diff, bool *hit_bp);
+void vm_rstep(VMState *state, unsigned long nsteps, VMStateDiff **diff, 
+              bool *hit_bp);
 
 /*! Set a breakpoint asynchronously when the interpreter is running. This
     function is async-signal-safe. */
