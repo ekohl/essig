@@ -356,10 +356,10 @@ _print_diff(VMState *state, VMStateDiff *diff)
     
     puts("VMStateDiff {");
     
-    printf(fmt, "PC", (unsigned long) GETPC(state),
-                      (unsigned long) diff->pc);
-    printf(fmt, "Cycles", (unsigned long) state->cycles,
-                          (unsigned long) diff->cycles);
+    printf(fmt, "PC", (unsigned long) diff->pc,
+                      (unsigned long) GETPC(state));
+    printf(fmt, "Cycles", (unsigned long) diff->cycles,
+                          (unsigned long) state->cycles);
     
     singlediff = diff->singlediff;
     while (singlediff) {

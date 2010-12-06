@@ -305,6 +305,8 @@ class SimulatorCLI(cmd.Cmd, object):
         cdef Simulator sim = self.simulator
         cdef bint hit_bp
         
+        self.info_instruction(self.simulator, '')
+        
         if not vm_step(sim.state, nsteps, &sim.diff, &hit_bp):
             raise ErrorMessage()
         

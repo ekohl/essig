@@ -75,7 +75,7 @@ bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	<arguments:{long long <it.name> = 0; int <it.name>_bits = 0;}; separator="\n">
 
 	// Decode the opcode
-	<opcodes; separator="\nopcode = state->instructions[vm_info(state,VM_INFO_REGISTER,PC,&error) + 1].instruction;if(error)\n\treturn false;\n">
+	<opcodes; separator="\nopcode = state->instructions[GETPC(state) + 1].instruction;if(error)\n\treturn false;\n">
 
 	// Cast signed arguments
 	<arguments; separator="\n">
