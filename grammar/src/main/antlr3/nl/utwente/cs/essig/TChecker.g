@@ -132,14 +132,9 @@ condition:
 
 word:
 		NUMBER
-	|	^(id=IDENTIFIER NOT? CONSTANT? (IDENTIFIER|n=NUMBER)? )
+	|	^(id=IDENTIFIER NOT? CONSTANT? )
 		{
-			Variable var;
-			if ($n == null ) {
-				var = new Variable($id.text);
-			} else {
-				var = new Variable($id.text + $n.text,Variable.VariableType.REGISTER);
-			}
+			Variable var = new Variable($id.text);
 			symbolTable.getDeclaration(var.getName(), $id);
 		}
 	|	^(RAM operatorExpr)

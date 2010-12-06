@@ -83,11 +83,11 @@ atmel {
 			//[R($d+1):R($d)] = R;
 
 			$d = $d + 1; // Set Rd to the high byte // TODO
-			V = !Rd7(h) & R15; //TODO High byte.. maybe iets van R($d+1)7 ipv de h te gebruiken
+			V = !Rd7 & R15; //TODO High byte.. maybe iets van R($d+1)7 ipv de h te gebruiken
 			N = R15;
 			S = N ^ V;
 			Z = !R15 & !R14 & !R13 & !R12 & !R11 & !R10 & !R9 & !R8 & !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
-			C = !R15 & Rd7(h); //TODO High byte.. maybe iets van R($d+1)7 ipv de h te gebruiken
+			C = !R15 & Rd7; //TODO High byte.. maybe iets van R($d+1)7 ipv de h te gebruiken
 
 			PC = PC + 1;
 		}
@@ -574,12 +574,12 @@ atmel {
 
 			[R($d+1):R($d)] = $R;
 
-			$d = $d + 1; // TODO (== high bit)
+			$d = $d + 1; // TODO (== high byte)
 			S = N ^ V;
-			V = Rd7(h) & !R15;
+			V = Rd7 & !R15; // TODO: High byte
 			N = R15;
 			Z = !R15 & !R14 & !R13 & !R12 & !R11 & !R10 & !R9 & !R8 & !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
-			C = R15 & !Rd7(h);
+			C = R15 & !Rd7; // TODO: High byte
 			/* R (Result) equals Rdh:Rdl after the operation (Rdh7-Rdh0 = R15-R8, Rdl7-Rdl0=R7-R0). */
 
 			PC = PC + 1;
@@ -587,7 +587,8 @@ atmel {
 
 		/* Skip if Bit in Register is Set */
 		sbrs "1111 111r rrrr 0bbb" Rr, b { // TODO: Check me
-			if Rr(b) == 1 {
+			// FIXME: Rr.b
+			if Rr == 1 {
 				PC = PC + 2;
 			} else {
 				PC = PC + 1;

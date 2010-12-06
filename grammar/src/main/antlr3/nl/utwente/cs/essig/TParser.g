@@ -129,7 +129,6 @@ condition:		word comparison^ word
 	;
 
 word	:		NOT? CONSTANT? IDENTIFIER^
-				(LPAREN! (operatorExpr) RPAREN!)?
 	|		NUMBER
 	|		RAM^ LPAREN! operatorExpr RPAREN!
 	|		multi_register

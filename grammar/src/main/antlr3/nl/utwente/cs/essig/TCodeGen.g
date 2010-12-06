@@ -140,20 +140,15 @@ condition:	^(c=comparison l=operatorExpr r=word)
 word returns [String comment = ""]:
 		NUMBER {$comment = $NUMBER.text;}
 	-> template (number={$NUMBER}) "<number>"
-	|	^( v=IDENTIFIER NOT? CONSTANT? (IDENTIFIER|NUMBER)? )
+	|	^( v=IDENTIFIER NOT? CONSTANT? )
 		{
-			Variable var;
-			if ($NUMBER == null ) {
-				var = new Variable($v.text);
-			} else {
-				var = new Variable($v.text + $NUMBER.text,Variable.VariableType.REGISTER);
-			}
-			if ($CONSTANT!=null) var.setConstant();
+			Variable var = new Variable($v.text);
+			if ($CONSTANT!=null)
+				var.setConstant();
 			
 			$comment = (($NOT != null) ? $NOT.text : "") + $v.text;
 			
 		}
-	// FIXME: Also handle $i
 	-> wordVariable (variable={var.getName()},bit={var.getNumber()},type={var.getType()},not={$NOT != null},constant={var.getConstant()})
 	|	^(map_type operatorExpr)
 		{ $comment = $map_type.comment + "(" + $operatorExpr.comment + ")"; }
