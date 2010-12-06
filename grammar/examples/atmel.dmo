@@ -79,8 +79,8 @@ atmel {
 		adiw "1001 0110 KKdd KKKK", clock=2 Rd, K {
 			// d = {24,26,28,30}
 			$d = 24 + $d * 2;
-			//R = [R($d+1):R($d)] + $K;
-			//[R($d+1):R($d)] = R;
+			R = R[$d+1..$d] + $K;
+			R[$d+1..$d] = R;
 
 			$d = $d + 1; // Set Rd to the high byte // TODO
 			V = !Rd7 & R15; //TODO High byte.. maybe iets van R($d+1)7 ipv de h te gebruiken
@@ -278,7 +278,7 @@ atmel {
 		}
 
 		icall "1001 0101 0000 1001" { // Checked
-			R = [R(31):R(30)]; //TODO should be RZ
+			R = R[31..30]; //TODO should be RZ
 			// Stack <- PC + 1
 			ram(SP) = PC + 1;
 			// SP = SP - 2 (or 3 if its 3 bytes)
@@ -297,14 +297,12 @@ atmel {
 
 		/* Indirect Jump */
 		ijmp "1001 0100 0000 1001", clock=2 { // Checked
-			PC = [R(31):R(30)]; //TODO should be RZ
-			PC = R[31..30];
+			PC = R[31..30]; // TODO should be RZ
 		}
 
 		/* Load an I/O Location to Register */
 		in "1011 0AAd dddd AAAA" Rd, A { // TODO: Check me
-			// FIXME: I/O port
-			Rd = ram(A+32);
+			Rd = io(A);
 
 			PC = PC + 1;
 		}
@@ -329,23 +327,23 @@ atmel {
 
 		/* Load indirect from X */
 		ld "1001 000d dddd 1100" Rd { // Checked
-			Rd = ram([R(27):R(26)]); // TODO should be RX
+			Rd = ram(R[27..26]); // TODO should be RX
 
 			PC = PC + 1;
 		}
 
 		/* Load indirect from X. Post increment X */
 		ldxplus "1001 000d dddd 1101" Rd { // Checked
-			Rd = ram([R(27):R(26)]); // TODO Should be RX
-			[R(27):R(26)] = [R(27):R(26)] + 1; // TODO Should be RX
+			Rd = ram(R[27..26]); // TODO Should be RX
+			R[27..26] = R[27..26] + 1; // TODO Should be RX
 
 			PC = PC + 1;
 		}
 
 		/* Load indirect from X. Pre decrement X */
 		ldminx "1001 000d dddd 1110" Rd { // Checked
-			[R(27):R(26)] = [R(27):R(26)] - 1; // TODO Should be RX
-			Rd = ram([R(27):R(26)]); // TODO Should be RX
+			R[27..26] = R[27..26] - 1; // TODO Should be RX
+			Rd = ram(R[27..26]); // TODO Should be RX
 
 			PC = PC + 1;
 		}
@@ -361,30 +359,30 @@ atmel {
 
 		/* Load Indirect from Data Space to Register using Index Y+ */
 		lddyplus "10q0 qq0d dddd 1qqq" Rd, q { // Checked
-			Rd = ram([R(29):R(28)]+$q); //TODO Should be RX
+			Rd = ram(R[29..28] + $q); //TODO Should be RX
 
 			PC = PC + 1;
 		}
 
 		/* Load Indirect from Data Space to Register using Index -Z */
 		lddzmin "1001 000d dddd 0010" Rd { // Checked
-			[R(31):R(30)] = [R(31):R(30)] - 1;
-			Rd = ram([R(31):R(30)]); //TODO Should be RZ
+			R[31..30] = R[31..30] - 1;
+			Rd = ram(R[31..30]); //TODO Should be RZ
 
 			PC = PC + 1;
 		}
 
 		/* Load Indirect from Data Space to Register using Index Z+ */
 		lddzplus "1001 000d dddd 0001" Rd { // Checked
-			Rd = ram([R(31):R(30)]); //TODO Should be RZ
-			[R(31):R(30)] = [R(31):R(30)] + 1; //TODO should be RZ
+			Rd = ram(R[31..30]); //TODO Should be RZ
+			R[31..30] = R[31..30] + 1; //TODO should be RZ
 
 			PC = PC + 1;
 		}
 
 		/* Load Indirect from Data Space to Register using Index Z+q */
 		lddzq "10q0 qq0d dddd 0qqq" Rd, q { // Checked
-			Rd = ram([R(31):R(30)]+$q); //TODO Should be RZ
+			Rd = ram(R[31..30] + $q); //TODO Should be RZ
 
 			PC = PC + 1;
 		}
@@ -414,7 +412,7 @@ atmel {
 		/* Load Program Memory */
 		lpm "1001 0101 1100 1000", clock=3 { // TODO: Check me
 			// FIXME something with RAMPXYZ
-			//R(0) = [R(31):R(30)]; // TODO should be RZ
+			//R(0) = R[31..30]; // TODO should be RZ
 
 			PC = PC + 1;
 		}
@@ -430,8 +428,8 @@ atmel {
 		/* Load Program Memory */
 		lpmzplus "1001 000d dddd 0101", clock=3 d { // TODO: Check me
 			// FIXME something with RAMPXYZ
-			//R0 = RZ; // TODO
-			//RZ = RZ + 1;
+			//R0 = R[31..30]; // TODO
+			R[31..30] = R[31..30] + 1; // TODO should be RZ
 
 			PC = PC + 1;
 		}
@@ -448,15 +446,15 @@ atmel {
 			$r = $r * 2;
 			/* d in 0,2,..,30 */
 			$d = $d * 2;
-			[R($d+1):R($d)] = [R($r+1):R($r)];
+			R[$d+1..$d] = R[$r+1..$r];
 
 			PC = PC + 1;
 		}
 
 		/* Multiply Unsigned */
 		mul "1001 11rd dddd rrrr", clock=2 Rd, Rr { // TODO: Check me
-			[R(1):R(0)] = Rd * Rr;
-			R = [R(1):R(0)];
+			R[1..0] = Rd * Rr;
+			R = R[1..0];
 
 			C = R15;
 			Z = !R15 & !R14 & !R13 & !R12 & !R11 & !R10 & !R9 & !R8 & !R7 & !R6 & !R5 & !R4 & !R3 & !R2 & !R1 & !R0;
@@ -482,8 +480,7 @@ atmel {
 
 		/* Store Register to I/O Location */
 		out "1011 1AAr rrrr AAAA" A, Rr { // TODO: Check me
-			// FIXME I/O
-			ram(A) = Rr - 32;
+			io(A) = Rr;
 
 			PC = PC + 1;
 		}
@@ -572,7 +569,7 @@ atmel {
 			//R = [R($d+1):R(d)] - $K;
 			R = R[$d+1..d] - $K;
 
-			[R($d+1):R($d)] = $R;
+			R[$d+1..$d] = $R;
 
 			$d = $d + 1; // TODO (== high byte)
 			S = N ^ V;
@@ -605,8 +602,8 @@ atmel {
 		/* Store Indirect From Register to Data Space using Index X+ */
 		stxplus "1001 001r rrrr 1101", clock=2 X, Rr { // TODO: Check me
 			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
-			ram([R(27):R(26)]) = Rr; //TODO Should be RX registers
-			[R(27):R(26)] = [R(27):R(26)] + 1; //TODO Should be RX
+			ram(R[27..26]) = Rr; //TODO Should be RX registers
+			R[27..26] = R[27..26] + 1; //TODO Should be RX
 
 			PC = PC + 1;
 		}
@@ -615,15 +612,15 @@ atmel {
 		/* Store Indirect From Register to Data Space using Index Y+ */
 		stdyplus "1000 001r rrrr 1000" Rr { // TODO: Check me
 			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
-			ram([R(29):R(28)]) = Rr; //TODO Should be RY
-			[R(29):R(28)] = [R(29):R(28)] + 1; // Should be RY
+			ram(R[29..28]) = Rr; //TODO Should be RY
+			R[29..28] = R[29..28] + 1; // Should be RY
 
 			PC = PC + 1;
 		}
 
 		stdyplusq "10q0 qq1r rrrr 1qqq" Rr,q {
 			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
-			ram([R(29):R(28)] + $q) = Rr; //TODO Should be RY
+			ram(R[29..28] + $q) = Rr; //TODO Should be RY
 
 			PC = PC + 1;
 		}
@@ -631,7 +628,7 @@ atmel {
 		/* Store Indirect From Register to Data Space using Index Z+q*/
 		stdzplusq "10q0 qq1r rrrr 0qqq" q, Rr { // TODO: Check me
 			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
-			ram([R(31):R(30)] + $q) = Rr; //TODO Should be RZ
+			ram(R[31..30] + $q) = Rr; //TODO Should be RZ
 
 			PC = PC + 1;
 		}
@@ -639,8 +636,8 @@ atmel {
 		/* Store Indirect From Register to Data Space using Index Z+ */
 		stdzplus "1001 001r rrrr 0001" Rr { // TODO: Check me
 			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
-			ram([R(31):R(30)]) = Rr; //TODO Should be RZ
-			[R(31):R(30)] = [R(31):R(30)] + 1; // TODO Should be RZ
+			ram(R[31..30]) = Rr; //TODO Should be RZ
+			R[31..30] = R[31..30] + 1; // TODO Should be RZ
 
 			PC = PC + 1;
 		}
