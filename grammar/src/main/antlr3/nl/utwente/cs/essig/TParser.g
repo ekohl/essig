@@ -82,7 +82,11 @@ multiword_register : 	IDENTIFIER^ (COLON! IDENTIFIER)+;
 maps:			MAPS^ LBRACK! (map LINE_SEPERATOR!)+ RBRACK!
 	;
 
-map:			(CHUNK | REGISTER | IO | RAM | ROM)^ LPAREN! NUMBER ARG_SEPERATOR! NUMBER RPAREN!
+map:			map_type^ LPAREN! NUMBER ARG_SEPERATOR! NUMBER RPAREN!
+	;
+
+map_type:
+			CHUNK | REGISTERS | IO | ROM | RAM
 	;
 
 instructions:		INSTRUCTIONS^ LBRACK! instruction+ RBRACK!
@@ -107,7 +111,10 @@ expr	:		assignExpr LINE_SEPERATOR!
 	|		HALT LINE_SEPERATOR!
 	;
 
-assignExpr:		(CONSTANT? IDENTIFIER (LPAREN (operatorExpr) RPAREN)? | (RAM LPAREN! operatorExpr RPAREN!) | (LPAREN! (operatorExpr) RPAREN!)) ASSIGN^ operatorExpr
+assignExpr:		CONSTANT? IDENTIFIER (LPAREN operatorExpr RPAREN)? ASSIGN^ operatorExpr
+	|		map_type LPAREN operatorExpr RPAREN ASSIGN operatorExpr
+		-> ^(ASSIGN ^(map_type operatorExpr) ^(operatorExpr))
+	|		LPAREN! operatorExpr RPAREN! ASSIGN^ operatorExpr
 	|		multi_register^ ASSIGN! operatorExpr
 	;
 

@@ -53,8 +53,13 @@ multiword_register:
 	;
 
 
-map:			^((t=CHUNK | t=REGISTER | t=IO | t=RAM | t=ROM) b=NUMBER e=NUMBER)
-		-> map(type={($t.text).toUpperCase()}, begin={$b}, end={$e})
+map:			^(t=map_type b=NUMBER e=NUMBER)
+		-> map(type={$t.st}, begin={$b}, end={$e})
+	;
+
+map_type:
+			(t=CHUNK | t=REGISTERS | t=IO | t=ROM | t=RAM)
+		-> template(type={($t.text).toUpperCase()}) "<type>"
 	;
 
 instruction:
@@ -84,15 +89,9 @@ expr:
 	;
 
 assignExpr:
-			^(
-				ASSIGN
-				(
-					CONSTANT? IDENTIFIER
-					| RAM operatorExpr
-				)
-				operatorExpr
-			)
-	|	^(MULTI_REG i1=IDENTIFIER o1=operatorExpr i2=IDENTIFIER o2=operatorExpr o3=operatorExpr)
+			^(ASSIGN CONSTANT? IDENTIFIER operatorExpr)
+	|		^(ASSIGN ^(map_type operatorExpr) operatorExpr)
+	|		^(MULTI_REG IDENTIFIER operatorExpr IDENTIFIER operatorExpr operatorExpr)
 	;
 
 

@@ -55,7 +55,12 @@ register:	^(IDENTIFIER NUMBER) -> register(name={$IDENTIFIER},offset={$NUMBER})
 multiword_register: 	^(IDENTIFIER IDENTIFIER+)
 	;
 
-map:		^((CHUNK | REGISTER | IO | RAM | ROM) NUMBER NUMBER)
+map:		^(map_type NUMBER NUMBER)
+	;
+
+map_type:
+			(t=CHUNK | t=REGISTERS | t=IO | t=ROM | t=RAM)
+		-> template(type={($t.text).toUpperCase()}) "<type>"
 	;
 
 instruction:	^(
@@ -94,22 +99,23 @@ expr	:	assignExpr
 	-> halt()
 	;
 
-assignExpr:	^(
-			ASSIGN { Variable var = new Variable("A"); }
-			(
-				CONSTANT? IDENTIFIER (LPAREN (op=operatorExpr) RPAREN)?
-					{ 
-						var = new Variable($IDENTIFIER.text + ($op.st!=null?$op.st:"")); if ($CONSTANT!=null) var.setConstant();
-						if (var.getName().equals("R")) { var.setConstant(false); var.setResult(); }
-						if ($op.st!=null) {var.setConstant(false); var.setResult(false);}
-					
-					}
-				| RAM op2=operatorExpr
-					{ var = new Variable($op2.st.toString(),Variable.VariableType.RAM); }
-			)
-			o=operatorExpr
-		)
+assignExpr:	^(ASSIGN CONSTANT? IDENTIFIER (LPAREN op=operatorExpr RPAREN)? o=operatorExpr)
+			{
+				Variable var = new Variable($IDENTIFIER.text + ($op.st!=null ? $op.st:""));
+				if ($CONSTANT!=null)
+					var.setConstant();
+				if (var.getName().equals("R")) {
+					var.setConstant(false);
+					var.setResult();
+				}
+				if ($op.st!=null) {
+					var.setConstant(false);
+					var.setResult(false);
+				}
+			}
 	-> assignExpr(var={var},type={var.getType()},value={$o.st},comment={var + " = " + $o.comment}, is_result={var.isResult()},constant={var.getConstant()})
+	|	^(ASSIGN ^(m=map_type o1=operatorExpr) o2=operatorExpr)
+	-> assignExpr(var={$o1.st},type={$m.st},value={$o2.st},comment={$m.st + "(" + $o1.comment + ") = " + $o.comment})
 	|	^(MULTI_REG i1=IDENTIFIER o1=operatorExpr i2=IDENTIFIER o2=operatorExpr o3=operatorExpr)
 	-> multiRegisterAssignExpr(low={$o1.st},high={$o2.st},value={$o3.st})
 	;

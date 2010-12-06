@@ -68,7 +68,11 @@ multiword_register:
 
 map:
 		// FIXME Check if maps aren't duplicated
-		^((CHUNK | REGISTER | IO | RAM | ROM) NUMBER NUMBER)
+		^(map_type NUMBER NUMBER)
+	;
+
+map_type:
+		CHUNK | REGISTERS | IO | ROM | RAM
 	;
 
 instruction:
@@ -108,7 +112,8 @@ expr:
 	;
 
 assignExpr:
-		^(ASSIGN (CONSTANT? IDENTIFIER (LPAREN (operatorExpr) RPAREN)? | (RAM operatorExpr)) operatorExpr)
+		^(ASSIGN CONSTANT? IDENTIFIER (LPAREN operatorExpr RPAREN)? operatorExpr)
+	|	^(ASSIGN ^(map_type operatorExpr) operatorExpr)
 	|	^(MULTI_REG IDENTIFIER operatorExpr IDENTIFIER operatorExpr operatorExpr)
 	;
 
