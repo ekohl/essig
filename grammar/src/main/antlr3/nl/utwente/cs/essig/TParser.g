@@ -124,14 +124,20 @@ condition:		word comparison^ word
 	|		LPAREN! operatorExpr RPAREN! comparison^ word
 	;
 
-word	:		variable
+word	:		variable (BIT^ (NUMBER|constant))?
 	|		NUMBER
 	|		NOT^ word
 	;
 
-variable:		CONSTANT IDENTIFIER
+constant:		CONSTANT IDENTIFIER
 		-> CONSTANT[$IDENTIFIER.text]
-	|		IDENTIFIER
+	;
+
+register:		IDENTIFIER
+	;
+
+variable:		constant
+	|		register
 	|		map_type^ LPAREN! operatorExpr RPAREN!
 	|		multi_register
 	;

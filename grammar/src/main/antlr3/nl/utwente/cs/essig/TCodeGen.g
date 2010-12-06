@@ -138,6 +138,9 @@ word returns [String comment]:
 	-> {$variable.st}
 	|	^(NOT w=word) { $comment = $NOT.text + $w.comment; }
 	-> not(value={$w.st})
+	|	^(BIT variable (b=NUMBER|b=CONSTANT))
+		{ $comment = $variable.comment + $BIT.text + $b.text; }
+	-> bit(var={$variable.st}, bit={$b.text})
 	;
 
 variable returns [String comment]:
@@ -149,7 +152,7 @@ variable returns [String comment]:
 			Variable var = new Variable($v.text);
 			$comment = $v.text;
 		}
-	-> wordVariable(variable={var.getName()}, type={var.getType()})
+	-> wordVariable(variable={var.getName()}, bit={var.getNumber()},type={var.getType()})
 	|	^(map_type operatorExpr)
 			{ $comment = $map_type.comment + "(" + $operatorExpr.comment + ")"; }
 	-> wordVariable(variable={$operatorExpr.st}, type={$map_type.st})

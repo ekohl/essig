@@ -169,3 +169,7 @@ multiRegister(r1,r2,type) ::= <<
 not(value) ::= <<
 (!(<value>))
 >>
+
+bit(var, bit) ::= <<
+GetBit(<var>, <bit>)
+>>

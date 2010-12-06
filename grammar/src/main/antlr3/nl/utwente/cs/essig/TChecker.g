@@ -132,19 +132,14 @@ word:
 		variable
 	|	NUMBER
 	|	^(NOT word)
+	|	^(BIT variable (NUMBER|CONSTANT))
 	;
 
 variable:
 		CONSTANT
-		{
-			//symbolTable.getDeclaration($CONSTANT.text, $CONSTANT);
-		}
-	|	id=IDENTIFIER
-		{
-			Variable var = new Variable($id.text);
-			// FIXME: re-enable
-			//symbolTable.getDeclaration(var.getName(), $id);
-		}
+		{ symbolTable.getDeclaration($CONSTANT.text, $CONSTANT); }
+	|	i=IDENTIFIER // FIXME: re-enable
+		//{ symbolTable.getDeclaration(new Variable($i.text).getName(), $i); }
 	|	^(map_type operatorExpr)
 	|	multi_register
 	;
