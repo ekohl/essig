@@ -28,6 +28,12 @@ options {
 @members {
 	private String defaultClock;
 	private HashMap<String,String> registers = new HashMap<String,String>(); 
+	private String statusRegVals = "CZNVSHTI";
+
+	public boolean isStatusBit(String value)
+	{
+		return (statusRegVals.indexOf(value.charAt(0))>=0);
+	}
 }
 
 microcontroller: ^(
@@ -100,7 +106,7 @@ expr	:	assignExpr
 	;
 
 assignExpr:	^(ASSIGN i=IDENTIFIER o=operatorExpr)
-	-> assignExpr(var={$i},type={"REGISTER"},value={$o.st},comment={$i + " = " + $o.comment})
+	-> assignExpr(var={$i},type={"REGISTER"},value={$o.st},comment={$i + " = " + $o.comment},is_pc={($i.text).equals("PC")},isStatusBit={isStatusBit($IDENTIFIER.text)})
 
 	|	^(ASSIGN CONSTANT o=operatorExpr)
 	-> assignConstant(var={$CONSTANT.text},value={$o.st},comment={$o.comment})
@@ -147,7 +153,7 @@ variable returns [String comment]:
 	-> template(constant={$CONSTANT.text}) "<constant>"
 	|	v=IDENTIFIER
 		{ $comment = $IDENTIFIER.text; }
-	-> wordVariable(variable={$IDENTIFIER}, type={"REGISTER"})
+	-> wordVariable(variable={$IDENTIFIER}, type={"REGISTER"},is_pc={($IDENTIFIER.text).equals("PC")},isStatusBit={isStatusBit($IDENTIFIER.text)})
 	|	^(map_type operatorExpr)
 			{ $comment = $map_type.comment + "(" + $operatorExpr.comment + ")"; }
 	-> wordVariable(variable={$operatorExpr.st}, type={$map_type.st})

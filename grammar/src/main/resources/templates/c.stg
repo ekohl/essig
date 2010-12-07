@@ -65,7 +65,7 @@ bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
 	// result
 	int result = 0;
-	//printf("<name> \n");
+	printf("<name> \n");
 	<if(clock)>
 	// Clock cycles
 	state->cycles += <clock>;
@@ -83,7 +83,7 @@ bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	// Execute expressions
 	<first(expressions):resultExpr()>
 	<rest(expressions); separator="\n">
-
+printf("end <name> \n");
 	return true;
 }
 >>
@@ -97,8 +97,9 @@ argument(name, signed) ::= <<
 >>
 
 resultExpr(expression) ::= <<
+int R = 0;
 <expression>
-int R = result;
+R = result;
 >>
 
 ifExpr(condition,ifExpr,elseExpr) ::= <<
@@ -117,7 +118,11 @@ operatorExpr(word,operator,expression) ::= <<
 >>
 
 
-assignExpr(var,type,value,comment,is_result) ::= <<
+assignExpr(var,type,value,comment,is_result,is_pc,isStatusBit) ::= <<
+<if(is_pc)>
+// Update the program counter
+SETPC(state,<value>);
+<else>
 // <comment>
 // Calculate expressions for the result var
 result = <value>;
@@ -126,8 +131,13 @@ if (error)
 	return false;
 
 <if(!is_result)>
+<if(isStatusBit)>
+SETBIT(SREG,<var>,result);
+<else>
 if(!vm_write(state, diff, VM_INFO_<type>, <var>, result))
 	return false;
+<endif>
+<endif>
 <endif>
 >>
 
@@ -153,8 +163,14 @@ condition(left,comparison,right) ::= <<
 <left> <comparison> <right>
 >>
 
-wordVariable(variable, bit, type) ::= <<
+wordVariable(variable, bit, type, is_pc,isStatusBit) ::= <<
+<if(is_pc)> 
+GETPC(state)
+<elseif(isStatusBit)>
+GETBIT(SREG,<variable>)
+<else>
 <if(bit)>GetBit(<endif> vm_info(state,VM_INFO_<type>,<variable>,&error) <if(bit)>, <bit>)<endif>
+<endif>
 >>
 
 halt() ::= <<

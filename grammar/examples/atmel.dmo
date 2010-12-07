@@ -12,14 +12,14 @@ atmel {
 		/* -- Status Register (SREG) -- */
 		SREG	= 40; //95; /* Status register */
 		// TODO: SREG(0) till SREG(7)
-		C	= 32; /* Carry flag */
-		Z	= 33; /* Zero flag */
-		N	= 34; /* Negative flag */
-		V	= 35; /* Two's complement overflow indicator */
-		S	= 36; /* N^V, For signed tests */
-		H	= 37; /* Half Carry Flag */
-		T	= 38; /* Transfer bit used by BLD and BST instructions */
-		I	= 39; /* Global Interrupt Enable/Disable Flag */
+		C	= 0; /* Carry flag */ 
+		Z	= 1; /* Zero flag */
+		N	= 2; /* Negative flag */
+		V	= 3; /* Two's complement overflow indicator */
+		S	= 4; /* N^V, For signed tests */
+		H	= 5; /* Half Carry Flag */
+		T	= 6; /* Transfer bit used by BLD and BST instructions */
+		I	= 7; /* Global Interrupt Enable/Disable Flag */
 
 		/* -- Rest -- */
 		PC	= 0x462; /*(Size=2) Program counter */
@@ -69,7 +69,7 @@ atmel {
 			V = Rd.7 & Rr.7 & !$R.7 | !Rd.7 & !Rr.7 & $R.7;
 			N = $R.7;
 			S = N ^ V;
-			Z = !$R.7 & !$R.6 & !$R.5 & !$R.4 & !$R.3 & !$R.2 & !$R.1 & !$R.0;
+				
 			C = Rd.7 & Rr.7 | Rr.7 & !$R.7 | !$R.7 & Rd.7;
 
 			PC = PC + 1;

@@ -77,7 +77,7 @@ map_type:
 
 instruction:
 		^(
-			IDENTIFIER
+			IDENTIFIER 		{System.out.println("\t \t " + $IDENTIFIER.text);}
 			{ symbolTable.openScope(); }
 			^(
 				PARAMS
@@ -86,17 +86,19 @@ instruction:
 			)
 			^(ARGUMENTS argument*)
 			{
-				// Verify opcodes with the defined arguments
-				for(Object opcode : $opcodes) {
+				
+// Verify opcodes with the defined arguments
+				/*for(Object opcode : $opcodes) {
 					for (Character c : new Opcode(((CommonTree)opcode).getText()).getArguments().keySet()) {
 						symbolTable.getDeclaration(c.toString(), (CommonTree) opcode);
 					}
-				}
+				}*/
+
 			}
-			^(EXPR expr {
+			^(EXPR {
 				// First expression declares R
 				symbolTable.declare("R", $EXPR);
-			} expr* )
+			} expr expr* )
 			{ symbolTable.closeScope(); }
 		)
 	;
