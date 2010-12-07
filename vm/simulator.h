@@ -50,6 +50,10 @@
 
 #define GETPC(state) ((PC_TYPE) vm_info(state, VM_INFO_PC, 0, NULL))
 #define SETPC(state, value) vm_write(state, NULL, VM_INFO_PC, 0, value)
+#define GETBIT(value, bitpos) (!!((value) & (1 << (bitpos))))
+#define SETBIT(value, bitpos, bitvalue) ((bitvalue) ? \
+    ((value) | ((bitvalue) << (bitpos))) : \
+    ((value) & ~(1 << (bitpos)))
 
 #include "vm.h"
 
