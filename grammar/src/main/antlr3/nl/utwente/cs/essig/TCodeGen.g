@@ -28,7 +28,6 @@ options {
 @members {
 	private String defaultClock;
 	private HashMap<String,String> registers = new HashMap<String,String>(); 
-	//private SymbolTable<CommonTree> symbolTable = new SymbolTable<CommonTree>();
 }
 
 microcontroller: ^(
@@ -89,7 +88,7 @@ opcode:
 	;
 
 argument:	SIGNED? IDENTIFIER
-	-> argument(name={new Variable($IDENTIFIER.text).getName()},signed={$SIGNED})
+	-> argument(name={$IDENTIFIER},signed={$SIGNED})
 	;
 
 expr	:	assignExpr
@@ -100,9 +99,8 @@ expr	:	assignExpr
 	-> halt()
 	;
 
-assignExpr:	^(ASSIGN IDENTIFIER o=operatorExpr)
-			{ Variable var = new Variable($IDENTIFIER.text); }
-	-> assignExpr(var={var},type={var.getType()},value={$o.st},comment={var + " = " + $o.comment}, is_result={"R".equals(var.getName())})
+assignExpr:	^(ASSIGN i=IDENTIFIER o=operatorExpr)
+	-> assignExpr(var={$i},type={"REGISTER"},value={$o.st},comment={$i + " = " + $o.comment})
 
 	|	^(ASSIGN CONSTANT o=operatorExpr)
 	-> assignConstant(var={$CONSTANT.text},value={$o.st},comment={$o.comment})
@@ -148,11 +146,8 @@ variable returns [String comment]:
 		{ $comment = $CONSTANT.text; }
 	-> template(constant={$CONSTANT.text}) "<constant>"
 	|	v=IDENTIFIER
-		{
-			Variable var = new Variable($v.text);
-			$comment = $v.text;
-		}
-	-> wordVariable(variable={var.getName()}, bit={var.getNumber()},type={var.getType()})
+		{ $comment = $IDENTIFIER.text; }
+	-> wordVariable(variable={$IDENTIFIER}, type={"REGISTER"})
 	|	^(map_type operatorExpr)
 			{ $comment = $map_type.comment + "(" + $operatorExpr.comment + ")"; }
 	-> wordVariable(variable={$operatorExpr.st}, type={$map_type.st})

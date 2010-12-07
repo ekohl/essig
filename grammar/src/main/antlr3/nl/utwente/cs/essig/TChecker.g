@@ -103,7 +103,7 @@ instruction:
 
 argument:		
 		SIGNED? IDENTIFIER {
-			symbolTable.declare(new Variable($IDENTIFIER.text).getName(), $IDENTIFIER);
+			symbolTable.declare($IDENTIFIER.text, $IDENTIFIER);
 		}
 	;
 
@@ -139,7 +139,7 @@ variable:
 		CONSTANT
 		{ symbolTable.getDeclaration($CONSTANT.text, $CONSTANT); }
 	|	i=IDENTIFIER // FIXME: re-enable
-		//{ symbolTable.getDeclaration(new Variable($i.text).getName(), $i); }
+		{ symbolTable.getDeclaration($i.text, $i); }
 	|	^(map_type operatorExpr)
 	|	multi_register
 	;

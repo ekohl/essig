@@ -103,7 +103,7 @@ params	:		OPCODE (ARG_SEPERATOR OPCODE)* (ARG_SEPERATOR CLOCK ASSIGN NUMBER)?
 arguments:		argument (ARG_SEPERATOR! argument)*
 	;
 
-argument:		(SIGNED)? IDENTIFIER
+argument:		(SIGNED)? identifier
 	;
 
 expr	:		assignExpr LINE_SEPERATOR!
@@ -133,8 +133,20 @@ constant:		CONSTANT IDENTIFIER
 		-> CONSTANT[$IDENTIFIER.text]
 	;
 
+identifier:
+			IDENTIFIER
+		{
+			String t = $IDENTIFIER.text;
+			if("R".equals(t.charAt(0))
+					&& t.length() > 1
+					&& Character.isLowerCase(t.charAt(1))) {
+				t = t.substring(1);
+			}
+		}
+		-> IDENTIFIER[t]
+	;
+
 variable:		constant
-	|		IDENTIFIER
 	|		map_type^ LPAREN! operatorExpr RPAREN!
 	|		multi_register
 	;
