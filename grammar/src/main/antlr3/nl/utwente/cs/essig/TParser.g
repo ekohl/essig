@@ -124,7 +124,7 @@ condition:		word comparison^ word
 	|		LPAREN! operatorExpr RPAREN! comparison^ word
 	;
 
-word	:		variable (BIT^ (NUMBER|constant))?
+word 	:		variable (BIT^ (NUMBER|constant))?
 	|		NUMBER
 	|		NOT^ word
 	;
@@ -137,7 +137,7 @@ identifier:
 			IDENTIFIER
 		{
 			String t = $IDENTIFIER.text;
-			if("R".equals(t.charAt(0))
+			if('R' == (t.charAt(0))
 					&& t.length() > 1
 					&& Character.isLowerCase(t.charAt(1))) {
 				t = t.substring(1);
@@ -147,6 +147,7 @@ identifier:
 	;
 
 variable:		constant
+	|		identifier
 	|		map_type^ LPAREN! operatorExpr RPAREN!
 	|		multi_register
 	;
