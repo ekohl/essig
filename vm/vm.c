@@ -334,7 +334,7 @@ _get_location(VMState *state, VMInfoType type, size_t addr, int *nbytes)
 {
     struct _mapping *mapping = get_info_type_mapping(type);
    
-    if (addr < 0 ||addr >= mapping->size) {
+    if (addr < 0 ||addr >= mapping->end) {
         vm_seterrno(VM_OUT_OF_BOUNDS_ERROR);
         return NULL;
     }
