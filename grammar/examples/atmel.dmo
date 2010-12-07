@@ -441,7 +441,7 @@ atmel {
 			PC = PC + 1;
 		}
 
-		movw "0000 0001 dddd rrrr" Rd, Rr { // TODO: Check me
+		movw "0000 0001 dddd rrrr" Rd, Rr { // Checked
 			/* r in 0,2,..,30 */
 			$r = $r * 2;
 			/* d in 0,2,..,30 */
@@ -452,7 +452,7 @@ atmel {
 		}
 
 		/* Multiply Unsigned */
-		mul "1001 11rd dddd rrrr", clock=2 Rd, Rr { // TODO: Check me
+		mul "1001 11rd dddd rrrr", clock=2 Rd, Rr { // Checked
 			R[1..0] = Rd * Rr;
 			R = R[1..0];
 
@@ -462,55 +462,57 @@ atmel {
 			PC = PC + 1;
 		}
 
-		neg "1001 010d dddd 0001" Rd { // TODO: Check me
+		neg "1001 010d dddd 0001" Rd { // TODO: Check me 
+			// wilfried: Seems to be correct but could it be Rd = 0 - Rd and omit the last line
 			R = 0 - Rd;
 
 			H = $R.3 | Rd3;
-			S = N ^ V;
 			V = $R.7 & !$R.6 & !$R.5 & !$R.4 & !$R.3 & !$R.2 & !$R.1;
 			N = $R.7;
+			S = N ^ V;
 			Z = !R;
 			C = $R.7 | $R.6 | $R.5 | $R.4 | $R.3 | $R.2 | $R.1 | $R.0;
 
-			// Assign Rd last because Rd is used in the status registers
 			Rd = R;
 
 			PC = PC + 1;
 		}
 
 		/* Store Register to I/O Location */
-		out "1011 1AAr rrrr AAAA" A, Rr { // TODO: Check me
+		out "1011 1AAr rrrr AAAA" A, Rr { // Checked
 			io(A) = Rr;
 
 			PC = PC + 1;
 		}
 
-		or "0010 10rd dddd rrrr" Rd,Rr { // TODO: Check me
+		or "0010 10rd dddd rrrr" Rd,Rr { // Checked
 			Rd = Rd | Rr;
 
-			S = N ^ V;
 			V = 0;
 			N = $R.7;
+			S = N ^ V;
 			Z = !$R.7 & !$R.6 & !$R.5 & !$R.4 & !$R.3 & !$R.2 & !$R.1 & !$R.0;
 
 			PC = PC + 1;
 		}
 
-		ori "0110 KKKK dddd KKKK" Rd, K { // TODO: Check me
+		ori "0110 KKKK dddd KKKK" Rd, K { // Checked
 			/* 16 <= d <= 31 */
 			$d = 16 + $d;
-			Rd = Rd | $K;
+			R = Rd | $K;
 
-			S = N ^ V;
 			V = 0;
 			N = $R.7;
+			S = N ^ V;
 			Z = !$R.7 & !$R.6 & !$R.5 & !$R.4 & !$R.3 & !$R.2 & !$R.1 & !$R.0;
+
+			Rd = R;
 
 			PC = PC + 1;
 		}
 
 		/* Push Register on Stack */
-		push "1001 001r rrrr 1111" Rr { // TODO: Check me
+		push "1001 001r rrrr 1111" Rr { // Checked
 			ram(SP) = Rr;
 			SP = SP - 1;
 
@@ -518,7 +520,7 @@ atmel {
 		}
 
 		/* Pop Register from Stack */
-		pop "1001 000d dddd 1111" Rd { // TODO: Check me
+		pop "1001 000d dddd 1111" Rd { // Checked
 			SP = SP + 1;
 			Rd = ram(SP);
 
