@@ -4,7 +4,7 @@ OBJECTS=vm.o generated_simulator.o interrupt_handler.o
 PROFILE_OBJECTS=$(OBJECTS) runtest.o
 PATH := $(PWD)/cython/bin:${PATH}
 PYTHON_DEBUG=`cython 2>&1 | grep -q '\--debug' && echo --pyrex-debug`
-PYTHON=`which python-dbg || which python`
+PYTHON=`which python-dbg 2>/dev/null|| which python`
 PYTHONPATH := $(PWD)/cython:${PYTHONPATH}
 
 TESTFILE1=../code-samples/factorial
@@ -18,13 +18,13 @@ PROFILE_N_STEPS = 10000000
 export PATH
 export PYTHONPATH
 
-run: cli
-	$(PYTHON) simulator.py $(TESTFILE)
+run: cli.so
+	@$(PYTHON) simulator.py $(TESTFILE)
 
-run-debug: cli
+run-debug: cli.so
 	cygdb . --args $(PYTHON) simulator.py $(TESTFILE)
 
-run-pdb: cli
+run-pdb: cli.so
 	$(PYTHON) -m pdb simulator.py $(TESTFILE)
 
 profile: 
@@ -51,7 +51,7 @@ _cachegrind: runtest
 
 # problem if the user has a 64-bit OS but a 32-bit Python
 # We could have distutils do everything, if we care
-cli: $(OBJECTS)
+cli.so: $(OBJECTS)
 	CFLAGS="$(CFLAGS)" $(PYTHON) setup.py build_ext --inplace $(PYTHON_DEBUG)
 
 vm.o: vm.c vm.h simulator.h readelf.c vmerrno.h generated_simulator.h
