@@ -53,7 +53,7 @@
 #define GETBIT(value, bitpos) (!!((value) & (1 << (bitpos))))
 #define SETBIT(value, bitpos, bitvalue) ((bitvalue) ? \
     ((value) | ((bitvalue) << (bitpos))) : \
-    ((value) & ~(1 << (bitpos)))
+    ((value) & ~(1 << (bitpos))))
 
 #include "vm.h"
 
