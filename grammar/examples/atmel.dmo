@@ -301,7 +301,7 @@ atmel {
 		}
 
 		/* Load an I/O Location to Register */
-		in "1011 0AAd dddd AAAA" Rd, A { // TODO: Check me
+		in "1011 0AAd dddd AAAA" Rd, A { // Checked
 			Rd = io(A);
 
 			PC = PC + 1;
@@ -528,13 +528,13 @@ atmel {
 		}
 
 		/* Return from Subroutine */
-		ret "1001 0101 0000 1000" { // TODO: Check me
+		ret "1001 0101 0000 1000" { // Checked
 			SP = SP + 2; // TODO not sure if this should be done after or before reading form stack.
 			PC = ram[SP+1..SP];
 		}
 
 		/* Relative Call to Subroutine */
-		rcall "1101 kkkk kkkk kkkk" ~k { // TODO: Check me
+		rcall "1101 kkkk kkkk kkkk" ~k { // Checked
 			PC = PC + $k + 1;
 			// FIXME
 			ram(SP) = PC + 1;
@@ -542,7 +542,7 @@ atmel {
 		}
 
 		/* Relative Jump */
-		rjmp "1100 kkkk kkkk kkkk" ~k { // TODO: Check me
+		rjmp "1100 kkkk kkkk kkkk" ~k { // Checked
 			if $k == -1 {
 				HALT;
 			} else {
@@ -551,13 +551,14 @@ atmel {
 		}
 
 		/* Rotate Right through Carry */
-		ror "1001 010d dddd 0111" Rd { // TODO: Check me
+		ror "1001 010d dddd 0111" Rd, Cold { // TODO: Check me
+			$Cold = C;
 			C = Rd0;
 	
-			R = Rd >> 1 | C << 8;
-			S = N ^ V;
-			V = N ^ C;
+			R = Rd >> 1 | $Cold << 8;
 			N = $R.7;
+			V = N ^ C;
+			S = N ^ V;
 			Z = !$R.7 & !$R.6 & !$R.5 & !$R.4 & !$R.3 & !$R.2 & !$R.1 & !$R.0;
 			Rd = R;
 
@@ -571,21 +572,21 @@ atmel {
 			//R = [R($d+1):R(d)] - $K;
 			R = R[$d+1..d] - $K;
 
-			R[$d+1..$d] = $R;
-
 			$d = $d + 1; // TODO (== high byte)
-			S = N ^ V;
 			V = Rd7 & !$R.15; // TODO: High byte
 			N = $R.15;
+			S = N ^ V;
 			Z = !$R.15 & !$R.14 & !$R.13 & !$R.12 & !$R.11 & !$R.10 & !$R.9 & !$R.8 & !$R.7 & !$R.6 & !$R.5 & !$R.4 & !$R.3 & !$R.2 & !$R.1 & !$R.0;
 			C = $R.15 & !Rd7; // TODO: High byte
 			/* R (Result) equals Rdh:Rdl after the operation (Rdh7-Rdh0 = $R.15-$R.8, Rdl7-Rdl0=$R.7-$R.0). */
+			
+			R[$d+1..$d] = $R;
 
 			PC = PC + 1;
 		}
 
 		/* Skip if Bit in Register is Set */
-		sbrs "1111 111r rrrr 0bbb" Rr, b { // TODO: Check me
+		sbrs "1111 111r rrrr 0bbb" Rr, b { // Checked
 			if Rr.$b == 1 {
 				PC = PC + 2;
 			} else {
@@ -594,7 +595,7 @@ atmel {
 		}
 
 		/* Set Carry Flag */
-		sec "1001 0100 0000 1000" {
+		sec "1001 0100 0000 1000" { // Checked
 			C = 1;
 
 			PC = PC + 1;
