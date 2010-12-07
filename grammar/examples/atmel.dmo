@@ -34,9 +34,9 @@ atmel {
 
 	maps {
 		chunk		(0, 0xFFFFFFF);
-		register	(0, 0x1F);
-		io		(0x20, 0x5F);
-		ram		(0, 0x460);
+		register	(0, 0x20);
+		io		(0x20, 0x60);
+		ram		(0, 0x461);
 		rom		(0x464,0xFFFFFF);
 	}
 
@@ -411,26 +411,21 @@ atmel {
 
 		/* Load Program Memory */
 		lpm "1001 0101 1100 1000", clock=3 { // TODO: Check me
-			// FIXME something with RAMPXYZ
-			//R(0) = R[31..30]; // TODO should be RZ
-
+			
+			R0 = rom(R[31..30]); 
 			PC = PC + 1;
 		}
 
 		/* Load Program Memory */
 		lpmz "1001 000d dddd 0100", clock=3 d { // TODO: Check me
-			// FIXME implement me
-			//Rd = RZ; // TODO something with RAMPXYZ
-
+			Rd = rom(R[31..30]);
 			PC = PC + 1;
 		}
 
 		/* Load Program Memory */
 		lpmzplus "1001 000d dddd 0101", clock=3 d { // TODO: Check me
-			// FIXME something with RAMPXYZ
-			//$R.0 = R[31..30]; // TODO
-			R[31..30] = R[31..30] + 1; // TODO should be RZ
-
+			Rd = rom(R[31..30]);
+			R[31..30] = R[31..30] + 1;
 			PC = PC + 1;
 		}
 
