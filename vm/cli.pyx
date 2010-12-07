@@ -464,11 +464,12 @@ class SimulatorCLI(cmd.Cmd, object):
         
         type, addr, value = arglist
         vm_info_type = self.vm_info_type.get(type)
+
         if vm_info_type is None:
             raise ErrorMessage('Invalid argument: %r' % args)
         
         if vm_info_type == VM_INFO_REGISTER:
-            addr = self.registers[addr]
+            addr = self.registers[(<object> addr).lower()]
         
         value = int(value, 0)
         

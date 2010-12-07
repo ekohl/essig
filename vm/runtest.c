@@ -74,10 +74,16 @@ main(int argc, char **argv)
     
 #ifdef WITH_DIFF
     check_error(diff = vm_newdiff());
-    vm_step(state, nsteps, diff, &hit_bp);
+    if (!vm_step(state, nsteps, diff, &hit_bp))
+        goto error;
 #else
-    vm_step(state, nsteps, NULL, &hit_bp);
+    if (!vm_step(state, nsteps, NULL, &hit_bp))
+        goto error;
 #endif
     
-    return 0;
+    return EXIT_SUCCESS;
+error:
+    fputs(vm_strerror(-1), stderr);
+    fputc('\n', stderr);
+    return EXIT_FAILURE;
 }

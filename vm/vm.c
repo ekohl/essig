@@ -228,7 +228,8 @@ vm_closediff(VMStateDiff *diff)
 /* control functions */
 
 static bool 
-_vm_step(VMState *state, int nsteps, VMStateDiff **diff, bool *hit_bp, bool first)
+_vm_step(VMState *state, unsigned long nsteps, VMStateDiff **diff, 
+         bool *hit_bp, bool first)
 {
     VMInterruptCallable *callable;
     VMStateDiff *newdiff = NULL;
@@ -309,7 +310,7 @@ _vm_step(VMState *state, int nsteps, VMStateDiff **diff, bool *hit_bp, bool firs
 }
 
 bool 
-vm_step(VMState *state, int nsteps, VMStateDiff **diff, bool *hit_bp)
+vm_step(VMState *state, unsigned long nsteps, VMStateDiff **diff, bool *hit_bp)
 {
     return _vm_step(state, nsteps, diff, hit_bp, true);
 }
@@ -333,7 +334,7 @@ _get_location(VMState *state, VMInfoType type, size_t addr, int *nbytes)
 {
     struct _mapping *mapping = get_info_type_mapping(type);
    
-    if (addr < 0 ||addr >= mapping->size) {
+    if (addr < 0 ||addr >= mapping->end) {
         vm_seterrno(VM_OUT_OF_BOUNDS_ERROR);
         return NULL;
     }
@@ -394,8 +395,8 @@ _print_diff(VMState *state, VMStateDiff *diff)
 #endif /* VM_DEBUG */
 
 static void
-_vm_rstep(VMState *state, int nsteps, VMStateDiff **diff, bool *hit_bp,
-          bool first)
+_vm_rstep(VMState *state, unsigned long nsteps, VMStateDiff **diff, 
+          bool *hit_bp, bool first)
 {
     VMSingleStateDiff *singlediff;
     VMStateDiff *next;
@@ -438,7 +439,8 @@ _vm_rstep(VMState *state, int nsteps, VMStateDiff **diff, bool *hit_bp,
 }
 
 void
-vm_rstep(VMState *state, int nsteps, VMStateDiff **diff, bool *hit_bp)
+vm_rstep(VMState *state, unsigned long nsteps, VMStateDiff **diff, 
+         bool *hit_bp)
 {
     _vm_rstep(state, nsteps, diff, hit_bp, true);
 }
