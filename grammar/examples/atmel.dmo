@@ -554,7 +554,7 @@ atmel {
 		/* Rotate Right through Carry */
 		ror "1001 010d dddd 0111" Rd, Cold { // TODO: Check me
 			$Cold = C;
-			C = Rd0;
+			C = Rd.0;
 	
 			$R = Rd >> 1 | $Cold << 8;
 			N = $R.7;
