@@ -37,10 +37,9 @@ microcontroller:
 	;
 
 parameter:
-			^(RAM NUMBER)
-	|		^(CLOCK NUMBER)
-	|		^(OP_SIZE NUMBER)
-		-> opcode_size(bits={$NUMBER})
+			CLOCK
+	|		OP_SIZE
+		-> opcode_size(bits={$OP_SIZE})
 	;
 
 register:

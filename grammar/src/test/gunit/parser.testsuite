@@ -5,10 +5,27 @@ gunit test walks T;
 }
 
 operator:
-"&" OK
-"|" OK
-"^" OK
-"+" OK
+"&"					-> "&"
+"|"					-> "|"
+"^"					-> "^"
+"+"					-> "+"
+"-"					-> "-"
+"*"					-> "*"
+">>"					-> ">>"
+"<<"					-> "<<"
+
+constant:
+"$"					FAIL
+"D"					FAIL
+"$d"					-> "d"
+"$R"					-> "R"
+
+identifier:
+"R"					-> "R"
+"Rd"					-> "d"
+"Rr"					-> "r"
+"R15"					-> "R15"
+"A"					-> "A"
 
 parameters:
 "parameter { }"				FAIL	// Invalid token (missing s)
@@ -16,23 +33,31 @@ parameters:
 "parameters {"				FAIL	// Missing }
 "parameters { }"			FAIL	// Missing parameters
 "parameters { bla 12; }"		FAIL	// Invalid parameter
-"parameters { ram 102e }"		FAIL	// Non-numeric ram, missing colon
-"parameters { ram 1024 }"		FAIL	// Missing colon
-"parameters { ram 1024; }"		-> (parameters (ram 1024))
-"parameters { ram 1024; gprs 32 }"	FAIL	// Missing offset, missing colon
-"parameters { ram 1024; gprs 32+ }"	FAIL	// Missing offset, missing colon
-"parameters { ram 1024; gprs 32+10 }"	FAIL	// Missing colon
-"parameters { ram 1024; gprs 32+10; }"	-> (parameters (ram 1024))
-"parameters { ram 1024; gprs 32+10; clock 1; }"	-> (parameters (ram 1024) (clock 1))
+"parameters { gprs 32 }"		FAIL	// Missing offset, missing colon
+"parameters { gprs 32+ }"		FAIL	// Missing offset, missing colon
+"parameters { gprs 32+10 }"		FAIL	// Missing colon
+"parameters { gprs 32+10; }"		-> "parameters"
+"parameters { gprs 32+10; clock 1; }"	-> (parameters 1)
+"parameters { gprs 32+10; clock 1; opcode-size 16; }"	-> (parameters 1 16)
 
 ifExpr:
-"if V == 0 { PC = 1; }"			-> (if (== V 0) (= PC 1))
-"if V == 0 { PC = PC + k + 1; }"	OK
-"if (N ^ V) == 0 { PC = PC + k + 1; }"	OK
-"if V == 0 { PC = PC + k + 1; } else { PC = PC + 1; }" OK
-"if (N ^ V) == 0 { PC = PC + k + 1; } else { PC = PC + 1; }" OK
+"if V == 0 { PC = 1; }"
+	-> (if (== V 0) (= PC 1))
+"if V == 0 { PC = PC + k + 1; }"
+	-> (if (== V 0) (= PC (+ PC (+ k 1))))
+"if (N ^ V) == 0 { PC = PC + k + 1; }"
+	-> (if (== (^ N V) 0) (= PC (+ PC (+ k 1))))
+"if V == 0 { PC = PC + k + 1; } else { PC = PC + 1; }"
+	-> (if (== V 0) (= PC (+ PC (+ k 1))) else (= PC (+ PC 1)))
+"if (N ^ V) == 0 { PC = PC + k + 1; } else { PC = PC + 1; }"
+	-> (if (== (^ N V) 0) (= PC (+ PC (+ k 1))) else (= PC (+ PC 1)))
 
 assignExpr:
 "a"					FAIL	// No assignment
 "a ="					FAIL	// No value
 "a = 0"					OK
+
+params:
+"\"01\""				-> (PARAMS "01")
+"\"01\",\"10\""				-> (PARAMS "01" "10")
+"\"01\",\"10\", clock=3"		-> (PARAMS "01" "10" 3)

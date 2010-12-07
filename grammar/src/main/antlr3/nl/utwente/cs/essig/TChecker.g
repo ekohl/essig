@@ -48,7 +48,7 @@ microcontroller:
 	;
 
 parameter:	
-		^(p=(RAM | CLOCK | OP_SIZE) NUMBER) {
+		p=(CLOCK | OP_SIZE) {
 			if(!params.add($p.text)) {
 				throw new TCheckerException($p, "Duplicate parameter " + $p.text);
 			}
@@ -82,7 +82,7 @@ instruction:
 			^(
 				PARAMS
 				(opcodes+=OPCODE)+
-				(^(CLOCK NUMBER))?
+				CLOCK?
 			)
 			^(ARGUMENTS argument*)
 			{
