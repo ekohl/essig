@@ -65,7 +65,10 @@ bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
 	// result
 	int result = 0;
-	printf("<name> \n");
+
+	// Status Register Value
+	int SREG_val = vm_info(state,VM_INFO_IO,SREG,&error);
+
 	<if(clock)>
 	// Clock cycles
 	state->cycles += <clock>;
@@ -83,7 +86,10 @@ bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	// Execute expressions
 	<first(expressions):resultExpr()>
 	<rest(expressions); separator="\n">
-printf("end <name> \n");
+
+	if (!vm_write(state,diff,VM_INFO_IO,SREG,SREG_val))
+		return false;
+
 	return true;
 }
 >>
@@ -132,7 +138,8 @@ if (error)
 
 <if(!is_result)>
 <if(isStatusBit)>
-SETBIT(SREG,<var>,result);
+// Set statusbit <var> in SREG
+SREG_val = SETBIT(SREG_val,<var>,result);
 <else>
 if(!vm_write(state, diff, VM_INFO_<type>, <var>, result))
 	return false;
@@ -167,7 +174,7 @@ wordVariable(variable, bit, type, is_pc,isStatusBit) ::= <<
 <if(is_pc)> 
 GETPC(state)
 <elseif(isStatusBit)>
-GETBIT(SREG,<variable>)
+GETBIT(SREG_val,<variable>)
 <else>
 <if(bit)>GetBit(<endif> vm_info(state,VM_INFO_<type>,<variable>,&error) <if(bit)>, <bit>)<endif>
 <endif>

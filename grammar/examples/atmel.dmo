@@ -8,7 +8,8 @@ atmel {
 
 	registers {
 		/* -- Status Register (SREG) -- */
-		SREG	= 40; //95; /* Status register */
+		// These offsets are actually I/O offsets.
+		SREG	= 0x3F; /* Status register */
 		// TODO: SREG(0) till SREG(7)
 		C	= 0; /* Carry flag */ 
 		Z	= 1; /* Zero flag */
@@ -266,7 +267,6 @@ atmel {
 		/* Exclusive Or */
 		eor "0010 01rd dddd rrrr" Rd, Rr { // Checked
 			Rd = Rd ^ Rr;
-
 			V = 0;
 			N = $R.7;
 			S = N ^ V;
