@@ -21,7 +21,7 @@ atmel {
 		I	= 7; /* Global Interrupt Enable/Disable Flag */
 
 		/* -- Rest -- */
-		PC	= 0xF462; /*(Size=2) Program counter */
+		PC	= 0x462; /*(Size=2) Program counter */
 		// FIXME: SPL = $3D ($5D), SPH = $3E ($5E)
 		SP	= 0x3D; /* (Size=2) Stack Pointer */
 

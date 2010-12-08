@@ -60,7 +60,7 @@ size_t ramsize = <ram>;
 
 instruction(name,opcodes,clock,arguments,expressions) ::= <<
 bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
-	printf("<name> \t at 0x%02x (0x%02x) \n",GETPC(state),GETPC(state)*2);	
+	printf("<name> \t at 0x%02x (0x%02x) SP:0x%02x \n",GETPC(state),GETPC(state)*2,((vm_info(state,VM_INFO_RAM,SP + 1 ,0) \<\<8) + vm_info(state,VM_INFO_RAM,SP,0)));	
 	// error
 	bool error = false;
 
@@ -157,11 +157,11 @@ assignConstant(var,value,comment) ::= <<
 multiRegisterAssignExpr(type,low,high,value) ::= <<
 //======MULTI WORD BEGIN
 // Low Byte
-vm_write(state,diff,VM_INFO_<type>,<low>,((<value>) & 0xFF));
+vm_write(state,diff,VM_INFO_<type>,<low>,(((<value>) & 0xFF00)\>\>8));
 if(error)
 	return false;
 // High Byte
-vm_write(state,diff,VM_INFO_<type>,<high>,(((<value>) & 0xFF00)\>\>8));
+vm_write(state,diff,VM_INFO_<type>,<high>,((<value>) & 0xFF));
 if(error)
 	return false;
 //======MULTI WORD END
