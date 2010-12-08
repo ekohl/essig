@@ -350,16 +350,15 @@ _get_location(VMState *state, VMInfoType type, size_t addr, int *nbytes)
 char *
 bin(unsigned int value)
 {
-    char *result, *tmp;
+#   define RESULT_SIZE (sizeof(unsigned int) * 8)
+    static char result[RESULT_SIZE + 2 + 1];
+    char *tmp;
     int nbits;
     
     if (value == 0)
         return "0b0";
-    else if (value == 1)
-        return "0b1";
     
-    nbits = (int) ceil(log((double) value) / log(2));
-    err_malloc(result = malloc(nbits + 2 + 1));
+    nbits = (int) floor(log((double) value) / log(2)) + 1;
     tmp = result;
     *tmp++ = '0';
     *tmp++ = 'b';
@@ -378,7 +377,7 @@ _print_diff(VMState *state, VMStateDiff *diff)
     char *binstr1, *binstr2;
     char *fmt =            "    %-20s: %lu -> %lu\n";
     char *fmt_single =     "    %-10s at 0x%-04x: %lu -> %lu\n";
-    char *fmt_single_bin = "    %-20s -> -20s";
+    char *fmt_single_bin = "    %-20s -> %-20s\n";
     
     VMSingleStateDiff *singlediff;
     
@@ -413,15 +412,14 @@ _print_diff(VMState *state, VMStateDiff *diff)
                (unsigned long) singlediff->oldval, 
                (unsigned long) singlediff->newval);
         
-        if (!(binstr1 = bin(singlediff->oldval)) && 
-             (binstr2 = bin(singlediff->newval))) {
+        binstr1 = bin((unsigned int) singlediff->oldval);
+        binstr2 = bin((unsigned int) singlediff->newval);
+        if (!binstr1 || !binstr2) {
             perror("Unable to allocate memory for the bin representation, "
                    "aborting.");
             abort();
         }
         printf(fmt_single_bin, binstr1, binstr2);
-        free(binstr1);
-        free(binstr2);
         singlediff = singlediff->next;
     }
     

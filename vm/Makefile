@@ -1,4 +1,4 @@
-CFLAGS += -O2 -g -Wall -Wno-unused-variable -fPIC -DVM_DEBUG=1
+CFLAGS += -O2 -g -Wall -Wno-unused-variable -lm -fPIC -DVM_DEBUG=1
 INTERRUPT_HANDLER=interrupt_handler.c
 OBJECTS=vm.o generated_simulator.o interrupt_handler.o
 PROFILE_OBJECTS=$(OBJECTS) runtest.o
