@@ -1,11 +1,9 @@
 atmel {
 	parameters {
-		gprs 32+0;
-		ram 16777216;
+		gprs 32+0; // 32 registers at offset 0
 		opcode-size 16; // 16 bits opcodes
-		// register-size = 8; //TODO
-		/* Standard Values */
-		clock 1; /* 1 clock_cycle */
+		// register-size = 8; // TODO 8 bit registers
+		clock 1; /* Standard 1 clock_cycle */
 	}
 
 	registers {
