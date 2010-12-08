@@ -1,4 +1,4 @@
-MAVEN=mvn -Dmaven.test.skip=true
+MAVEN=mvn
 EXAMPLE=atmel.dmo
 ESSIG=target/essig-0.1-jar-with-dependencies.jar
 

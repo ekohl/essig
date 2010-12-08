@@ -277,10 +277,11 @@ atmel {
 
 		icall "1001 0101 0000 1001" { // Checked
 			$R = R[31..30]; //TODO should be RZ
+
 			// Stack <- PC + 1
-			ram(SP) = PC + 1;
-			// SP = SP - 2 (or 3 if its 3 bytes)
+			ram[SP+1..SP] = PC + 1;
 			SP = SP - 2;
+
 			PC = R;
 		}
 
@@ -288,8 +289,11 @@ atmel {
 		call "1001 010k kkkk 111k", "kkkk kkkk kkkk kkkk", clock=4 k { // Checked
 			/* 0 <= k < 64K */
 			$R = $k;
-			ram(SP) = PC + 2;
+
+			// Push PC onto the stack
+			ram[SP+1..SP] = PC + 2;
 			SP = SP - 2;
+
 			PC = R;
 		}
 
@@ -507,7 +511,7 @@ atmel {
 
 		/* Push Register on Stack */
 		push "1001 001r rrrr 1111" Rr { // Checked
-			ram(SP) = Rr;
+			ram[SP+1..SP] = Rr;
 			SP = SP - 1;
 
 			PC = PC + 1;
@@ -515,23 +519,25 @@ atmel {
 
 		/* Pop Register from Stack */
 		pop "1001 000d dddd 1111" Rd { // Checked
+			Rd = ram[SP+1..SP];
 			SP = SP + 1;
-			Rd = ram(SP);
 
 			PC = PC + 1;
 		}
 
 		/* Return from Subroutine */
 		ret "1001 0101 0000 1000" { // Checked
-			SP = SP + 2; // TODO not sure if this should be done after or before reading form stack.
+			// Pop PC from the stack
 			PC = ram[SP+1..SP];
+			SP = SP + 2;
 		}
 
 		/* Relative Call to Subroutine */
 		rcall "1101 kkkk kkkk kkkk" ~k { // Checked
 			PC = PC + $k + 1;
-			// FIXME
-			ram(SP) = PC + 1;
+
+			// Push PC onto the stack
+			ram[SP+1..SP] = PC + 1;
 			SP = SP - 2;
 		}
 
