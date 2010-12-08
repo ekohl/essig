@@ -796,7 +796,7 @@ Opcode *
 get_opcode(VMState *state, PC_TYPE pc)
 {
     if (pc < state->executable_segment_offset || 
-        pc >= state->instructions_size) {
+        pc > state->instructions_size) {
         vm_seterrno(VM_PC_OUT_OF_BOUNDS);
 #ifdef VM_DEBUG
         printf(LOCATION " pc: %lu max pc: %lu\n", 

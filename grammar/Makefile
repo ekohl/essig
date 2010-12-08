@@ -1,5 +1,5 @@
 ULIMIT=ulimit -v $$((1024 * 2048))
-MAVEN=$(ULIMIT); mvn
+MAVEN=$(ULIMIT); mvn -Dmaven.test.skip=true
 JAVA=$(ULIMIT); java
 EXAMPLE=atmel.dmo
 ESSIG=target/essig-0.1-jar-with-dependencies.jar

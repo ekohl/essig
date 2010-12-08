@@ -21,7 +21,7 @@ atmel {
 		I	= 7; /* Global Interrupt Enable/Disable Flag */
 
 		/* -- Rest -- */
-		PC	= 0x462; /*(Size=2) Program counter */
+		PC	= 0xF462; /*(Size=2) Program counter */
 		// FIXME: SPL = $3D ($5D), SPH = $3E ($5E)
 		SP	= 0x3D; /* (Size=2) Stack Pointer */
 
@@ -281,21 +281,23 @@ atmel {
 
 			// Stack <- PC + 1
 			ram[$SP+1..$SP] = PC + 1;
-			SP = SP - 2;
+			ram[$SP+1..$SP] = ram[$SP+1..$SP] - 2;
 
-			PC = R;
+			PC = $R;
 		}
 
 		/* Long Call to a Subroutine */
 		call "1001 010k kkkk 111k", "kkkk kkkk kkkk kkkk", clock=4 k { // Checked
 			/* 0 <= k < 64K */
-			$R = $k;
 
 			// Push PC onto the stack
+			
 			ram[$SP+1..$SP] = PC + 2;
-			SP = SP - 2;
 
-			PC = R;
+			ram[$SP+1..$SP] = ram[$SP+1..$SP] - 2;
+			
+
+			PC = $k;
 		}
 
 		/* Indirect Jump */
@@ -317,8 +319,8 @@ atmel {
 			V = $R.7 & !$R.6 & !$R.5 & !$R.4 & !$R.3 & !$R.2 & !$R.1 & !$R.0;
 			N = $R.7;
 			S = N ^ V;
-			Z = !R;
-			Rd = R;
+			Z = !$R;
+			Rd = $R;
 
 			PC = PC + 1;
 		}
@@ -407,7 +409,7 @@ atmel {
 			V = N ^ C;
 			S = N ^ V;
 			Z = !$R.7 & !$R.6 & !$R.5 & !$R.4 & !$R.3 & !$R.2 & !$R.1 & !$R.0;
-			Rd = R;
+			Rd = $R;
 			
 			PC = PC + 1;
 		}
@@ -472,7 +474,7 @@ atmel {
 			Z = !R;
 			C = $R.7 | $R.6 | $R.5 | $R.4 | $R.3 | $R.2 | $R.1 | $R.0;
 
-			Rd = R;
+			Rd = $R;
 
 			PC = PC + 1;
 		}
@@ -505,7 +507,7 @@ atmel {
 			S = N ^ V;
 			Z = !$R.7 & !$R.6 & !$R.5 & !$R.4 & !$R.3 & !$R.2 & !$R.1 & !$R.0;
 
-			Rd = R;
+			Rd = $R;
 
 			PC = PC + 1;
 		}
@@ -513,7 +515,7 @@ atmel {
 		/* Push Register on Stack */
 		push "1001 001r rrrr 1111" Rr { // Checked
 			ram[$SP+1..$SP] = Rr;
-			SP = SP - 1;
+			ram[$SP+1..$SP] = ram[$SP+1..$SP] - 1;
 
 			PC = PC + 1;
 		}
@@ -521,7 +523,7 @@ atmel {
 		/* Pop Register from Stack */
 		pop "1001 000d dddd 1111" Rd { // Checked
 			Rd = ram[$SP+1..$SP];
-			SP = SP + 1;
+			ram[$SP+1..$SP] = ram[$SP+1..$SP] +1;
 
 			PC = PC + 1;
 		}
@@ -530,7 +532,7 @@ atmel {
 		ret "1001 0101 0000 1000" { // Checked
 			// Pop PC from the stack
 			PC = ram[$SP+1..$SP];
-			SP = SP + 2;
+			ram[$SP+1..$SP] = ram[$SP+1..$SP] +2;
 		}
 
 		/* Relative Call to Subroutine */
@@ -539,7 +541,7 @@ atmel {
 
 			// Push PC onto the stack
 			ram[$SP+1..$SP] = PC + 1;
-			SP = SP - 2;
+			ram[$SP+1..$SP] = ram[$SP+1..$SP] - 2;
 		}
 
 		/* Relative Jump */
@@ -561,7 +563,7 @@ atmel {
 			V = N ^ C;
 			S = N ^ V;
 			Z = !$R.7 & !$R.6 & !$R.5 & !$R.4 & !$R.3 & !$R.2 & !$R.1 & !$R.0;
-			Rd = R;
+			Rd = $R;
 
 			PC = PC + 1;
 		}
