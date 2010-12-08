@@ -7,7 +7,7 @@ static bool _read_elf(VMState *state, char *program, size_t program_size);
 static struct _mapping *get_info_type_mapping(VMInfoType type);
 Opcode *get_opcode(VMState *state, PC_TYPE pc);
 
-#define MAPPING(TYPE, OFFSET, END, CHUNK) { #TYPE, TYPE, OFFSET, CHUNK }
+#define MAPPING(TYPE, OFFSET, END, CHUNK) { #TYPE, TYPE, OFFSET, END, CHUNK }
 struct _mapping {
     char *name;
     VMInfoType type; /* Keep this one for sanity checks */

@@ -7,6 +7,7 @@
 #define UBIGTYPE uint64_t
 
 #ifndef CHUNK_OFFSET
+#error "Define CHUNK_OFFSET and friends"
 
 #define CHUNK_OFFSET 0
 #define CHUNK_END ROM_END
