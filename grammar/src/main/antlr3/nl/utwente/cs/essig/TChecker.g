@@ -48,7 +48,7 @@ microcontroller:
 	;
 
 parameter:	
-		^(p=(RAM | CLOCK | OP_SIZE) NUMBER) {
+		p=(CLOCK | OP_SIZE) {
 			if(!params.add($p.text)) {
 				throw new TCheckerException($p, "Duplicate parameter " + $p.text);
 			}
@@ -82,7 +82,7 @@ instruction:
 			^(
 				PARAMS
 				(opcodes+=OPCODE)+
-				(^(CLOCK NUMBER))?
+				CLOCK?
 			)
 			^(ARGUMENTS argument*)
 			{
@@ -93,17 +93,14 @@ instruction:
 					}
 				}
 			}
-			^(EXPR expr {
-				// First expression declares R
-				symbolTable.declare("R", $EXPR);
-			} expr* )
+			^(EXPR { symbolTable.declare("R", $EXPR); } expr+ )
 			{ symbolTable.closeScope(); }
 		)
 	;
 
 argument:		
 		SIGNED? IDENTIFIER {
-			symbolTable.declare(new Variable($IDENTIFIER.text).getName(), $IDENTIFIER);
+			symbolTable.declare($IDENTIFIER.text, $IDENTIFIER);
 		}
 	;
 
@@ -136,10 +133,8 @@ word:
 	;
 
 variable:
-		CONSTANT
-		{ symbolTable.getDeclaration($CONSTANT.text, $CONSTANT); }
-	|	i=IDENTIFIER // FIXME: re-enable
-		//{ symbolTable.getDeclaration(new Variable($i.text).getName(), $i); }
+		v=(CONSTANT|IDENTIFIER)
+		{ symbolTable.getDeclaration($v.text, $v); }
 	|	^(map_type operatorExpr)
 	|	multi_register
 	;

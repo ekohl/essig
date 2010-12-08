@@ -28,7 +28,12 @@ options {
 @members {
 	private String defaultClock;
 	private HashMap<String,String> registers = new HashMap<String,String>(); 
-	//private SymbolTable<CommonTree> symbolTable = new SymbolTable<CommonTree>();
+	private String statusRegVals = "CZNVSHTI";
+
+	public boolean isStatusBit(String value)
+	{
+		return (statusRegVals.indexOf(value.charAt(0))>=0);
+	}
 }
 
 microcontroller: ^(
@@ -41,15 +46,12 @@ microcontroller: ^(
 	-> microcontroller(name={$IDENTIFIER},parameters={$p},registers={$r},instructions={$i})
 	;
 
-parameter:	^(RAM NUMBER)
-	-> ram(ram={$NUMBER})
-	|	^(CLOCK NUMBER)
-		{ defaultClock = $NUMBER.text; }
-	|	^(OP_SIZE NUMBER)
+parameter:	CLOCK { defaultClock = $CLOCK.text; }
+	|	OP_SIZE
 	;
 
 register:	^(IDENTIFIER NUMBER) -> register(name={$IDENTIFIER},offset={$NUMBER})
-	|       ^(IDENTIFIER multiword_register) -> register(name={$IDENTIFIER},offset={"123"})
+	|       ^(IDENTIFIER multiword_register) -> register(name={$IDENTIFIER})
 	;
 
 multiword_register: 	^(IDENTIFIER IDENTIFIER+)
@@ -68,7 +70,7 @@ instruction:	^(
 			IDENTIFIER
 			^(PARAMS
 				(ops+=opcode)+
-				(^(CLOCK NUMBER))?
+				CLOCK?
 			)
 			^(ARGUMENTS (a+=argument)*)
 			^(EXPR (e+=expr)+)
@@ -76,7 +78,7 @@ instruction:	^(
 	-> instruction(
 		name={$IDENTIFIER},
 		opcodes={$ops},
-		clock={$NUMBER != null ? $NUMBER.text : defaultClock},
+		clock={$CLOCK != null ? $CLOCK.text : defaultClock},
 		arguments={$a},
 		expressions={$e}
 	)
@@ -89,7 +91,7 @@ opcode:
 	;
 
 argument:	SIGNED? IDENTIFIER
-	-> argument(name={new Variable($IDENTIFIER.text).getName()},signed={$SIGNED})
+	-> argument(name={$IDENTIFIER},signed={$SIGNED})
 	;
 
 expr	:	assignExpr
@@ -100,9 +102,8 @@ expr	:	assignExpr
 	-> halt()
 	;
 
-assignExpr:	^(ASSIGN IDENTIFIER o=operatorExpr)
-			{ Variable var = new Variable($IDENTIFIER.text); }
-	-> assignExpr(var={var},type={var.getType()},value={$o.st},comment={var + " = " + $o.comment}, is_result={"R".equals(var.getName())})
+assignExpr:	^(ASSIGN i=IDENTIFIER o=operatorExpr)
+	-> assignExpr(var={$i},type={"REGISTER"},value={$o.st},comment={$i + " = " + $o.comment},is_pc={($i.text).equals("PC")},isStatusBit={isStatusBit($IDENTIFIER.text)})
 
 	|	^(ASSIGN CONSTANT o=operatorExpr)
 	-> assignConstant(var={$CONSTANT.text},value={$o.st},comment={$o.comment})
@@ -148,11 +149,8 @@ variable returns [String comment]:
 		{ $comment = $CONSTANT.text; }
 	-> template(constant={$CONSTANT.text}) "<constant>"
 	|	v=IDENTIFIER
-		{
-			Variable var = new Variable($v.text);
-			$comment = $v.text;
-		}
-	-> wordVariable(variable={var.getName()}, bit={var.getNumber()},type={var.getType()})
+		{ $comment = $IDENTIFIER.text; }
+	-> wordVariable(variable={$IDENTIFIER}, type={"REGISTER"},is_pc={($IDENTIFIER.text).equals("PC")},isStatusBit={isStatusBit($IDENTIFIER.text)})
 	|	^(map_type operatorExpr)
 			{ $comment = $map_type.comment + "(" + $operatorExpr.comment + ")"; }
 	-> wordVariable(variable={$operatorExpr.st}, type={$map_type.st})

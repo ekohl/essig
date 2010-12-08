@@ -51,16 +51,17 @@ microcontroller:	IDENTIFIER^ LBRACK! parameters registers maps instructions RBRA
 parameters:		PARAMETERS^ LBRACK! (parameter LINE_SEPERATOR!)+ RBRACK!
 	;
 
-parameter:		RAM^ NUMBER
-	|		GPRS amount=NUMBER {
+parameter:		GPRS amount=NUMBER {
 				gprs = Integer.parseInt($amount.text);
 			}
 			(ADD offset=NUMBER {
 				gprs_offset = Integer.parseInt($offset.text);
 			})?
 		->
-	|		OP_SIZE^ NUMBER
-	|		CLOCK^ NUMBER
+	|		OP_SIZE NUMBER
+		-> OP_SIZE[$NUMBER.text]
+	|		CLOCK NUMBER
+		-> CLOCK[$NUMBER.text]
 	;
 
 registers:		REGISTERS^ LBRACK! (register LINE_SEPERATOR!)+ RBRACK! {
@@ -97,13 +98,13 @@ instruction:		IDENTIFIER params arguments? LBRACK expr+ RBRACK
 	;
 
 params	:		OPCODE (ARG_SEPERATOR OPCODE)* (ARG_SEPERATOR CLOCK ASSIGN NUMBER)?
-		-> ^(PARAMS OPCODE+ (^(CLOCK NUMBER))?)
+		-> ^(PARAMS OPCODE+ (CLOCK[$NUMBER.text])?)
 	;
 
 arguments:		argument (ARG_SEPERATOR! argument)*
 	;
 
-argument:		(SIGNED)? IDENTIFIER
+argument:		SIGNED? identifier
 	;
 
 expr	:		assignExpr LINE_SEPERATOR!
@@ -124,7 +125,7 @@ condition:		word comparison^ word
 	|		LPAREN! operatorExpr RPAREN! comparison^ word
 	;
 
-word	:		variable (BIT^ (NUMBER|constant))?
+word 	:		variable (BIT^ (NUMBER|constant))?
 	|		NUMBER
 	|		NOT^ word
 	;
@@ -133,8 +134,21 @@ constant:		CONSTANT IDENTIFIER
 		-> CONSTANT[$IDENTIFIER.text]
 	;
 
+identifier:
+			IDENTIFIER
+		{
+			String t = $IDENTIFIER.text;
+			if('R' == (t.charAt(0))
+					&& t.length() > 1
+					&& Character.isLowerCase(t.charAt(1))) {
+				t = t.substring(1);
+			}
+		}
+		-> IDENTIFIER[t]
+	;
+
 variable:		constant
-	|		IDENTIFIER
+	|		identifier
 	|		map_type^ LPAREN! operatorExpr RPAREN!
 	|		multi_register
 	;

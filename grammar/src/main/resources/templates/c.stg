@@ -65,7 +65,10 @@ bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
 	// result
 	int result = 0;
-	//printf("<name> \n");
+
+	// Status Register Value
+	int SREG_val = vm_info(state,VM_INFO_IO,SREG,&error);
+
 	<if(clock)>
 	// Clock cycles
 	state->cycles += <clock>;
@@ -75,7 +78,7 @@ bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	<arguments:{long long <it.name> = 0; int <it.name>_bits = 0;}; separator="\n">
 
 	// Decode the opcode
-	<opcodes; separator="\nopcode = state->instructions[GETPC(state) + 1].instruction;if(error)\n\treturn false;\n">
+	<opcodes; separator="\n opcode = (int)get_opcode(state, GETPC(state) + 1)->instruction;\n">
 
 	// Cast signed arguments
 	<arguments; separator="\n">
@@ -83,6 +86,9 @@ bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	// Execute expressions
 	<first(expressions):resultExpr()>
 	<rest(expressions); separator="\n">
+
+	if (!vm_write(state,diff,VM_INFO_IO,SREG,SREG_val))
+		return false;
 
 	return true;
 }
@@ -97,8 +103,9 @@ argument(name, signed) ::= <<
 >>
 
 resultExpr(expression) ::= <<
+int R = 0;
 <expression>
-int R = result;
+R = result;
 >>
 
 ifExpr(condition,ifExpr,elseExpr) ::= <<
@@ -117,7 +124,11 @@ operatorExpr(word,operator,expression) ::= <<
 >>
 
 
-assignExpr(var,type,value,comment,is_result) ::= <<
+assignExpr(var,type,value,comment,is_result,is_pc,isStatusBit) ::= <<
+<if(is_pc)>
+// Update the program counter
+SETPC(state,<value>);
+<else>
 // <comment>
 // Calculate expressions for the result var
 result = <value>;
@@ -126,8 +137,14 @@ if (error)
 	return false;
 
 <if(!is_result)>
+<if(isStatusBit)>
+// Set statusbit <var> in SREG
+SREG_val = SETBIT(SREG_val,<var>,result);
+<else>
 if(!vm_write(state, diff, VM_INFO_<type>, <var>, result))
 	return false;
+<endif>
+<endif>
 <endif>
 >>
 
@@ -153,8 +170,14 @@ condition(left,comparison,right) ::= <<
 <left> <comparison> <right>
 >>
 
-wordVariable(variable, bit, type) ::= <<
+wordVariable(variable, bit, type, is_pc,isStatusBit) ::= <<
+<if(is_pc)> 
+GETPC(state)
+<elseif(isStatusBit)>
+GETBIT(SREG_val,<variable>)
+<else>
 <if(bit)>GetBit(<endif> vm_info(state,VM_INFO_<type>,<variable>,&error) <if(bit)>, <bit>)<endif>
+<endif>
 >>
 
 halt() ::= <<

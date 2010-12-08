@@ -1,9 +1,8 @@
-% This file was converted to LaTeX by Writer2LaTeX ver. 1.1.5
-% see http://writer2latex.sourceforge.net for more info
 \documentclass[a4paper]{report}
+%Uncomment this for better screen readable report 
+%\documentclass[a4paper]{scrreprt}
 \usepackage[english]{babel}
 \usepackage[pdftex]{graphicx}
-%\pagestyle{Standard}
 \title{Essig}
 \author{
 	Ewoud Kohl van Wijngaarden (s0113433)
@@ -13,33 +12,25 @@
 	Ruud Harmsen (s0165999)
 	\and
 	Mark Florisson (s0165972)
+	\\
+	\\
+	\small Ontwerpproject (192199109) \\
+	\small University of Twente \\
+	\small Faculty of Electrical Engineering, Mathematics and Computer Science
 }
-\date{2010-11-17}
+\date{}
+
 \begin{document}
 \maketitle
-% \includegraphics[width=3.53cm,height=2.96cm]{Essig-img001.jpg}
-
-%{\selectlanguage{dutch}\sffamily
-%University of Twente}
-
-%{\selectlanguage{dutch}\sffamily
-%Faculty of Electrical Engineering, Mathematics and Computer Science}
-
-%{\selectlanguage{dutch}\sffamily
-%Ontwerpproject (192199109)}
-
-%{\selectlanguage{dutch}\sffamily
-%Enschede, 16\textsuperscript{th} November 2010}
 
 \setcounter{tocdepth}{10}
 \renewcommand\contentsname{Table of Contents}
 \tableofcontents
-\clearpage\selectlanguage{english}%\sffamily\bfseries
+\clearpage\selectlanguage{english}
 \chapter{Preface}
 
 
-\clearpage\chapter{Introduction}
-%\sffamily
+\chapter{Introduction}
 The ESSIG (Embedded Systems SImulator Generator) project is aimed
 towards automating the process of writing a simulator for a
 microcontroller. This means that the essig system will generate a
@@ -48,16 +39,13 @@ the user in an input language. Secondary targets include making the
 simulator suitable for debugging programs and having the ability to
 join several microcontrollers together in a network
 
-\clearpage\chapter{Related work}
-%\sffamily
+\chapter{Related work}
 Dit verslag beschrijft de bedachte programmeertaal Expr en beschrijft de
 ontwikkeling van de bijbehorende compiler.
 
-%\sffamily
 Aan het eind van het verslag zijn enkele appendices opgenomen.
 
-\clearpage\chapter{Overview}
-%\sffamily
+\chapter{Overview}
 Essig is roughly composed out of three components. First we have the
 input language, which can be used to describe the micro controller a
 simulator should be generated for. Than we have a generator, which
@@ -71,16 +59,13 @@ to each other.
 \begin{center}
 \includegraphics[width=5.376cm,height=4.932cm]{Essig-img002.png}
 \end{center}
-\clearpage\chapter{Specifying microcontroller}
-%\sffamily
+\chapter{Specifying microcontroller}
 Dit verslag beschrijft de bedachte programmeertaal Expr en beschrijft de
 ontwikkeling van de bijbehorende compiler.
 
-%\sffamily
 Aan het eind van het verslag zijn enkele appendices opgenomen. 
 
-\clearpage\chapter{Simulator}
-%\sffamily
+\chapter{Simulator}
 The final simulator is composed of two components: A general VM
 containing things common to all microcontrollers and supplying debug
 capabilities. All communication to the Simulator is done with a state
@@ -89,7 +74,6 @@ subsections describe each component in detail.
 
 \section{VM}
 
-%\sffamily
 The VM is a library in which functions are gathered that most simulators
 have in common. These functions are defined in terms of a private API
 for which implementations can be generated using the generator and the
@@ -102,7 +86,6 @@ state, which when used properly gives interesting possibilities when
 debugging a program.
 
 \section{Micro Controller state}
-%\sffamily
 To be able to let our VM execute any code for any microcontroller we
 defined a structure that could represent any micro controller state. It
 has all things that all micro controllers have in common. A RAM, a ROM,
@@ -120,7 +103,6 @@ structure and state to the disk and resume exectution later on (with
 full backtracking)).
 
 \section{Generated code in the VM}
-%\sffamily
 The generated portion of the VM works over a private API that the
 generated code exports. This contains a lot of information (Like the
 micro controller architecture information for the state), but more
@@ -133,35 +115,28 @@ executed (in the step or cont methods for example)and they then
 manipulate the state through functions exported by the VM.
 
 \section[Interrupt Handling]{Interrupt Handling}
-%\sffamily
 Interrupts in essig can occur at two different levels:
 
-%\liststyleLi
 \begin{enumerate}
-\item {%\sffamily
+\item {
 From outside of the VM through the vm\_interrupt method }
-\item {%\sffamily
+\item {
 From a peripharel }
 \end{enumerate}
-%\sffamily
 In either case a policy can govern whether or not the interrupt will be
 passed on to the simulator
 
-%\sffamily
 The simulator than enforces the actual rules for the microcontroller
 that is simulated through a call to the handle\_interrupt method
 
-%\sffamily
 After that the vm resumes normal execution
 \section[Opcode parsing]{Opcode parsing}
-%\sffamily
 In any simulator at some point opcodes will have to be parsed in order
 to determine what code to execute. There are a lot of different
 solutions to this problem and we will discuss a few of the here and
 after that explain the solution we chose.
 
 \subsection[Switch statement]{Switch statement}
-%\sffamily
 To a lot of simulators out there this is the preferred method. The idea
 is that you input the opcode or a part of the opcode into a switch
 statement and continue execution at the matched case. This method has
@@ -170,7 +145,6 @@ simulator since the opcodes are (or can be) very different accross
 different architectures.
 
 \subsection{Some sort of function array}
-%\sffamily
 This isn't used that much at all but for smaller architectures it can be
 done. The idea is that you have an array of functions that handle an
 opcode and that you index the array using the opcode. But as mentioned
@@ -179,7 +153,6 @@ become far too large and since some instructions have some argument(s)
 embedded in the opcode a lot of functions appear twice in the array.
 
 \subsection{Our solution}
-%\sffamily
 We wanted to be able to find our instruction in an array, but not have
 an entry for every possible opcode. So we decided to make masks for
 opcodes (these masks are then specified in the specification) and
@@ -188,8 +161,7 @@ process (lets call it disassembling) gives the advantage of fast opcode
 resolution in exchange for a slightly longer load time. This idea is
 further illustrated in the following diagram:
 
-\clearpage\section[PC incrementation]{PC incrementation}
-%\sffamily
+\section[PC incrementation]{PC incrementation}
 In different micro controllers the program counter either points to the
 current instruction or the next instruction. Because we delegate
 program counter incrementation to our instruction handlers both
@@ -197,11 +169,9 @@ situations can be emulated quite easily by either incrementing the
 program counter at the beginning of the instruction handler (to
 indicate the next instruction) or at the end of the handler.
 
-%\sffamily
 To illustrate this consider the following two pseudo code
 implementations of rcall:
 
-%\ttfamily
 \begin{verbatim}
 // PC points to next instruction}
 
@@ -222,11 +192,9 @@ PC = PC + k
 PC = PC + 1
 \end{verbatim}
 
-%\sffamily
 It can be seen that in a micro controller in which the PC points to the
 next instruction the push operation is simpler.
 
-%\sffamily
 In the above example the effects of the instruction was exactly the same
 but in micro controllers in which it is possible to push the PC (This
 is not so in atmel micro controllers) there can be a difference:
@@ -247,37 +215,31 @@ STORE PC on stack
 PC = PC + 1
 \end{verbatim}
 
-%\sffamily
 Now in the first the top of the stack is the address of the next
 instruction but in the second the address of the current instruction.
 It also illustrates that our language can handle both situations
 because the incrementation of the PC is handled by the instruction
 handler
 
-\clearpage\chapter{User guide}
-%\sffamily
+\chapter{User guide}
 Dit verslag beschrijft de bedachte programmeertaal Expr en beschrijft de
 ontwikkeling van de bijbehorende compiler.
 
-%\sffamily
 Aan het eind van het verslag zijn enkele appendices opgenomen. 
 
-\clearpage\chapter{Conclusions and future work}
-%\sffamily
+\chapter{Conclusions and future work}
 Dit verslag beschrijft de bedachte programmeertaal Expr en beschrijft de
 ontwikkeling van de bijbehorende compiler.
 
-%\sffamily
 Aan het eind van het verslag zijn enkele appendices opgenomen. 
 
-\clearpage\appendix\chapter[Microcontroller specification
+\appendix
+\chapter[Microcontroller specification
 language]{A\ \ Microcontroller specification language}
-%\sffamily
 Op het laatste moment hebben we besloten om de ANTLR specificaties niet
 uit te printen, test, test, test.
 
-\clearpage\chapter[Evaluation]{Evaluation}
-%\sffamily
+\chapter[Evaluation]{Evaluation}
 De code en voorbeeldin- en uitvoer van een uitgebreid Expr programma is
 opgenomen in deze appendix.
 \end{document}
