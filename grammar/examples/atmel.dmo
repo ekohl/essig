@@ -598,7 +598,7 @@ atmel {
 
 		/* Store Indirect From Register to Data Space using Index X+ */
 		stxplus "1001 001r rrrr 1101", clock=2 X, Rr { // Checked
-			// X,Y,Z: Indirect Address Register (X=$R.27:$R.26, Y=$R.29:$R.28 and Z=$R.31:$R.30)
+			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
 			ram(R[27..26]) = Rr; //TODO Should be RX registers
 			R[27..26] = R[27..26] + 1; //TODO Should be RX
 
@@ -608,7 +608,7 @@ atmel {
 
 		/* Store Indirect From Register to Data Space using Index Y+ */
 		stdyplus "1000 001r rrrr 1001" Rr { // Checked
-			// X,Y,Z: Indirect Address Register (X=$R.27:$R.26, Y=$R.29:$R.28 and Z=$R.31:$R.30)
+			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
 			ram(R[29..28]) = Rr; //TODO Should be RY
 			R[29..28] = R[29..28] + 1; // Should be RY
 
@@ -616,7 +616,7 @@ atmel {
 		}
 
 		stdyplusq "10q0 qq1r rrrr 1qqq" Rr,q { // Checked
-			// X,Y,Z: Indirect Address Register (X=$R.27:$R.26, Y=$R.29:$R.28 and Z=$R.31:$R.30)
+			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
 			ram(R[29..28] + $q) = Rr; //TODO Should be RY
 
 			PC = PC + 1;
@@ -624,7 +624,7 @@ atmel {
 
 		/* Store Indirect From Register to Data Space using Index Z+q*/
 		stdzplusq "10q0 qq1r rrrr 0qqq" q, Rr { // Checked
-			// X,Y,Z: Indirect Address Register (X=$R.27:$R.26, Y=$R.29:$R.28 and Z=$R.31:$R.30)
+			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
 			ram(R[31..30] + $q) = Rr; //TODO Should be RZ
 
 			PC = PC + 1;
@@ -632,7 +632,7 @@ atmel {
 
 		/* Store Indirect From Register to Data Space using Index Z+ */
 		stdzplus "1001 001r rrrr 0001" Rr { // Checked
-			// X,Y,Z: Indirect Address Register (X=$R.27:$R.26, Y=$R.29:$R.28 and Z=$R.31:$R.30)
+			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
 			ram(R[31..30]) = Rr; //TODO Should be RZ
 			R[31..30] = R[31..30] + 1; // TODO Should be RZ
 
