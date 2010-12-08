@@ -46,15 +46,12 @@ microcontroller: ^(
 	-> microcontroller(name={$IDENTIFIER},parameters={$p},registers={$r},instructions={$i})
 	;
 
-parameter:	^(RAM NUMBER)
-	-> ram(ram={$NUMBER})
-	|	^(CLOCK NUMBER)
-		{ defaultClock = $NUMBER.text; }
-	|	^(OP_SIZE NUMBER)
+parameter:	CLOCK { defaultClock = $CLOCK.text; }
+	|	OP_SIZE
 	;
 
 register:	^(IDENTIFIER NUMBER) -> register(name={$IDENTIFIER},offset={$NUMBER})
-	|       ^(IDENTIFIER multiword_register) -> register(name={$IDENTIFIER},offset={"123"})
+	|       ^(IDENTIFIER multiword_register) -> register(name={$IDENTIFIER})
 	;
 
 multiword_register: 	^(IDENTIFIER IDENTIFIER+)
@@ -73,7 +70,7 @@ instruction:	^(
 			IDENTIFIER
 			^(PARAMS
 				(ops+=opcode)+
-				(^(CLOCK NUMBER))?
+				CLOCK?
 			)
 			^(ARGUMENTS (a+=argument)*)
 			^(EXPR (e+=expr)+)
@@ -81,7 +78,7 @@ instruction:	^(
 	-> instruction(
 		name={$IDENTIFIER},
 		opcodes={$ops},
-		clock={$NUMBER != null ? $NUMBER.text : defaultClock},
+		clock={$CLOCK != null ? $CLOCK.text : defaultClock},
 		arguments={$a},
 		expressions={$e}
 	)
