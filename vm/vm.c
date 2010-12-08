@@ -356,7 +356,7 @@ char *
 bin(unsigned int value)
 {
 #   define RESULT_SIZE (sizeof(unsigned int) * 8)
-    static char result[RESULT_SIZE + 2 + 1];
+    static char result[RESULT_SIZE + RESULT_SIZE / 4 + 2 + 1];
     char *tmp;
     int nbits;
     
@@ -368,6 +368,8 @@ bin(unsigned int value)
     *tmp++ = '0';
     *tmp++ = 'b';
     while (nbits--) {
+        if ((nbits + 1) % 4 == 0)
+            *tmp++ = ' ';
         *tmp++ = value & (1 << nbits) ? '1' : '0';
     }
     *tmp = '\0';
