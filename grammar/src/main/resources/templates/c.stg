@@ -156,11 +156,11 @@ assignConstant(var,value,comment) ::= <<
 multiRegisterAssignExpr(type,low,high,value) ::= <<
 //======MULTI WORD BEGIN
 // Low Byte
-vm_write(state,diff,VM_INFO_REGISTER,<low>,(<value>&&0xFF));
+vm_write(state,diff,VM_INFO_<type>,<low>,((<value>) & 0xFF));
 if(error)
 	return false;
 // High Byte
-vm_write(state,diff,VM_INFO_REGISTER,<high>,((<value> && 0xFF00)\>\>8));
+vm_write(state,diff,VM_INFO_<type>,<high>,(((<value>) & 0xFF00)\>\>8));
 if(error)
 	return false;
 //======MULTI WORD END
@@ -170,13 +170,13 @@ condition(left,comparison,right) ::= <<
 <left> <comparison> <right>
 >>
 
-wordVariable(variable, bit, type, is_pc,isStatusBit) ::= <<
+wordVariable(variable, type, is_pc,isStatusBit) ::= <<
 <if(is_pc)> 
 GETPC(state)
 <elseif(isStatusBit)>
 GETBIT(SREG_val,<variable>)
 <else>
-<if(bit)>GetBit(<endif> vm_info(state,VM_INFO_<type>,<variable>,&error) <if(bit)>, <bit>)<endif>
+vm_info(state,VM_INFO_<type>,<variable>,&error)
 <endif>
 >>
 
