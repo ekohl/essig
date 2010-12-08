@@ -2,10 +2,10 @@ CFLAGS += -O2 -g -Wall -Wno-unused-variable -lm -fPIC -DVM_DEBUG=1
 INTERRUPT_HANDLER=interrupt_handler.c
 OBJECTS=vm.o generated_simulator.o interrupt_handler.o
 PROFILE_OBJECTS=$(OBJECTS) runtest.o
-PATH := $(PWD)/cython/bin:${PATH}
+PATH := $(CURDIR)/cython/bin:${PATH}
 PYTHON_DEBUG=`cython 2>&1 | grep -q '\--debug' && echo --pyrex-debug`
 PYTHON=`which python-dbg 2>/dev/null|| which python`
-PYTHONPATH := $(PWD)/cython:${PYTHONPATH}
+PYTHONPATH := $(CURDIR)/cython:${PYTHONPATH}
 
 TESTFILE1=../code-samples/factorial
 TESTFILE2=../code-samples/empty
@@ -27,13 +27,11 @@ run-debug: cli.so
 run-pdb: cli.so
 	$(PYTHON) -m pdb simulator.py $(TESTFILE)
 
-profile: 
-	make clean
+profile: clean
 	ulimit -v $$((1024 * 1024)) && \
 	CFLAGS="$$CFLAGS -pg -O3" LDFLAGS="-pg" $(MAKE) _profile
 
-cachegrind:
-	make clean
+cachegrind: clean
 	ulimit -v $$((1024 * 1024)) && \
 	CFLAGS="$$CFLAGS -O3" $(MAKE) _cachegrind
 
@@ -63,3 +61,5 @@ doc:
 
 clean:
 	git clean -d -X -f
+
+.PHONY: doc clean run _profile _cachegrind cachegrind profile run-pdb run-debug run
