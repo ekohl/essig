@@ -79,7 +79,7 @@ atmel {
 			// d = {24,26,28,30}
 			$d = 24 + $d * 2;
 			$R = R[$d+1..$d] + $K;
-			R[$d+1..$d] = $R;
+			
 
 			$d = $d + 1; // Set Rd to the high byte // TODO
 			V = !Rd.7 & $R.15; //TODO High byte.. maybe iets van R($d+1)7 ipv de h te gebruiken
@@ -87,7 +87,9 @@ atmel {
 			S = N ^ V;
 			Z = !$R.15 & !$R.14 & !$R.13 & !$R.12 & !$R.11 & !$R.10 & !$R.9 & !$R.8 & !$R.7 & !$R.6 & !$R.5 & !$R.4 & !$R.3 & !$R.2 & !$R.1 & !$R.0;
 			C = !$R.15 & Rd.7; //TODO High byte.. maybe iets van R($d+1)7 ipv de h te gebruiken
-
+			
+			$d = $d - 1;
+			R[$d+1..$d] = $R;
 			PC = PC + 1;
 		}
 
@@ -254,13 +256,14 @@ atmel {
 
 		/* Decrement */
 		dec "1001 010d dddd 1010" Rd { // Checked
-			Rd = Rd - 1;
+			$R = Rd - 1;
 
 			V = !$R.7 & $R.6 & $R.5 & $R.4 & $R.3 & $R.2 & $R.1 & $R.0;
 			N = $R.7;
 			S = N ^ V;
 			Z = !$R.7 & !$R.6 & !$R.5 & !$R.4 & !$R.3 & !$R.2 & !$R.1 & !$R.0;
 
+			Rd = $R;
 			PC = PC + 1;
 		}
 
@@ -453,12 +456,12 @@ atmel {
 
 		/* Multiply Unsigned */
 		mul "1001 11rd dddd rrrr", clock=2 Rd, Rr { // Checked
-			R[1..0] = Rd * Rr;
-			$R = R[1..0];
-
+			
+			$R = Rd * Rr;
+			
 			C = $R.15;
 			Z = !$R.15 & !$R.14 & !$R.13 & !$R.12 & !$R.11 & !$R.10 & !$R.9 & !$R.8 & !$R.7 & !$R.6 & !$R.5 & !$R.4 & !$R.3 & !$R.2 & !$R.1 & !$R.0;
-
+			R[1..0] = $R;
 			PC = PC + 1;
 		}
 
@@ -500,7 +503,7 @@ atmel {
 		ori "0110 KKKK dddd KKKK" Rd, K { // Checked
 			/* 16 <= d <= 31 */
 			$d = 16 + $d;
-			R = Rd | $K;
+			$R = Rd | $K;
 
 			V = 0;
 			N = $R.7;
@@ -558,7 +561,7 @@ atmel {
 			$Cold = C;
 			C = Rd.0;
 	
-			$R = Rd >> 1 | $Cold << 8;
+			$R = Rd >> 1 | $Cold << 7;
 			N = $R.7;
 			V = N ^ C;
 			S = N ^ V;
@@ -572,7 +575,7 @@ atmel {
 		sbiw "1001 0111 KKdd KKKK" Rd, K { // TODO: Check me
 			/* d = {24,26,28,30} */
 			$d = 24 + $d * 2;
-			$R = R[$d+1..d] - $K;
+			$R = R[$d+1..$d] - $K;
 
 			$d = $d + 1; // TODO (== high byte)
 			V = Rd.7 & !$R.15; // TODO: High byte
@@ -582,6 +585,7 @@ atmel {
 			C = $R.15 & !Rd.7; // TODO: High byte
 			/* R (Result) equals Rdh:Rdl after the operation (Rdh7-Rdh0 = $R.15-$R.8, Rdl7-Rdl0=$R.7-$R.0). */
 			
+			$d = $d - 1;
 			R[$d+1..$d] = $R;
 
 			PC = PC + 1;
@@ -670,7 +674,7 @@ atmel {
 		/* Subtract without Carry */
 		sub "0011 0rd dddd rrrr" Rd, Rr { // Checked
 			/* 0 <= d <= 31, 0 <= r <= 31 */
-			Rd = Rd - Rr;
+			$R = Rd - Rr;
 
 			H = !Rd.3 & Rr.3 | Rr.3 & $R.3 | $R.3 & !Rd.3;
 			V = Rd.7 & !Rr.7 & !$R.7 | !Rd.7 & Rr.7 & $R.7;
@@ -678,7 +682,8 @@ atmel {
 			S = N ^ V;
 			Z = !$R.7 & !$R.6 & !$R.5 & !$R.4 & !$R.3 & !$R.2 & !$R.1 & !$R.0;
 			C = !Rd.7 & Rr.7 | Rr.7 & $R.7 | $R.7 & !Rd.7;
-
+			
+			Rd = $R;
 			PC = PC + 1;
 		}
 
@@ -703,7 +708,7 @@ atmel {
 			/* 0 <= K <= 255 */
 			/* 16 <= d <= 31 */
 			$d = 16 + $d;
-			R = Rd - $K - C;
+			$R = Rd - $K - C;
 
 			H = !Rd.3 & $K.3 | $K.3 & $R.3 | $R.3 & !Rd.3;
 			V = Rd.7 & !$K.7 & $R.7 | Rd.7 & $K.7 & $R.7;

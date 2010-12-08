@@ -60,7 +60,7 @@ size_t ramsize = <ram>;
 
 instruction(name,opcodes,clock,arguments,expressions) ::= <<
 bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
-	printf("<name>  at %d \n",GETPC(state));	
+	printf("<name> \t at 0x%02x (0x%02x) \n",GETPC(state),GETPC(state)*2);	
 	// error
 	bool error = false;
 

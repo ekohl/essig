@@ -10,7 +10,7 @@ header(parameters, registers) ::= <<
 <maps; separator="\n">
 
 // Registers
-#define PC_OFFSET 0x3D
+#define PC_OFFSET PC
 #define SIZEOF_PC 2
 <registers; separator="\n">
 >>
