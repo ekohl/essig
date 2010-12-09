@@ -23,7 +23,7 @@ atmel {
 		/* -- Rest -- */
 		PC	= 0x462; /*(Size=2) Program counter */
 		// FIXME: SPL = $3D ($5D), SPH = $3E ($5E)
-		SP	= 0x3D; /* (Size=2) Stack Pointer */
+		SP	= 0x5D; /* (Size=2) Stack Pointer */
 
 		/** X,Y,Z registers */
 		RX = R27:R26;
@@ -283,7 +283,7 @@ atmel {
 			$R = R[31..30]; //TODO should be RZ
 
 			// Stack <- PC + 1
-			ram[$SP+1..$SP] = PC + 1;
+			ram(ram[$SP+1..$SP]) = PC + 1;
 			ram[$SP+1..$SP] = ram[$SP+1..$SP] - 2;
 
 			PC = $R;
@@ -295,7 +295,7 @@ atmel {
 
 			// Push PC onto the stack
 			
-			ram[$SP+1..$SP] = PC + 2;
+			ram(ram[$SP+1..$SP]) = PC + 2;
 
 			ram[$SP+1..$SP] = ram[$SP+1..$SP] - 2;
 			
@@ -517,7 +517,7 @@ atmel {
 
 		/* Push Register on Stack */
 		push "1001 001r rrrr 1111" Rr { // Checked
-			ram[$SP+1..$SP] = Rr;
+			ram(ram[$SP+1..$SP]) = Rr;
 			ram[$SP+1..$SP] = ram[$SP+1..$SP] - 1;
 
 			PC = PC + 1;
@@ -525,7 +525,7 @@ atmel {
 
 		/* Pop Register from Stack */
 		pop "1001 000d dddd 1111" Rd { // Checked
-			Rd = ram[$SP+1..$SP];
+			Rd = ram(ram[$SP+1..$SP]);
 			ram[$SP+1..$SP] = ram[$SP+1..$SP] +1;
 
 			PC = PC + 1;
@@ -534,7 +534,7 @@ atmel {
 		/* Return from Subroutine */
 		ret "1001 0101 0000 1000" { // Checked
 			// Pop PC from the stack
-			PC = ram[$SP+1..$SP];
+			PC = ram(ram[$SP+1..$SP]);
 			ram[$SP+1..$SP] = ram[$SP+1..$SP] +2;
 		}
 
@@ -543,7 +543,7 @@ atmel {
 			PC = PC + $k + 1;
 
 			// Push PC onto the stack
-			ram[$SP+1..$SP] = PC + 1;
+			ram(ram[$SP+1..$SP]) = PC + 1;
 			ram[$SP+1..$SP] = ram[$SP+1..$SP] - 2;
 		}
 
