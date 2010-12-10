@@ -59,8 +59,7 @@ size_t ramsize = <ram>;
 >>
 
 instruction(name,opcodes,clock,arguments,expressions) ::= <<
-bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
-	printf("%-10s at 0x%02x (0x%02x) SP:0x%02x RY:0x%02x\n","<name>",GETPC(state),GETPC(state)*2,((vm_info(state,VM_INFO_RAM,SP + 1 ,0) \<\<8) + vm_info(state,VM_INFO_RAM,SP,0)),((vm_info(state,VM_INFO_REGISTER,29 ,0) \<\<8) + vm_info(state,VM_INFO_RAM,28,0)));	
+bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {	
 	// error
 	bool error = false;
 
@@ -69,6 +68,20 @@ bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 
 	// Status Register Value
 	int SREG_val = vm_info(state,VM_INFO_IO,SREG,&error);
+
+	printf("%-10s at 0x%02x (0x%02x) SP:0x%04x RY:0x%04x C:%d Z:%d N:%d V:%d S:%d H:%d T:%d I:%d \n",
+		"<name>",
+		GETPC(state),
+		GETPC(state)*2,
+		((vm_info(state,VM_INFO_RAM,SP + 1 ,0) \<\<8) + vm_info(state,VM_INFO_RAM,SP,0)),((vm_info(state,VM_INFO_REGISTER,29 ,0) \<\<8) + vm_info(state,VM_INFO_RAM,28,0)),
+	GETBIT(SREG_val,C),
+	GETBIT(SREG_val,Z),
+	GETBIT(SREG_val,N),
+	GETBIT(SREG_val,V),
+	GETBIT(SREG_val,S),
+	GETBIT(SREG_val,H),
+	GETBIT(SREG_val,T),
+	GETBIT(SREG_val,I));
 
 	<if(clock)>
 	// Clock cycles
