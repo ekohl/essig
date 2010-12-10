@@ -525,8 +525,8 @@ atmel {
 
 		/* Pop Register from Stack */
 		pop "1001 000d dddd 1111" Rd { // Checked
-			Rd = ram(ram[$SP+1..$SP]);
-			ram[$SP+1..$SP] = ram[$SP+1..$SP] +1;
+			ram[$SP+1..$SP] = ram[$SP+1..$SP] + 1;			
+			Rd = ram(ram[$SP+1..$SP]);			
 
 			PC = PC + 1;
 		}
@@ -534,8 +534,9 @@ atmel {
 		/* Return from Subroutine */
 		ret "1001 0101 0000 1000" { // Checked
 			// Pop PC from the stack
+			ram[$SP+1..$SP] = ram[$SP+1..$SP] + 2;
 			PC = ram(ram[$SP+1..$SP]);
-			ram[$SP+1..$SP] = ram[$SP+1..$SP] +2;
+			 
 		}
 
 		/* Relative Call to Subroutine */
