@@ -29,8 +29,7 @@ grammar:
 %.dmo: grammar
 	$(JAVA) -jar $(ESSIG) grammar/examples/$@
 
-vm/generated_simulator.h: $(EXAMPLE)
-vm/generated_simulator.c: $(EXAMPLE)
+vm/generated_simulator.h vm/generated_simulator.c: $(EXAMPLE)
 
 install: vm/cli.so
 	$(INSTALL) -d $(DESTDIR)

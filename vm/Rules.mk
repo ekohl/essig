@@ -12,10 +12,10 @@ CFLAGS += -O2 -g -Wall -Wno-unused-variable -lm -fPIC -DVM_DEBUG=1
 INTERRUPT_HANDLER=$(d)/interrupt_handler.c
 
 # Use bundled cython
-PATH := $(d)/cython/bin:${PATH}
+VPATH = $(realpath $(dir))/cython/bin
 PYTHON_DEBUG=`cython 2>&1 | grep -q '\--debug' && echo --pyrex-debug`
 PYTHON=`which python-dbg 2>/dev/null || which python`
-PYTHONPATH := $(d)/cython:${PYTHONPATH}
+PYTHONPATH := $(realpath $(dir))/cython:${PYTHONPATH}
 
 # make sure CFLAGS are also passed to python
 export PATH
