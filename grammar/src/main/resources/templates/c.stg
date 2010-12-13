@@ -58,7 +58,8 @@ bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	// Status Register Value
 	int SREG_val = vm_info(state,VM_INFO_IO,SREG,&error);
 
-/*	printf("%-10s at 0x%04x (0x%04x) SP:0x%04x RY:0x%04x C:%d Z:%d N:%d V:%d S:%d H:%d T:%d I:%d \n",
+#ifdef VM_DEBUG
+	printf("%-10s at 0x%04x (0x%04x) SP:0x%04x RY:0x%04x C:%d Z:%d N:%d V:%d S:%d H:%d T:%d I:%d \n",
 		"<name>",
 		GETPC(state),
 		GETPC(state)*2,
@@ -71,7 +72,8 @@ bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	GETBIT(SREG_val,H),
 	GETBIT(SREG_val,T),
 	GETBIT(SREG_val,I));
-*/
+
+#endif
 	<if(clock)>
 	// Clock cycles
 	state->cycles += <clock>;
