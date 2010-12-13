@@ -30,7 +30,7 @@ options {
 
 @members {
 	private String defaultClock;
-	private HashMap<String,String> registers = new HashMap<String,String>(); 
+	private HashMap<String,String> registers = new HashMap<String,String>();
 	private static final Set<String> statusRegVals = new HashSet<String>(Arrays.asList(
      new String[]  {"C","Z","N","V","S","H","T","I"}
 ));
@@ -45,7 +45,7 @@ microcontroller: ^(
 			IDENTIFIER
 			^(PARAMETERS (p+=parameter)+)
 			^(REGISTERS (r+=register)+)
-			^(MAPS map+)
+			^(MAPS .+)
 			^(INSTRUCTIONS (i+=instruction)+)
 		)
 	-> microcontroller(name={$IDENTIFIER},parameters={$p},registers={$r},instructions={$i})
@@ -58,19 +58,12 @@ parameter:	CLOCK { defaultClock = $CLOCK.text; }
 	;
 
 register:	^(IDENTIFIER NUMBER) -> register(name={$IDENTIFIER},offset={$NUMBER})
-	|       ^(IDENTIFIER multiword_register) -> register(name={$IDENTIFIER})
-	;
-
-multiword_register: 	^(IDENTIFIER IDENTIFIER+)
-	;
-
-map:		^(map_type NUMBER NUMBER)
 	;
 
 map_type returns [String comment]:
 			t=MAP_TYPE
 				{ $comment = $t.text; }
-		-> template(type={($t.text).toUpperCase()}) "<type>"
+		-> literal(value={($t.text).toUpperCase()})
 	;
 
 instruction:	^(
@@ -141,7 +134,7 @@ condition:	^(c=comparison l=operatorExpr r=word)
 
 word returns [String comment]:
 		NUMBER {$comment = $NUMBER.text;}
-	-> template (number={$NUMBER}) "<number>"
+	-> literal(value={$NUMBER})
 	|	variable {$comment = $variable.comment; }
 	-> {$variable.st}
 	|	^(NOT w=word) { $comment = $NOT.text + $w.comment; }
@@ -154,7 +147,7 @@ word returns [String comment]:
 variable returns [String comment]:
 		CONSTANT
 		{ $comment = $CONSTANT.text; }
-	-> template(constant={$CONSTANT.text}) "<constant>"
+	-> literal(value={$CONSTANT.text})
 	|	v=IDENTIFIER
 		{ $comment = $IDENTIFIER.text; }
 	-> wordVariable(variable={$IDENTIFIER}, type={"REGISTER"},is_pc={($IDENTIFIER.text).equals("PC")},isStatusBit={isStatusBit($IDENTIFIER.text)})
@@ -170,15 +163,17 @@ multi_register:
 	-> multiRegister(r1={$o1.st},r2={$o2.st},type={$multi_identifier.st})
 	;
 
-multi_identifier : 
-		IDENTIFIER -> template(var={"REGISTER"}) "<var>"
-	|	map_type -> {$map_type.st}
+multi_identifier:
+		IDENTIFIER
+	-> literal(value={"REGISTER"})
+	|	map_type
+	-> {$map_type.st}
 	;
 
-comparison:		(c=EQUALS | c=LT | c=LTE | c=GT | c=GTE)
-	-> template(c={$c}) "<c>"
+comparison:	(c=EQUALS | c=LT | c=LTE | c=GT | c=GTE)
+	-> literal(value={$c})
 	;
 
 operator:      (o=AND | o=OR | o=XOR | o=ADD | o=MINUS | o=MULT | o=SHIFT)
-	-> template(operator={$o}) "<operator>"
+	-> literal(value={$o})
 	;

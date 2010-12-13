@@ -31,7 +31,7 @@ options {
 	import java.util.Set;
 }
 
-@members {	
+@members {
 	private SymbolTable<CommonTree> symbolTable = new SymbolTable<CommonTree>();
 	private Set<String> params = new HashSet<String>();
 }
@@ -47,7 +47,7 @@ microcontroller:
 		)
 	;
 
-parameter:	
+parameter:
 		(p=(CLOCK | OP_SIZE) | ^(p=ENDIANNESS .)) {
 			if(!params.add($p.text)) {
 				throw new TCheckerException($p, "Duplicate parameter " + $p.text);
@@ -57,13 +57,9 @@ parameter:
 
 register:
 		// FIXME Check NUMBER
-		^(IDENTIFIER (NUMBER | multiword_register)) {
+		^(IDENTIFIER NUMBER) {
 			symbolTable.declare($IDENTIFIER.text, $IDENTIFIER);
 		}
-	;
-
-multiword_register:
-		^(IDENTIFIER IDENTIFIER+)
 	;
 
 map:
@@ -84,7 +80,8 @@ instruction:
 			{
 				// Verify opcodes with the defined arguments
 				for(Object opcode : $opcodes) {
-					for (Character c : new Opcode(((CommonTree)opcode).getText()).getArguments().keySet()) {
+					Opcode op = new Opcode(((CommonTree)opcode).getText());
+					for (Character c : op.getArguments().keySet()) {
 						symbolTable.getDeclaration(c.toString(), (CommonTree) opcode);
 					}
 				}
@@ -94,7 +91,7 @@ instruction:
 		)
 	;
 
-argument:		
+argument:
 		SIGNED? IDENTIFIER {
 			symbolTable.declare($IDENTIFIER.text, $IDENTIFIER);
 		}
