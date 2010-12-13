@@ -45,7 +45,7 @@ microcontroller: ^(
 			IDENTIFIER
 			^(PARAMETERS (p+=parameter)+)
 			^(REGISTERS (r+=register)+)
-			^(MAPS map+)
+			^(MAPS .+)
 			^(INSTRUCTIONS (i+=instruction)+)
 		)
 	-> microcontroller(name={$IDENTIFIER},parameters={$p},registers={$r},instructions={$i})
@@ -62,9 +62,6 @@ register:	^(IDENTIFIER NUMBER) -> register(name={$IDENTIFIER},offset={$NUMBER})
 	;
 
 multiword_register: 	^(IDENTIFIER IDENTIFIER+)
-	;
-
-map:		^(map_type NUMBER NUMBER)
 	;
 
 map_type returns [String comment]:
