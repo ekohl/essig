@@ -30,7 +30,7 @@ options {
 
 @members {
 	private String defaultClock;
-	private HashMap<String,String> registers = new HashMap<String,String>(); 
+	private HashMap<String,String> registers = new HashMap<String,String>();
 	private static final Set<String> statusRegVals = new HashSet<String>(Arrays.asList(
      new String[]  {"C","Z","N","V","S","H","T","I"}
 ));
@@ -163,12 +163,12 @@ multi_register:
 	-> multiRegister(r1={$o1.st},r2={$o2.st},type={$multi_identifier.st})
 	;
 
-multi_identifier : 
+multi_identifier:
 		IDENTIFIER -> template(var={"REGISTER"}) "<var>"
 	|	map_type -> {$map_type.st}
 	;
 
-comparison:		(c=EQUALS | c=LT | c=LTE | c=GT | c=GTE)
+comparison:	(c=EQUALS | c=LT | c=LTE | c=GT | c=GTE)
 	-> template(c={$c}) "<c>"
 	;
 

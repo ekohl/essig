@@ -65,15 +65,16 @@ parameter:		GPRS amount=NUMBER {
 	|		ENDIANNESS^ (BIG | LITTLE)
 	;
 
-registers:		REGISTERS^ LBRACK! (register LINE_SEPERATOR!)+ RBRACK! {
+registers:		REGISTERS^ LBRACK! (register LINE_SEPERATOR!)+ RBRACK!
+		{
 			// Hack in the general purpose registers
 			for(int i=0; i < gprs; i++) {
 				// -> IDENTIFIER^ NUMBER[Ri]
-				CommonTree reg = (CommonTree) adaptor.create(IDENTIFIER, "R" + Integer.toString(i));
+				Object reg = adaptor.create(IDENTIFIER, "R" + i);
 				adaptor.becomeRoot($REGISTERS.tree, reg);
 				adaptor.addChild(reg, adaptor.create(NUMBER, Integer.toString(gprs_offset + i)));
 			}
-	}
+		}
 	;
 
 register:		IDENTIFIER^ ASSIGN! NUMBER
@@ -150,12 +151,10 @@ variable:		constant
 
 multi_register: 	multi_identifier LBRACE operatorExpr INTERVAL operatorExpr RBRACE
 				-> ^(MULTI_REG multi_identifier operatorExpr operatorExpr)
-		;
+	;
 
-multi_identifier:
-			IDENTIFIER
-		|	MAP_TYPE
-		;
+multi_identifier:	IDENTIFIER | MAP_TYPE
+	;
 
 comparison:		EQUALS | LT | LTE | GT | GTE
 	;
