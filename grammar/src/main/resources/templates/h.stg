@@ -10,7 +10,8 @@ header(parameters, registers) ::= <<
 <maps; separator="\n">
 
 // Registers
-#define PC_OFFSET 0x3D
+#define PC_OFFSET PC
+<! TODO hardcoded !>
 #define SIZEOF_PC 2
 <registers; separator="\n">
 >>
@@ -22,6 +23,7 @@ opcode_size(bits) ::= <<
 map(type, begin, end) ::= <<
 #define <type>_OFFSET <begin>
 #define <type>_END <end>
+<! TODO hardcoded !>
 #define SIZEOF_<type> 1
 >>
 

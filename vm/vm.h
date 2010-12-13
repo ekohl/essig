@@ -1,6 +1,7 @@
 #ifndef VM_H
 #define VM_H
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>

@@ -353,7 +353,7 @@ class SimulatorCLI(cmd.Cmd, object):
     
     def info_registers(self, Simulator sim, about):
         for i in range(nregisters):
-            val = sim.state.chunk[registers[i].offset]
+            val = <unsigned char> sim.state.chunk[registers[i].offset]
             print self.register_fmt % (registers[i].name, 
                                        sizeof(OPCODE_TYPE) * 2,
                                        val)

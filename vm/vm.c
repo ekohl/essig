@@ -7,7 +7,9 @@ static bool _read_elf(VMState *state, char *program, size_t program_size);
 static struct _mapping *get_info_type_mapping(VMInfoType type);
 Opcode *get_opcode(VMState *state, PC_TYPE pc);
 
+#define MAPPING(TYPE, OFFSET, END, CHUNK) { #TYPE, TYPE, OFFSET, END, CHUNK }
 struct _mapping {
+    char *name;
     VMInfoType type; /* Keep this one for sanity checks */
     size_t offset;
     size_t end;
@@ -15,13 +17,13 @@ struct _mapping {
 };
 
 static struct _mapping memory_mappings[] = {
-    { VM_INFO_CHUNK,    CHUNK_OFFSET,    CHUNK_END,    SIZEOF_CHUNK },
-    { VM_INFO_REGISTER, REGISTER_OFFSET, REGISTER_END, SIZEOF_REGISTER },
-    { VM_INFO_RAM,      RAM_OFFSET,      RAM_END,      SIZEOF_RAM },
-    { VM_INFO_ROM,      ROM_OFFSET,      ROM_END,      SIZEOF_ROM },
-    { VM_INFO_IO,       IO_OFFSET,       IO_END,       SIZEOF_IO },
-    { VM_INFO_PC,       PC_OFFSET,       PC_OFFSET + 
-                                         SIZEOF_PC,    SIZEOF_PC },
+    MAPPING(VM_INFO_CHUNK,    CHUNK_OFFSET,    CHUNK_END,    SIZEOF_CHUNK),
+    MAPPING(VM_INFO_REGISTER, REGISTER_OFFSET, REGISTER_END, SIZEOF_REGISTER),
+    MAPPING(VM_INFO_RAM,      RAM_OFFSET,      RAM_END,      SIZEOF_RAM),
+    MAPPING(VM_INFO_ROM,      ROM_OFFSET,      ROM_END,      SIZEOF_ROM),
+    MAPPING(VM_INFO_IO,       IO_OFFSET,       IO_END,       SIZEOF_IO),
+    MAPPING(VM_INFO_PC,       PC_OFFSET,       PC_OFFSET + 
+                                               SIZEOF_PC,    SIZEOF_PC ),
 };
 
 
@@ -335,6 +337,9 @@ _get_location(VMState *state, VMInfoType type, size_t addr, int *nbytes)
     struct _mapping *mapping = get_info_type_mapping(type);
    
     if (addr < 0 ||addr >= mapping->end) {
+#       ifdef VM_DEBUG
+            printf("address: %lu, type: %s\n", addr, mapping->name);
+#       endif
         vm_seterrno(VM_OUT_OF_BOUNDS_ERROR);
         return NULL;
     }
@@ -347,11 +352,39 @@ _get_location(VMState *state, VMInfoType type, size_t addr, int *nbytes)
 
 #ifdef VM_DEBUG
 
+char *
+bin(unsigned int value)
+{
+#   define RESULT_SIZE (sizeof(unsigned int) * 8)
+    static char result[RESULT_SIZE + RESULT_SIZE / 4 + 2 + 1];
+    char *tmp;
+    int nbits;
+    
+    if (value == 0)
+        return "0b0";
+    
+    nbits = (int) floor(log((double) value) / log(2)) + 1;
+    tmp = result;
+    *tmp++ = '0';
+    *tmp++ = 'b';
+    while (nbits--) {
+        if ((nbits + 1) % 4 == 0)
+            *tmp++ = ' ';
+        *tmp++ = value & (1 << nbits) ? '1' : '0';
+    }
+    *tmp = '\0';
+    return result;
+error:
+    return NULL;
+}
+
 void
 _print_diff(VMState *state, VMStateDiff *diff)
 {
-    char *fmt =        "    %-20s: %lu -> %lu\n";
-    char *fmt_single = "    %-10s at 0x%-04x: %lu -> %lu\n";
+    char *binstr1, *binstr2;
+    char *fmt =            "    %-20s: %lu -> %lu\n";
+    char *fmt_single =     "    %-10s at 0x%-04x: %lu -> %lu\n";
+    char *fmt_single_bin = "    %-20s -> %-20s\n";
     
     VMSingleStateDiff *singlediff;
     
@@ -386,6 +419,14 @@ _print_diff(VMState *state, VMStateDiff *diff)
                (unsigned long) singlediff->oldval, 
                (unsigned long) singlediff->newval);
         
+        binstr1 = bin((unsigned int) singlediff->oldval);
+        binstr2 = bin((unsigned int) singlediff->newval);
+        if (!binstr1 || !binstr2) {
+            perror("Unable to allocate memory for the bin representation, "
+                   "aborting.");
+            abort();
+        }
+        printf(fmt_single_bin, binstr1, binstr2);
         singlediff = singlediff->next;
     }
     
@@ -755,7 +796,7 @@ Opcode *
 get_opcode(VMState *state, PC_TYPE pc)
 {
     if (pc < state->executable_segment_offset || 
-        pc >= state->instructions_size) {
+        pc > state->instructions_size) {
         vm_seterrno(VM_PC_OUT_OF_BOUNDS);
 #ifdef VM_DEBUG
         printf(LOCATION " pc: %lu max pc: %lu\n", 

@@ -23,16 +23,21 @@ options {
 //
 @header {
     package nl.utwente.cs.essig;
+    import java.util.HashSet;
+    import java.util.Set;
+    import java.util.Arrays;
 }
 
 @members {
 	private String defaultClock;
 	private HashMap<String,String> registers = new HashMap<String,String>(); 
-	private String statusRegVals = "CZNVSHTI";
+	private static final Set<String> statusRegVals = new HashSet<String>(Arrays.asList(
+     new String[]  {"C","Z","N","V","S","H","T","I"}
+));
 
-	public boolean isStatusBit(String value)
+	public static boolean isStatusBit(String value)
 	{
-		return (statusRegVals.indexOf(value.charAt(0))>=0);
+		return statusRegVals.contains(value);
 	}
 }
 
@@ -48,6 +53,8 @@ microcontroller: ^(
 
 parameter:	CLOCK { defaultClock = $CLOCK.text; }
 	|	OP_SIZE
+	|	^(ENDIANNESS (BIG | LITTLE))
+	-> endianness(is_big={$BIG != null})
 	;
 
 register:	^(IDENTIFIER NUMBER) -> register(name={$IDENTIFIER},offset={$NUMBER})

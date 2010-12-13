@@ -39,14 +39,27 @@ public class OpcodeTest {
 	@Test
 	public final void testComplex() {
 		String opcode = "00 0111 rdddd dr rrr";
-		String expectedString = "int d = 0; int d_bits = 0; AddBit(&d,opcode,8); d_bits++; AddBit(&d,opcode,7); d_bits++; AddBit(&d,opcode,6); d_bits++; AddBit(&d,opcode,5); d_bits++; AddBit(&d,opcode,4); d_bits++; \nint r = 0; int r_bits = 0; AddBit(&r,opcode,9); r_bits++; AddBit(&r,opcode,3); r_bits++; AddBit(&r,opcode,2); r_bits++; AddBit(&r,opcode,1); r_bits++; AddBit(&r,opcode,0); \n";
+		String expectedString = "d_bits += 5;\n" +
+				"AddBit(&d,opcode,8);\n" +
+				"AddBit(&d,opcode,7);\n" +
+				"AddBit(&d,opcode,6);\n" +
+				"AddBit(&d,opcode,5);\n" +
+				"AddBit(&d,opcode,4);\n" +
+				"\n" +
+				"r_bits += 5;\n" +
+				"AddBit(&r,opcode,9);\n" +
+				"AddBit(&r,opcode,3);\n" +
+				"AddBit(&r,opcode,2);\n" +
+				"AddBit(&r,opcode,1);\n" +
+				"AddBit(&r,opcode,0);\n" +
+				"\n";
 		String expectedMask = "11 1111 00000 00 000";
 		String expectedOpcode = "00 0111 00000 00 000";
 		String exampleOpcodes[] = { "00 0111 00000 00 000",
 				"00 0111 00000 00 001", "00 0111 11111 11 111" };
 
-		//test(opcode, expectedString, expectedMask, expectedOpcode,
-		//		exampleOpcodes);
+		test(opcode, expectedString, expectedMask, expectedOpcode,
+				exampleOpcodes);
 	}
 
 	private final void test(String opcode, String expectedString,
