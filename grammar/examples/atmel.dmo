@@ -292,9 +292,7 @@ atmel {
 			// Push PC onto the stack
 			
 			ram(ram[$SP+1..$SP]) = PC + 2;
-
 			ram[$SP+1..$SP] = ram[$SP+1..$SP] - 2;
-			
 
 			PC = $k;
 		}
@@ -514,7 +512,9 @@ atmel {
 
 		/* Push Register on Stack */
 		push "1001 001r rrrr 1111" Rr { // Checked
+
 			ram(ram[$SP+1..$SP]) = Rr;
+
 			ram[$SP+1..$SP] = ram[$SP+1..$SP] - 1;
 
 			PC = PC + 1;
@@ -522,8 +522,10 @@ atmel {
 
 		/* Pop Register from Stack */
 		pop "1001 000d dddd 1111" Rd { // Checked
+
 			ram[$SP+1..$SP] = ram[$SP+1..$SP] + 1;			
 			Rd = ram(ram[$SP+1..$SP]);			
+
 
 			PC = PC + 1;
 		}
@@ -531,9 +533,11 @@ atmel {
 		/* Return from Subroutine */
 		ret "1001 0101 0000 1000" { // Checked
 			// Pop PC from the stack
+
 			ram[$SP+1..$SP] = ram[$SP+1..$SP] + 2;
 			PC = ram(ram[$SP+1..$SP]);
 			 
+
 		}
 
 		/* Relative Call to Subroutine */
@@ -541,7 +545,9 @@ atmel {
 			PC = PC + $k + 1;
 
 			// Push PC onto the stack
+
 			ram(ram[$SP+1..$SP]) = PC + 1;
+
 			ram[$SP+1..$SP] = ram[$SP+1..$SP] - 2;
 		}
 
