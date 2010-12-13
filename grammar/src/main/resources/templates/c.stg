@@ -22,7 +22,7 @@ Register registers[] = {
 static void AddBit(long long *val, int source, int pos)
 {
 	*val \<\<=1;
-	*val |= GetBit(source,pos);
+	*val |= GETBIT(source,pos);
 } 
 
 // Instructions
