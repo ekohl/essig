@@ -68,7 +68,7 @@ cdef extern from "vm.h":
         size_t executable_segment_offset
         VMBreakpoint *breakpoints
         unsigned int cycles
-        char *chunk
+        unsigned char *chunk
         # OPCODE_TYPE *ram
         # OPCODE_TYPE *registers
         # OPCODE_TYPE *pins
