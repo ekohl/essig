@@ -1,7 +1,7 @@
-//#include <stdio.h>
+#include <stdio.h>
 
 int main(int argc, char* argv[]) {
-	char i = 5;
+	char i = 6;
 	int result = 1;
 
 	while(i>1) {
@@ -9,7 +9,7 @@ int main(int argc, char* argv[]) {
 		i--;
 	}
 
-	//printf("%d\n", result);
+	printf("%d\n", result);
 
 	return result;
 }

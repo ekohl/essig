@@ -9,7 +9,7 @@ atmel {
 	registers {
 		/* -- Status Register (SREG) -- */
 		// These offsets are actually I/O offsets.
-		SREG	= 0x3F; /* Status register */
+		SREG	= 0x5F; /* Status register */
 		// TODO: SREG(0) till SREG(7)
 		C	= 0; /* Carry flag */ 
 		Z	= 1; /* Zero flag */
