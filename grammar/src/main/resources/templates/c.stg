@@ -24,13 +24,8 @@ Register registers[] = {
  };
 // End of registers
 
-// helper functions (should be in VM I Think)
-bool GetBit(int b, int pos)
-{
-	return ((b & (1 \<\< pos)) != 0);
-}
-
-void AddBit(long long *val, int source, int pos)
+// helper function (should be in VM I Think)
+static void AddBit(long long *val, int source, int pos)
 {
 	*val \<\<=1;
 	*val |= GetBit(source,pos);
@@ -209,5 +204,5 @@ not(value) ::= <<
 >>
 
 bit(var, bit) ::= <<
-GetBit(<var>, <bit>)
+GETBIT(<var>, <bit>)
 >>
