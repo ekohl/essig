@@ -608,6 +608,15 @@ atmel {
 		}
 
 		/* Store Indirect From Register to Data Space using Index X+ */
+		stx "1001 001r rrrr 1100", clock=2 X, Rr {
+			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
+			ram(R[27..26]) = Rr; //TODO Should be RX registers
+
+			PC = PC + 1;
+		}
+
+
+		/* Store Indirect From Register to Data Space using Index X+ */
 		stxplus "1001 001r rrrr 1101", clock=2 X, Rr {
 			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
 			ram(R[27..26]) = Rr; //TODO Should be RX registers
