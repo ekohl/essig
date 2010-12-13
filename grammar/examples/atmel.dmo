@@ -24,11 +24,6 @@ atmel {
 		PC	= 0x462; /*(Size=2) Program counter */
 		// FIXME: SPL = $3D ($5D), SPH = $3E ($5E)
 		SP	= 0x5D; /* (Size=2) Stack Pointer */
-
-		/** X,Y,Z registers */
-		RX = R27:R26;
-		RY = R29:R28;
-		RZ = R31:R30;
 	}
 
 	maps {
@@ -158,7 +153,7 @@ atmel {
 
 		/* Branch if Greater or Equal (Signed) */ // Checked
 		brge "1111 01kk kkkk k100" ~k {
-			if S == 0 {
+			if (N^V) == 0 {
 				PC = PC + $k + 1;
 			} else {
 				PC = PC + 1;
@@ -456,7 +451,8 @@ atmel {
 
 		/* Multiply Unsigned */
 		mul "1001 11rd dddd rrrr", clock=2 Rd, Rr { // Checked
-			
+			$R = 0;
+
 			$R = Rd * Rr;
 			
 			C = $R.15;
@@ -619,7 +615,7 @@ atmel {
 
 
 		/* Store Indirect From Register to Data Space using Index Y+ */
-		stdyplus "1000 001r rrrr 1001" Rr { // Checked
+		stdyplus "1001 001r rrrr 1001" Rr { // Checked
 			// X,Y,Z: Indirect Address Register (X=R27:R26, Y=R29:R28 and Z=R31:R30)
 			ram(R[29..28]) = Rr; //TODO Should be RY
 			R[29..28] = R[29..28] + 1; // Should be RY

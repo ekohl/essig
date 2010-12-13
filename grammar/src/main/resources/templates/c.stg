@@ -165,6 +165,7 @@ if(!vm_write(state, diff, VM_INFO_<type>, <var>, result))
 assignConstant(var,value,comment) ::= <<
 <if (comment)>// <var> = <comment><endif>
 <var> = <value>;
+result = <value>;
 >>
 
 multiRegisterAssignExpr(type,low,high,value) ::= <<
