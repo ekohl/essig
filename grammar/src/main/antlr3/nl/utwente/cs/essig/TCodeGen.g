@@ -63,7 +63,7 @@ register:	^(IDENTIFIER NUMBER) -> register(name={$IDENTIFIER},offset={$NUMBER})
 map_type returns [String comment]:
 			t=MAP_TYPE
 				{ $comment = $t.text; }
-		-> template(type={($t.text).toUpperCase()}) "<type>"
+		-> literal(value={($t.text).toUpperCase()})
 	;
 
 instruction:	^(
@@ -134,7 +134,7 @@ condition:	^(c=comparison l=operatorExpr r=word)
 
 word returns [String comment]:
 		NUMBER {$comment = $NUMBER.text;}
-	-> template (number={$NUMBER}) "<number>"
+	-> literal(value={$NUMBER})
 	|	variable {$comment = $variable.comment; }
 	-> {$variable.st}
 	|	^(NOT w=word) { $comment = $NOT.text + $w.comment; }
@@ -147,7 +147,7 @@ word returns [String comment]:
 variable returns [String comment]:
 		CONSTANT
 		{ $comment = $CONSTANT.text; }
-	-> template(constant={$CONSTANT.text}) "<constant>"
+	-> literal(value={$CONSTANT.text})
 	|	v=IDENTIFIER
 		{ $comment = $IDENTIFIER.text; }
 	-> wordVariable(variable={$IDENTIFIER}, type={"REGISTER"},is_pc={($IDENTIFIER.text).equals("PC")},isStatusBit={isStatusBit($IDENTIFIER.text)})
@@ -164,14 +164,16 @@ multi_register:
 	;
 
 multi_identifier:
-		IDENTIFIER -> template(var={"REGISTER"}) "<var>"
-	|	map_type -> {$map_type.st}
+		IDENTIFIER
+	-> literal(value={"REGISTER"})
+	|	map_type
+	-> {$map_type.st}
 	;
 
 comparison:	(c=EQUALS | c=LT | c=LTE | c=GT | c=GTE)
-	-> template(c={$c}) "<c>"
+	-> literal(value={$c})
 	;
 
 operator:      (o=AND | o=OR | o=XOR | o=ADD | o=MINUS | o=MULT | o=SHIFT)
-	-> template(operator={$o}) "<operator>"
+	-> literal(value={$o})
 	;
