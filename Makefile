@@ -12,9 +12,13 @@ GIT=git
 # Install files
 FILES=vm/cli.so vm/simulator.py
 
-.PHONY: all code-samples grammar %.dmo vm install clean
+# Include VM rules
+dir := vm
+include $(dir)/Rules.mk
 
-all: code-samples vm
+.PHONY: all code-samples grammar %.dmo install clean
+
+all: code-samples vm/cli.so
 
 code-samples:
 	$(MAKE) $(MAKEOPTS) -C $@
@@ -25,10 +29,10 @@ grammar:
 %.dmo: grammar
 	$(JAVA) -jar $(ESSIG) grammar/examples/$@
 
-vm: $(EXAMPLE)
-	$(MAKE) $(MAKEOPTS) -C $@ cli.so
+vm/generated_simulator.h: $(EXAMPLE)
+vm/generated_simulator.c: $(EXAMPLE)
 
-install: vm
+install: vm/cli.so
 	$(INSTALL) -d $(DESTDIR)
 	for file in $(FILES); do \
 	  $(INSTALL) $$file $(DESTDIR); \
