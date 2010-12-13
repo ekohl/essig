@@ -24,7 +24,7 @@ export PYTHONPATH
 # problem if the user has a 64-bit OS but a 32-bit Python
 # We could have distutils do everything, if we care
 $(d)/cli.so: $(OBJS_$(d))
-	cd $(dir) && CFLAGS="$(CFLAGS)" $(PYTHON) setup.py build_ext $(PYTHON_DEBUG)
+	cd $(dir) && CFLAGS="$(CFLAGS)" $(PYTHON) setup.py build_ext --inplace $(PYTHON_DEBUG)
 
 # Local rules
 $(d)/vm.o: $(d)/vm.c $(d)/vm.h $(d)/simulator.h $(d)/readelf.c $(d)/vmerrno.h $(d)/generated_simulator.h
