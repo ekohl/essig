@@ -679,7 +679,12 @@ vm_write_nbytes(VMState *state, VMStateDiff *diff, VMInfoType type,
         singlediff->next = diff->singlediff;
         diff->singlediff = singlediff;
     }
-    
+
+    if (location >= state->chunk + PRINT_OFFSET && 
+        location < state->chunk + PRINT_END)
+        printf("Value 0x%ux written to 0x%x.\n", (unsigned int) value, 
+                                                 (unsigned int) destaddr);
+
     /* finally, write the value */
     vm_convert_endianness((char *) &value, nbytes);
     memcpy(location, &value, nbytes);
@@ -771,14 +776,12 @@ disassemble(OPCODE_TYPE *assembly, size_t assembly_length)
             
             if (!is_arg) {
                 some_error = true;
-#ifdef VM_DEBUG
                 fprintf(
                     stderr,
                     LOCATION " Cannot handle instruction 0x%x at address "
                     "offset 0x%x.\n",
                     (unsigned int) assembly[i], 
                     (unsigned int) (i * sizeof(OPCODE_TYPE)));
-#endif
                 /* vm_seterrno(VM_ILLEGAL_INSTRUCTION); */
             }
         }

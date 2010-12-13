@@ -6,7 +6,7 @@ d		:= $(dir)
 # Local variables
 OBJS_$(d):=$(d)/vm.o $(d)/generated_simulator.o $(d)/interrupt_handler.o
 PROFILE_OBJECTS=$(OBJS_$(d)) $(d)/runtest.o
-CFLAGS += -O2 -g -Wall -Wno-unused-variable -lm -fPIC -DVM_DEBUG=1
+CFLAGS += -O2 -g -Wall -Wno-unused-variable -lm -fPIC
 
 # Set interrupt handler
 INTERRUPT_HANDLER=$(d)/interrupt_handler.c
@@ -24,7 +24,8 @@ export PYTHONPATH
 # problem if the user has a 64-bit OS but a 32-bit Python
 # We could have distutils do everything, if we care
 $(d)/cli.so: $(OBJS_$(d))
-	cd $(dir) && CFLAGS="$(CFLAGS)" $(PYTHON) setup.py build_ext $(PYTHON_DEBUG)
+	cd $(dir) && CFLAGS="$(CFLAGS)" $(PYTHON) setup.py build_ext \
+                                              --inplace $(PYTHON_DEBUG)
 
 # Local rules
 $(d)/vm.o: $(d)/vm.c $(d)/vm.h $(d)/simulator.h $(d)/readelf.c $(d)/vmerrno.h $(d)/generated_simulator.h

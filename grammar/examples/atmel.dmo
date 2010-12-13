@@ -25,6 +25,7 @@ atmel {
 		PC	= 0x462; /*(Size=2) Program counter */
 		// FIXME: SPL = $3D ($5D), SPH = $3E ($5E)
 		SP	= 0x5D; /* (Size=2) Stack Pointer */
+        PORTA = 0x3b; /* (Size=1) PORT A */
 	}
 
 	maps {
@@ -33,6 +34,7 @@ atmel {
 		io		(0x20, 0x60);
 		ram		(0, 0x461);
 		rom		(0x464,0xFFFFFF);
+        print   (0x3b, 0x3c);
 	}
 
 	instructions {
