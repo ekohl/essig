@@ -57,13 +57,9 @@ parameter:
 
 register:
 		// FIXME Check NUMBER
-		^(IDENTIFIER (NUMBER | multiword_register)) {
+		^(IDENTIFIER NUMBER) {
 			symbolTable.declare($IDENTIFIER.text, $IDENTIFIER);
 		}
-	;
-
-multiword_register:
-		^(IDENTIFIER IDENTIFIER+)
 	;
 
 map:

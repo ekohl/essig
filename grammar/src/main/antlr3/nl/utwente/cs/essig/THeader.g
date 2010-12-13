@@ -44,14 +44,9 @@ parameter:
 	;
 
 register:
-			^(IDENTIFIER (NUMBER | multiword_register))
+			^(IDENTIFIER NUMBER)
 		-> register(name={$IDENTIFIER},offset={$NUMBER})
 	;
-
-multiword_register:
-			^(IDENTIFIER IDENTIFIER+)
-	;
-
 
 map:			^(t=MAP_TYPE b=NUMBER e=NUMBER)
 		-> map(type={($t.text).toUpperCase()}, begin={$b}, end={$e})

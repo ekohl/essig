@@ -76,10 +76,8 @@ registers:		REGISTERS^ LBRACK! (register LINE_SEPERATOR!)+ RBRACK! {
 	}
 	;
 
-register:		IDENTIFIER^ ASSIGN! (NUMBER | multiword_register)
+register:		IDENTIFIER^ ASSIGN! NUMBER
 	;
-
-multiword_register : 	IDENTIFIER^ (COLON! IDENTIFIER)+;
 
 maps:			MAPS^ LBRACK! (map LINE_SEPERATOR!)+ RBRACK!
 	;

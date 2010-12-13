@@ -58,10 +58,6 @@ parameter:	CLOCK { defaultClock = $CLOCK.text; }
 	;
 
 register:	^(IDENTIFIER NUMBER) -> register(name={$IDENTIFIER},offset={$NUMBER})
-	|       ^(IDENTIFIER multiword_register) -> register(name={$IDENTIFIER})
-	;
-
-multiword_register: 	^(IDENTIFIER IDENTIFIER+)
 	;
 
 map_type returns [String comment]:
