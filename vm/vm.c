@@ -379,7 +379,7 @@ error:
 }
 
 void
-_print_diff(VMState *state, VMStateDiff *diff)
+vm_print_diff(VMState *state, VMStateDiff *diff)
 {
     char *binstr1, *binstr2;
     char *fmt =            "    %-20s: %lu -> %lu\n";
@@ -432,7 +432,12 @@ _print_diff(VMState *state, VMStateDiff *diff)
     
     puts("}");
 }
+#else /* !VM_DEBUG */
+void
+vm_print_diff(VMState *state, VMStateDiff *diff)
+{
 
+}
 #endif /* VM_DEBUG */
 
 static void

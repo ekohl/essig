@@ -1,4 +1,4 @@
-CFLAGS += -O2 -g -Wall -Wno-unused-variable -lm -fPIC -DVM_DEBUG=1
+CFLAGS += -O2 -g -Wall -Wno-unused-variable -lm -fPIC
 INTERRUPT_HANDLER=interrupt_handler.c
 OBJECTS=vm.o generated_simulator.o interrupt_handler.o
 PROFILE_OBJECTS=$(OBJECTS) runtest.o
@@ -20,6 +20,9 @@ export PYTHONPATH
 
 run: cli.so
 	@$(PYTHON) simulator.py $(TESTFILE)
+
+debug:
+	CFLAGS="$(CFLAGS) -DVM_DEBUG=1" $(MAKE) run
 
 run-debug: cli.so
 	cygdb . --args $(PYTHON) simulator.py $(TESTFILE)

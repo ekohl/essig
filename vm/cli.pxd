@@ -105,7 +105,7 @@ cdef extern from "vm.h":
     BIGTYPE vm_info(VMState *state, VMInfoType type, size_t vmaddr, 
                     bool *errorp)
     
-    void _print_diff(VMState *state, VMStateDiff *diff)
+    void vm_print_diff(VMState *state, VMStateDiff *diff)
 
     bool vm_write(VMState *state, VMStateDiff *diff, VMInfoType type, 
                   size_t destaddr, OPCODE_TYPE value)
