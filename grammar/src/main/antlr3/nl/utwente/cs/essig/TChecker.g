@@ -48,7 +48,7 @@ microcontroller:
 	;
 
 parameter:	
-		p=(CLOCK | OP_SIZE) {
+		(p=(CLOCK | OP_SIZE) | ^(p=ENDIANNESS .)) {
 			if(!params.add($p.text)) {
 				throw new TCheckerException($p, "Duplicate parameter " + $p.text);
 			}

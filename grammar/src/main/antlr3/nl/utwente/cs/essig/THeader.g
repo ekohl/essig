@@ -40,6 +40,7 @@ parameter:
 			CLOCK
 	|		OP_SIZE
 		-> opcode_size(bits={$OP_SIZE})
+	|		^(ENDIANNESS .)
 	;
 
 register:

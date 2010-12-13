@@ -10,12 +10,6 @@ microcontroller(name,parameters,registers,instructions) ::= <<
 <parameters; separator="\n">
 // End of parameters
 
-// FIXME: Hardcoded parameters
-int npins = 0;
-size_t pinoffset = 0;
-int nbits_cpu = 16;
-bool is_big_endian = false;
-
 // Registers
 int nregisters = <length(registers)>;
 Register registers[] = {
@@ -49,8 +43,8 @@ register(name) ::= <<
 "<name>"
 >>
 
-ram (ram) ::= <<
-size_t ramsize = <ram>;
+endianness(is_big) ::= <<
+bool is_big_endian = <is_big>;
 >>
 
 instruction(name,opcodes,clock,arguments,expressions) ::= <<
