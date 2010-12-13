@@ -84,11 +84,7 @@ multiword_register : 	IDENTIFIER^ (COLON! IDENTIFIER)+;
 maps:			MAPS^ LBRACK! (map LINE_SEPERATOR!)+ RBRACK!
 	;
 
-map:			map_type^ LPAREN! NUMBER ARG_SEPERATOR! NUMBER RPAREN!
-	;
-
-map_type:
-			CHUNK | REGISTER | IO | ROM | RAM
+map:			MAP_TYPE^ LPAREN! NUMBER ARG_SEPERATOR! NUMBER RPAREN!
 	;
 
 instructions:		INSTRUCTIONS^ LBRACK! instruction+ RBRACK!
@@ -150,7 +146,7 @@ identifier:
 
 variable:		constant
 	|		identifier
-	|		map_type^ LPAREN! operatorExpr RPAREN!
+	|		MAP_TYPE^ LPAREN! operatorExpr RPAREN!
 	|		multi_register
 	;
 
@@ -160,7 +156,7 @@ multi_register: 	multi_identifier LBRACE operatorExpr INTERVAL operatorExpr RBRA
 
 multi_identifier:
 			IDENTIFIER
-		|	map_type
+		|	MAP_TYPE
 		;
 
 comparison:		EQUALS | LT | LTE | GT | GTE

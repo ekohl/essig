@@ -68,11 +68,7 @@ multiword_register:
 
 map:
 		// FIXME Check if maps aren't duplicated
-		^(map_type NUMBER NUMBER)
-	;
-
-map_type:
-		CHUNK | REGISTER | IO | ROM | RAM
+		^(MAP_TYPE NUMBER NUMBER)
 	;
 
 instruction:
@@ -135,7 +131,7 @@ word:
 variable:
 		v=(CONSTANT|IDENTIFIER)
 		{ symbolTable.getDeclaration($v.text, $v); }
-	|	^(map_type operatorExpr)
+	|	^(MAP_TYPE operatorExpr)
 	|	multi_register
 	;
 
@@ -145,7 +141,7 @@ multi_register:
 
 multi_identifier:
 		IDENTIFIER
-	|	map_type
+	|	MAP_TYPE
 	;
 
 comparison:

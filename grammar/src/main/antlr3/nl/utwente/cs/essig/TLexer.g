@@ -31,11 +31,13 @@ CLOCK		:	'clock';
 OP_SIZE		:	'opcode-size';
 ENDIANNESS	:	'endianness';
 
-CHUNK		:	'chunk';
-IO		:	'io';
-RAM		:	'ram';
-ROM		:	'rom';
-REGISTER	:	'register';
+MAP_TYPE		:	CHUNK | IO | RAM | ROM | REGISTER | PRINT;
+fragment CHUNK		:	'chunk';
+fragment IO		:	'io';
+fragment RAM		:	'ram';
+fragment ROM		:	'rom';
+fragment REGISTER	:	'register';
+fragment PRINT		:	'print';
 
 HALT		:       'HALT';
 CONSTANT	:	'$';

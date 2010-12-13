@@ -53,11 +53,6 @@ multiword_register:
 	;
 
 
-map:			^(t=map_type b=NUMBER e=NUMBER)
-		-> map(type={$t.st}, begin={$b}, end={$e})
-	;
-
-map_type:
-			(t=CHUNK | t=REGISTER | t=IO | t=ROM | t=RAM)
-		-> template(type={($t.text).toUpperCase()}) "<type>"
+map:			^(t=MAP_TYPE b=NUMBER e=NUMBER)
+		-> map(type={($t.text).toUpperCase()}, begin={$b}, end={$e})
 	;

@@ -68,7 +68,7 @@ map:		^(map_type NUMBER NUMBER)
 	;
 
 map_type returns [String comment]:
-			(t=CHUNK | t=REGISTER | t=IO | t=ROM | t=RAM)
+			t=MAP_TYPE
 				{ $comment = $t.text; }
 		-> template(type={($t.text).toUpperCase()}) "<type>"
 	;
