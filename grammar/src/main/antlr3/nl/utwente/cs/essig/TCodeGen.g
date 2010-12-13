@@ -53,6 +53,8 @@ microcontroller: ^(
 
 parameter:	CLOCK { defaultClock = $CLOCK.text; }
 	|	OP_SIZE
+	|	^(ENDIANNESS (BIG | LITTLE))
+	-> endianness(is_big={$BIG != null})
 	;
 
 register:	^(IDENTIFIER NUMBER) -> register(name={$IDENTIFIER},offset={$NUMBER})

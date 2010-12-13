@@ -3,7 +3,8 @@ atmel {
 		gprs 32+0; // 32 registers at offset 0
 		opcode-size 16; // 16 bits opcodes
 		// register-size = 8; // TODO 8 bit registers
-		clock 1; /* Standard 1 clock_cycle */
+		clock 1; // Standard 1 clock cycle
+		endianness little; // Little endian
 	}
 
 	registers {

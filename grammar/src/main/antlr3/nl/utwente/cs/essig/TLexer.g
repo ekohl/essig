@@ -29,6 +29,7 @@ ELSE		:	'else';
 GPRS		:	'gprs';
 CLOCK		:	'clock';
 OP_SIZE		:	'opcode-size';
+ENDIANNESS	:	'endianness';
 
 CHUNK		:	'chunk';
 IO		:	'io';
@@ -38,6 +39,9 @@ REGISTER	:	'register';
 
 HALT		:       'HALT';
 CONSTANT	:	'$';
+
+BIG		:	'big';
+LITTLE		:	'little';
 
 IDENTIFIER		:	LETTER (LETTER | DIGIT)* ;
 

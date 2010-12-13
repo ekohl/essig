@@ -62,6 +62,7 @@ parameter:		GPRS amount=NUMBER {
 		-> OP_SIZE[$NUMBER.text]
 	|		CLOCK NUMBER
 		-> CLOCK[$NUMBER.text]
+	|		ENDIANNESS^ (BIG | LITTLE)
 	;
 
 registers:		REGISTERS^ LBRACK! (register LINE_SEPERATOR!)+ RBRACK! {

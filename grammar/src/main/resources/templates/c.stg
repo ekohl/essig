@@ -10,12 +10,6 @@ microcontroller(name,parameters,registers,instructions) ::= <<
 <parameters; separator="\n">
 // End of parameters
 
-// FIXME: Hardcoded parameters
-int npins = 0;
-size_t pinoffset = 0;
-int nbits_cpu = 16;
-bool is_big_endian = false;
-
 // Registers
 int nregisters = <length(registers)>;
 Register registers[] = {
@@ -24,13 +18,8 @@ Register registers[] = {
  };
 // End of registers
 
-// helper functions (should be in VM I Think)
-bool GetBit(int b, int pos)
-{
-	return ((b & (1 \<\< pos)) != 0);
-}
-
-void AddBit(long long *val, int source, int pos)
+// helper function (should be in VM I Think)
+static void AddBit(long long *val, int source, int pos)
 {
 	*val \<\<=1;
 	*val |= GetBit(source,pos);
@@ -54,8 +43,8 @@ register(name) ::= <<
 "<name>"
 >>
 
-ram (ram) ::= <<
-size_t ramsize = <ram>;
+endianness(is_big) ::= <<
+bool is_big_endian = <is_big>;
 >>
 
 instruction(name,opcodes,clock,arguments,expressions) ::= <<
@@ -209,5 +198,5 @@ not(value) ::= <<
 >>
 
 bit(var, bit) ::= <<
-GetBit(<var>, <bit>)
+GETBIT(<var>, <bit>)
 >>
