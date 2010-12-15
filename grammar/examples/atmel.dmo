@@ -163,6 +163,15 @@ atmel {
 			}
 		}
 
+		/* Branch if Less Than (Signed) */
+		brlt "1111 00kk kkkk k100" ~k {
+			if (N^V) == 1 {
+				PC = PC + $k + 1;
+			} else {
+				PC = PC + 1;
+			}
+		}
+
 		/* Branch if Not Equal */
 		brne "1111 01kk kkkk k001" ~k {
 			if Z == 0 {
