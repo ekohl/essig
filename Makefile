@@ -5,8 +5,8 @@ ESSIG=grammar/target/essig-0.1-jar-with-dependencies.jar
 # Programs
 INSTALL=install
 DESTDIR=$(CURDIR)/target
-MAVEN=mvn
-JAVA=java
+MAVEN=ulimit -v $$((2048 * 1024)) ; mvn
+JAVA=ulimit -v $$((2048 * 1024)) ; java
 GIT=git
 
 # Install files
