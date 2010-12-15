@@ -65,30 +65,25 @@ parameter:		GPRS amount=NUMBER {
 	|		ENDIANNESS^ (BIG | LITTLE)
 	;
 
-registers:		REGISTERS^ LBRACK! (register LINE_SEPERATOR!)+ RBRACK! {
+registers:		REGISTERS^ LBRACK! (register LINE_SEPERATOR!)+ RBRACK!
+		{
 			// Hack in the general purpose registers
 			for(int i=0; i < gprs; i++) {
 				// -> IDENTIFIER^ NUMBER[Ri]
-				CommonTree reg = (CommonTree) adaptor.create(IDENTIFIER, "R" + Integer.toString(i));
+				Object reg = adaptor.create(IDENTIFIER, "R" + i);
 				adaptor.becomeRoot($REGISTERS.tree, reg);
 				adaptor.addChild(reg, adaptor.create(NUMBER, Integer.toString(gprs_offset + i)));
 			}
-	}
+		}
 	;
 
-register:		IDENTIFIER^ ASSIGN! (NUMBER | multiword_register)
+register:		IDENTIFIER^ ASSIGN! NUMBER
 	;
-
-multiword_register : 	IDENTIFIER^ (COLON! IDENTIFIER)+;
 
 maps:			MAPS^ LBRACK! (map LINE_SEPERATOR!)+ RBRACK!
 	;
 
-map:			map_type^ LPAREN! NUMBER ARG_SEPERATOR! NUMBER RPAREN!
-	;
-
-map_type:
-			CHUNK | REGISTER | IO | ROM | RAM
+map:			MAP_TYPE^ LPAREN! NUMBER ARG_SEPERATOR! NUMBER RPAREN!
 	;
 
 instructions:		INSTRUCTIONS^ LBRACK! instruction+ RBRACK!
@@ -150,18 +145,16 @@ identifier:
 
 variable:		constant
 	|		identifier
-	|		map_type^ LPAREN! operatorExpr RPAREN!
+	|		MAP_TYPE^ LPAREN! operatorExpr RPAREN!
 	|		multi_register
 	;
 
 multi_register: 	multi_identifier LBRACE operatorExpr INTERVAL operatorExpr RBRACE
 				-> ^(MULTI_REG multi_identifier operatorExpr operatorExpr)
-		;
+	;
 
-multi_identifier:
-			IDENTIFIER
-		|	map_type
-		;
+multi_identifier:	IDENTIFIER | MAP_TYPE
+	;
 
 comparison:		EQUALS | LT | LTE | GT | GTE
 	;

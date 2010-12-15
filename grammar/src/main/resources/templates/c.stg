@@ -13,9 +13,8 @@ microcontroller(name,parameters,registers,instructions) ::= <<
 // Registers
 int nregisters = <length(registers)>;
 Register registers[] = {
-	<registers:{\{ "<it.name>", <it.name> \}}; separator=",\n">
-
- };
+	<registers; separator=",\n">
+};
 // End of registers
 
 // helper function (should be in VM I Think)
@@ -40,7 +39,7 @@ opcodehandler(it) ::= <<
 >>
 
 register(name) ::= <<
-"<name>"
+{"<name>", <name>}
 >>
 
 endianness(is_big) ::= <<
@@ -58,20 +57,24 @@ bool <name> (VMState * state, VMStateDiff *diff, OPCODE_TYPE opcode) {
 	// Status Register Value
 	int SREG_val = vm_info(state,VM_INFO_IO,SREG,&error);
 
-/*	printf("%-10s at 0x%04x (0x%04x) SP:0x%04x RY:0x%04x C:%d Z:%d N:%d V:%d S:%d H:%d T:%d I:%d \n",
+#ifdef VM_DEBUG
+	printf("%-10s at 0x%04x (0x%04x) SP:0x%04lx RY:0x%04lx C:%d Z:%d N:%d V:%d S:%d H:%d T:%d I:%d \n",
 		"<name>",
 		GETPC(state),
 		GETPC(state)*2,
-		((vm_info(state,VM_INFO_RAM,SP + 1 ,0) \<\<8) + vm_info(state,VM_INFO_RAM,SP,0)),((vm_info(state,VM_INFO_REGISTER,29 ,0) \<\<8) + vm_info(state,VM_INFO_RAM,28,0)),
-	GETBIT(SREG_val,C),
-	GETBIT(SREG_val,Z),
-	GETBIT(SREG_val,N),
-	GETBIT(SREG_val,V),
-	GETBIT(SREG_val,S),
-	GETBIT(SREG_val,H),
-	GETBIT(SREG_val,T),
-	GETBIT(SREG_val,I));
-*/
+		(UBIGTYPE) ((vm_info(state,VM_INFO_RAM,SP + 1 ,0) \<\<8) + vm_info(state,VM_INFO_RAM,SP,0)),
+		(UBIGTYPE) ((vm_info(state,VM_INFO_REGISTER,R29 ,0) \<\<8) + vm_info(state,VM_INFO_REGISTER,R28,0)),
+		GETBIT(SREG_val,C),
+		GETBIT(SREG_val,Z),
+		GETBIT(SREG_val,N),
+		GETBIT(SREG_val,V),
+		GETBIT(SREG_val,S),
+		GETBIT(SREG_val,H),
+		GETBIT(SREG_val,T),
+		GETBIT(SREG_val,I)
+	);
+
+#endif
 	<if(clock)>
 	// Clock cycles
 	state->cycles += <clock>;
@@ -108,7 +111,7 @@ argument(name, signed) ::= <<
 resultExpr(expression) ::= <<
 int R = 0;
 <expression>
-R = result;
+//R = result;
 >>
 
 ifExpr(condition,ifExpr,elseExpr) ::= <<
@@ -125,7 +128,6 @@ else {
 operatorExpr(word,operator,expression) ::= <<
 <word> <operator> <expression> 
 >>
-
 
 assignExpr(var,type,value,comment,is_result,is_pc,isStatusBit) ::= <<
 <if(is_pc)>
@@ -154,7 +156,7 @@ if(!vm_write(state, diff, VM_INFO_<type>, <var>, result))
 assignConstant(var,value,comment) ::= <<
 <if (comment)>// <var> = <comment><endif>
 <var> = <value>;
-result = <value>;
+//result = <value>;
 >>
 
 multiRegisterAssignExpr(type,low,high,value) ::= <<
@@ -199,4 +201,8 @@ not(value) ::= <<
 
 bit(var, bit) ::= <<
 GETBIT(<var>, <bit>)
+>>
+
+literal(value) ::= <<
+<value>
 >>

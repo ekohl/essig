@@ -305,7 +305,7 @@ class SimulatorCLI(cmd.Cmd, object):
         cdef Simulator sim = self.simulator
         cdef bint hit_bp
         
-        self.info_instruction(self.simulator, '')
+        #self.info_instruction(self.simulator, '')
         
         if not vm_step(sim.state, nsteps, &sim.diff, &hit_bp):
             raise ErrorMessage()
@@ -421,7 +421,7 @@ class SimulatorCLI(cmd.Cmd, object):
             GETPC(sim.state),
             GETPC(sim.state) * 2)
 
-        _print_diff(sim.state, sim.diff)
+        vm_print_diff(sim.state, sim.diff)
     
     def do_info(self, about):
         """

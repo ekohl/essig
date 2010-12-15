@@ -2,7 +2,7 @@ CC=avr-gcc
 #CC=gcc
 OBJDUMP=avr-objdump
 #OBJDUMP=objdump
-CFLAGS=-g -Wall -mmcu=atmega16
+CFLAGS+=-g -Wall -mmcu=atmega16
 ALL=empty factorial
 
 .PHONY: all

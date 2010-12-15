@@ -1,11 +1,6 @@
-CFLAGS += -O2 -g -Wall -Wno-unused-variable -lm -fPIC -DVM_DEBUG=1
-INTERRUPT_HANDLER=interrupt_handler.c
-OBJECTS=vm.o generated_simulator.o interrupt_handler.o
-PROFILE_OBJECTS=$(OBJECTS) runtest.o
-PATH := $(CURDIR)/cython/bin:${PATH}
-PYTHON_DEBUG=`cython 2>&1 | grep -q '\--debug' && echo --pyrex-debug`
-PYTHON=`which python-dbg 2>/dev/null|| which python`
-PYTHONPATH := $(CURDIR)/cython:${PYTHONPATH}
+# inherit rules
+dir := .
+include Rules.mk
 
 TESTFILE1=../code-samples/factorial
 TESTFILE2=../code-samples/empty
@@ -13,16 +8,17 @@ TESTFILE=$(TESTFILE1)
 
 PROFILE_N_STEPS = 10000000
 
-
-# make sure CFLAGS are also passed to python
-export PATH
-export PYTHONPATH
-
 run: cli.so
 	@$(PYTHON) simulator.py $(TESTFILE)
 
+debug:
+	CFLAGS="$(CFLAGS) -DVM_DEBUG=1" $(MAKE) run
+
 run-debug: cli.so
 	cygdb . --args $(PYTHON) simulator.py $(TESTFILE)
+
+run-gdb: cli.so
+	gdb --args $(PYTHON) simulator.py $(TESTFILE)
 
 run-pdb: cli.so
 	$(PYTHON) -m pdb simulator.py $(TESTFILE)
@@ -35,9 +31,6 @@ cachegrind: clean
 	ulimit -v $$((1024 * 1024)) && \
 	CFLAGS="$$CFLAGS -O3" $(MAKE) _cachegrind
 
-runtest: $(PROFILE_OBJECTS)
-	$(CC) $(CFLAGS) $(PROFILE_OBJECTS) -o runtest
-
 _profile: runtest
 	./runtest $(PROFILE_N_STEPS)
 	gprof runtest gmon.out
@@ -46,15 +39,6 @@ _cachegrind: runtest
 	valgrind --tool=callgrind --callgrind-out-file=callgrind.out \
 		     ./runtest $(PROFILE_N_STEPS)
 	kcachegrind callgrind.out
-
-# problem if the user has a 64-bit OS but a 32-bit Python
-# We could have distutils do everything, if we care
-cli.so: $(OBJECTS)
-	CFLAGS="$(CFLAGS)" $(PYTHON) setup.py build_ext --inplace $(PYTHON_DEBUG)
-
-vm.o: vm.c vm.h simulator.h readelf.c vmerrno.h generated_simulator.h
-generated_simulator.o: generated_simulator.c generated_simulator.h
-interrupt_handler.o: $(INTERRUPT_HANDLER)
 
 doc:
 	doxygen doxyconfig

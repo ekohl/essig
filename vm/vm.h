@@ -251,6 +251,9 @@ void vm_closestate(VMState *);
 /*! Deallocate a VMStateDiff */
 void vm_closediff(VMStateDiff *);
 
+/*! Print a diff if this is a debug build */
+void vm_print_diff(VMState *, VMStateDiff *);
+
 /*! \defgroup VMDEBUGGER  Debugger Functions */
 /* @{ */
 

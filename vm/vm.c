@@ -379,7 +379,7 @@ error:
 }
 
 void
-_print_diff(VMState *state, VMStateDiff *diff)
+vm_print_diff(VMState *state, VMStateDiff *diff)
 {
     char *binstr1, *binstr2;
     char *fmt =            "    %-20s: %lu -> %lu\n";
@@ -432,7 +432,12 @@ _print_diff(VMState *state, VMStateDiff *diff)
     
     puts("}");
 }
+#else /* !VM_DEBUG */
+void
+vm_print_diff(VMState *state, VMStateDiff *diff)
+{
 
+}
 #endif /* VM_DEBUG */
 
 static void
@@ -658,23 +663,34 @@ vm_write_nbytes(VMState *state, VMStateDiff *diff, VMInfoType type,
         goto error;
     
     if (diff) {
-        /* update our diffs */
-        err_malloc((singlediff = malloc(sizeof(VMSingleStateDiff))));
-        /* We already did error checking, don't do it again. Read and store
-           in host endianness so rstep can write to uC endianness. */
-        singlediff->oldval = vm_info(state, type, destaddr, NULL);
+        BIGTYPE oldval;
+
+        oldval = vm_info(state, type, destaddr, NULL);
         
-#ifdef VM_DEBUG
-        singlediff->newval = value;
-#endif
+        if (value != oldval) {
+            /* update our diffs */
+            err_malloc((singlediff = malloc(sizeof(VMSingleStateDiff))));
+            /* We already did error checking, don't do it again. Read and store
+            in host endianness so rstep can write to uC endianness. */
+            singlediff->oldval = vm_info(state, type, destaddr, NULL);
         
-        singlediff->type = type;
-        singlediff->location = destaddr;
-        singlediff->nbytes = nbytes;
-        singlediff->next = diff->singlediff;
-        diff->singlediff = singlediff;
+#           ifdef VM_DEBUG
+                singlediff->newval = value;
+#           endif
+            
+            singlediff->type = type;
+            singlediff->location = destaddr;
+            singlediff->nbytes = nbytes;
+            singlediff->next = diff->singlediff;
+            diff->singlediff = singlediff;
+        }
     }
-    
+
+    if (location >= state->chunk + PRINT_OFFSET && 
+        location < state->chunk + PRINT_END)
+        printf("Value 0x%x written to 0x%x.\n", (unsigned int) value, 
+                                                (unsigned int) destaddr);
+
     /* finally, write the value */
     vm_convert_endianness((char *) &value, nbytes);
     memcpy(location, &value, nbytes);
@@ -766,14 +782,12 @@ disassemble(OPCODE_TYPE *assembly, size_t assembly_length)
             
             if (!is_arg) {
                 some_error = true;
-#ifdef VM_DEBUG
                 fprintf(
                     stderr,
                     LOCATION " Cannot handle instruction 0x%x at address "
                     "offset 0x%x.\n",
                     (unsigned int) assembly[i], 
                     (unsigned int) (i * sizeof(OPCODE_TYPE)));
-#endif
                 /* vm_seterrno(VM_ILLEGAL_INSTRUCTION); */
             }
         }

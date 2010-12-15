@@ -5,16 +5,20 @@ ESSIG=grammar/target/essig-0.1-jar-with-dependencies.jar
 # Programs
 INSTALL=install
 DESTDIR=$(CURDIR)/target
-MAVEN=mvn
-JAVA=java
+MAVEN=ulimit -v $$((2048 * 1024)) ; mvn
+JAVA=ulimit -v $$((2048 * 1024)) ; java
 GIT=git
 
 # Install files
 FILES=vm/cli.so vm/simulator.py
 
-.PHONY: all code-samples grammar %.dmo vm install clean
+# Include VM rules
+dir := vm
+include $(dir)/Rules.mk
 
-all: code-samples vm
+.PHONY: all code-samples grammar %.dmo install clean
+
+all: code-samples vm/cli.so
 
 code-samples:
 	$(MAKE) $(MAKEOPTS) -C $@
@@ -25,10 +29,9 @@ grammar:
 %.dmo: grammar
 	$(JAVA) -jar $(ESSIG) grammar/examples/$@
 
-vm: $(EXAMPLE)
-	$(MAKE) $(MAKEOPTS) -C $@ cli.so
+vm/generated_simulator.h vm/generated_simulator.c: $(EXAMPLE)
 
-install: vm
+install: vm/cli.so
 	$(INSTALL) -d $(DESTDIR)
 	for file in $(FILES); do \
 	  $(INSTALL) $$file $(DESTDIR); \
