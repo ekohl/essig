@@ -663,27 +663,33 @@ vm_write_nbytes(VMState *state, VMStateDiff *diff, VMInfoType type,
         goto error;
     
     if (diff) {
-        /* update our diffs */
-        err_malloc((singlediff = malloc(sizeof(VMSingleStateDiff))));
-        /* We already did error checking, don't do it again. Read and store
-           in host endianness so rstep can write to uC endianness. */
-        singlediff->oldval = vm_info(state, type, destaddr, NULL);
+        BIGTYPE oldval;
+
+        oldval = vm_info(state, type, destaddr, NULL);
         
-#ifdef VM_DEBUG
-        singlediff->newval = value;
-#endif
+        if (value != oldval) {
+            /* update our diffs */
+            err_malloc((singlediff = malloc(sizeof(VMSingleStateDiff))));
+            /* We already did error checking, don't do it again. Read and store
+            in host endianness so rstep can write to uC endianness. */
+            singlediff->oldval = vm_info(state, type, destaddr, NULL);
         
-        singlediff->type = type;
-        singlediff->location = destaddr;
-        singlediff->nbytes = nbytes;
-        singlediff->next = diff->singlediff;
-        diff->singlediff = singlediff;
+#           ifdef VM_DEBUG
+                singlediff->newval = value;
+#           endif
+            
+            singlediff->type = type;
+            singlediff->location = destaddr;
+            singlediff->nbytes = nbytes;
+            singlediff->next = diff->singlediff;
+            diff->singlediff = singlediff;
+        }
     }
 
     if (location >= state->chunk + PRINT_OFFSET && 
         location < state->chunk + PRINT_END)
-        printf("Value 0x%ux written to 0x%x.\n", (unsigned int) value, 
-                                                 (unsigned int) destaddr);
+        printf("Value 0x%x written to 0x%x.\n", (unsigned int) value, 
+                                                (unsigned int) destaddr);
 
     /* finally, write the value */
     vm_convert_endianness((char *) &value, nbytes);

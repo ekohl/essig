@@ -22,16 +22,19 @@ int main(int argc, char* argv[]) {
 	long result = 0;
    
 
-	while(i>1) {
+	while (i > 1) {
 		result *= i;
 		i--;
 	}
-    PORTA = result;
+
 #ifdef WITH_PRINTF
-    fprintf(destfile, "%d\n", result);
+    fprintf(destfile, "%l\n", result);
 #else
     resultp = (char *) &result;
     for (i = 0; i < sizeof(result); i++) {
+        if (1 << i > result)
+            break;
+
         PORTA = resultp[sizeof(result) - i - 1];
     }
 #endif
