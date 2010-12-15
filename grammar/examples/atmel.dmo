@@ -45,22 +45,22 @@ atmel {
 
 		/* Add with Carry */
 		adc "0001 11rd dddd rrrr" Rd, Rr {
-			Rd = Rd + Rr + C;
-
+			$R = Rd + Rr + C;
+			
 			H = Rd.3 & Rr.3 | Rr.3 & !$R.3 | !$R.3 & Rd.3;
 			V = Rd.7 & Rr.7 & !$R.7 | !Rd.7 & !Rr.7 & $R.7;
 			N = $R.7;
 			S = N ^ V;
 			Z = !$R.7 & !$R.6 & !$R.5 & !$R.4 & !$R.3 & !$R.2 & !$R.1 & !$R.0;
 			C = Rd.7 & Rr.7 | Rr.7 & !$R.7 | !$R.7 & Rd.7;
-
+			Rd = $R;
 			PC = PC + 1;
 
 		}
 
 		/* Add without Carry */
 		add "0000 11rd dddd rrrr" Rd, Rr {
-			Rd = Rd + Rr;
+			$R = Rd + Rr;
 
 			H = Rd.3 & Rr.3 | Rr.3 & !$R.3 | !$R.3 & Rd.3;
 			V = Rd.7 & Rr.7 & !$R.7 | !Rd.7 & !Rr.7 & $R.7;
@@ -68,7 +68,7 @@ atmel {
 			S = N ^ V;
 
 			C = Rd.7 & Rr.7 | Rr.7 & !$R.7 | !$R.7 & Rd.7;
-
+			Rd = $R;
 			PC = PC + 1;
 		}
 
@@ -94,13 +94,13 @@ atmel {
 		/* Logical AND */
 		and "0010 00rd dddd rrrr" Rd, Rr {
 			/* 0 <= d <= 31, 0 <= r 31 */
-			Rd = Rd & Rr;
+			$R = Rd & Rr;
 
 			V = 0;
 			N = $R.7;
 			S = N ^ V;
 			Z = !$R.7 & !$R.6 & !$R.5 & !$R.4 & !$R.3 & !$R.2 & !$R.1 & !$R.0;
-
+			Rd = $R;
 			PC = PC + 1;
 		}
 
@@ -108,13 +108,13 @@ atmel {
                 andi "0111 KKKK dddd KKKK" Rd, K {
                         /* 16 <= d <= 31, 0 <= K <= 255 */
 			$d = 16 + $d;
-                        Rd = Rd & $K;
+                        $R = Rd & $K;
 
                         V = 0;
                         N = $R.7;
                         S = N ^ V;
                         Z = !$R.7 & !$R.6 & !$R.5 & !$R.4 & !$R.3 & !$R.2 & !$R.1 & !$R.0;
-
+			Rd = $R;
                         PC = PC + 1;
                 }
 
@@ -198,7 +198,7 @@ atmel {
 		/* One's complement */
 		com "1001 010d dddd 0000" Rd, K {
 			Rd = 255 - Rd;
-
+			$R = Rd;
 			V = 0;
 			N = $R.7;
 			S = N ^ V;
@@ -277,7 +277,7 @@ atmel {
 		/* Exclusive Or */
 		eor "0010 01rd dddd rrrr" Rd, Rr {
 			Rd = Rd ^ Rr;
-
+			$R = Rd;
 			V = 0;
 			N = $R.7;
 			S = N ^ V;
@@ -371,7 +371,7 @@ atmel {
 		}
 
 		/* Load Indirect from Data Space to Register using Index Y+ */
-		lddyplus "10q0 qq0d dddd 1qqq" Rd, q {
+		lddyplusq "10q0 qq0d dddd 1qqq" Rd, q {
 			Rd = ram(R[29..28] + $q); //TODO Should be RX
 
 			PC = PC + 1;
@@ -495,7 +495,7 @@ atmel {
 
 		or "0010 10rd dddd rrrr" Rd,Rr {
 			Rd = Rd | Rr;
-
+			$R = Rd;
 			V = 0;
 			N = $R.7;
 			S = N ^ V;
@@ -670,7 +670,7 @@ atmel {
 
 		/* Subtract with Carry */
 		sbc "0000 10rd dddd rrrr" Rd, Rr {
-			Rd = Rd - Rr - C;
+			$R = Rd - Rr - C;
 
 			H = !Rd.3 & Rr.3 | Rr.3 & $R.3 | $R.3 & !Rd.3;
 			V = Rd.7 & !Rr.7 & !$R.7 | !Rd.7 & Rr.7 & $R.7;
@@ -678,7 +678,7 @@ atmel {
 			S = N ^ V;
 			Z = !$R.7 & !$R.6 & !$R.5 & !$R.4 & !$R.3 & !$R.2 & !$R.1 & !$R.0 & Z;
 			C = !Rd.7 & Rr.7 | Rr.7 & $R.7 | $R.7 & !Rd.7;
-
+			Rd = $R;
 			PC = PC + 1;
 		}
 
@@ -708,7 +708,8 @@ atmel {
 		subi "0101 KKKK dddd KKKK" Rd, K {
 			/* 0 <= K <= 255 */
 			/* 16 <= d <= 31 */
-			$d = 16 + $d;
+$d = $d;			
+$d = 16 + $d;
 			$R = Rd - $K;
 
 			H = !Rd.3 & $K.3 | $K.3 & $R.3 | $R.3 & !Rd.3;

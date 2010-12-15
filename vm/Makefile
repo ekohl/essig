@@ -17,6 +17,9 @@ debug:
 run-debug: cli.so
 	cygdb . --args $(PYTHON) simulator.py $(TESTFILE)
 
+run-gdb: cli.so
+	gdb --args $(PYTHON) simulator.py $(TESTFILE)
+
 run-pdb: cli.so
 	$(PYTHON) -m pdb simulator.py $(TESTFILE)
 

@@ -111,7 +111,7 @@ argument(name, signed) ::= <<
 resultExpr(expression) ::= <<
 int R = 0;
 <expression>
-R = result;
+//R = result;
 >>
 
 ifExpr(condition,ifExpr,elseExpr) ::= <<
@@ -156,7 +156,7 @@ if(!vm_write(state, diff, VM_INFO_<type>, <var>, result))
 assignConstant(var,value,comment) ::= <<
 <if (comment)>// <var> = <comment><endif>
 <var> = <value>;
-result = <value>;
+//result = <value>;
 >>
 
 multiRegisterAssignExpr(type,low,high,value) ::= <<

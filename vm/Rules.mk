@@ -6,7 +6,7 @@ d		:= $(dir)
 # Local variables
 OBJS_$(d):=$(d)/vm.o $(d)/generated_simulator.o $(d)/interrupt_handler.o
 PROFILE_OBJECTS=$(OBJS_$(d)) $(d)/runtest.o
-CFLAGS += -O2 -g -Wall -Wno-unused-variable -lm -fPIC
+CFLAGS += -g -Wall -Wno-unused-variable -lm -fPIC
 
 # Set interrupt handler
 INTERRUPT_HANDLER=$(d)/interrupt_handler.c
