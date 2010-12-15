@@ -27,9 +27,6 @@
 \renewcommand\contentsname{Table of Contents}
 \tableofcontents
 \clearpage\selectlanguage{english}
-\chapter{Preface}
-
-
 \chapter{Introduction}
 The ESSIG (Embedded Systems SImulator Generator) project is aimed
 towards automating the process of writing a simulator for a
@@ -59,7 +56,13 @@ to each other.
 \begin{center}
 \includegraphics[width=5.376cm,height=4.932cm]{Essig-img002.png}
 \end{center}
-\chapter{Specifying microcontroller}
+\chapter{AVR Microcontroller}
+Dit verslag beschrijft de bedachte programmeertaal Expr en beschrijft de
+ontwikkeling van de bijbehorende compiler.
+
+Aan het eind van het verslag zijn enkele appendices opgenomen. 
+
+\chapter{Grammar}
 Dit verslag beschrijft de bedachte programmeertaal Expr en beschrijft de
 ontwikkeling van de bijbehorende compiler.
 
@@ -227,19 +230,24 @@ ontwikkeling van de bijbehorende compiler.
 
 Aan het eind van het verslag zijn enkele appendices opgenomen. 
 
-\chapter{Conclusions and future work}
+\chapter{Limitations and future work}
 Dit verslag beschrijft de bedachte programmeertaal Expr en beschrijft de
 ontwikkeling van de bijbehorende compiler.
 
 Aan het eind van het verslag zijn enkele appendices opgenomen. 
 
+\bibliographystyle{plain}
+\clearpage
+\addcontentsline{toc}{chapter}{Bibliography}
+\bibliography{Essig}
+
 \appendix
-\chapter[Microcontroller specification
-language]{Microcontroller specification language}
+\chapter[Grammar explanation]{Microcontroller specification language}
 Op het laatste moment hebben we besloten om de ANTLR specificaties niet
 uit te printen, test, test, test.
 
 \chapter[Evaluation]{Evaluation}
 De code en voorbeeldin- en uitvoer van een uitgebreid Expr programma is
-opgenomen in deze appendix.
+\cite{atmelISA} opgenomen in deze appendix.
 \end{document}
+
