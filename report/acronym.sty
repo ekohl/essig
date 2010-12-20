@@ -1,0 +1,58 @@
+%%
+%% This is file `acronym.sty',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% acronym.dtx  (with options: `acronym')
+%% 
+%% Copyright (C) 1994 by Tobias Oetiker.
+%% All rights reserved.
+%% 
+%%  This package is distributed in the hope that it will be useful,
+%%  but WITHOUT ANY WARRANTY; without even the implied warranty of
+%%  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+%% 
+\def\filename{acronym}
+\def\fileversion{v1.3}
+\def\filedate{1996/09/19}
+\def\docdate {94/07/13}
+\NeedsTeXFormat{LaTeX2e}[1994/06/01]
+\ProvidesPackage{acronym}
+\newcommand{\newacro}[2]{\expandafter\gdef\csname fn@#1\endcsname{#2}}
+\newcommand{\acrodef}[2]{
+\newacro{#1}{#2}%
+\write\@auxout{\string\newacro{#1}{#2}}%
+}
+\newenvironment{acronym}%
+{\begin{description}
+    \providecommand{\acro}[2]{%
+        \acrodef{##1}{##2}%
+        \item[##1] ##2}}
+{\end{description}}
+\newcommand{\acs}[1]{%
+\expandafter\ifx\csname fn@#1\endcsname\relax%
+ \textbf{#1!}%
+ \PackageWarning{acronym}{Acronym `#1' is not defined}%
+ \expandafter\gdef\csname fn@#1\endcsname{\textbf{#1!}}
+\else%
+ #1%
+\fi}
+\newcommand{\acf}[1]%
+  {\csname fn@#1\endcsname{}\nolinebreak[3] (\acs{#1})}%
+\DeclareOption{footnote}{%
+  \renewcommand{\acf}[1]%
+  {\acs{#1}\footnote{\csname fn@#1\endcsname}}%
+}
+\newcommand{\acl}[1]{\csname fn@#1\endcsname{}}%
+\ProcessOptions
+\newcommand{\ac}[1]{%
+\expandafter\ifx\csname ac@#1\endcsname\relax%
+ \acf{#1}%
+ \expandafter\gdef\csname ac@#1\endcsname{x}%
+\else%
+ \acs{#1}%
+\fi}
+\endinput
+%%
+%% End of file `acronym.sty'.
