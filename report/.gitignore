@@ -3,3 +3,7 @@
 *.toc
 *.pdf
 *.out
+*.blg
+*.bbl
+*.d
+*.brf

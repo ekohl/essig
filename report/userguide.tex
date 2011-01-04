@@ -1,0 +1,112 @@
+\chapter{User guide}
+\section{Basics}
+\subsection{Style}
+The \ac{ESSIG} specification style is influenced by Java. The biggest
+difference can be found in typing which we shall see later on. However, both
+separate lines by a semi-colon and it can also can be seen in blocks which have
+the following pattern:
+
+\begin{verbatim}
+IDENTIFIER {
+	line1;
+	line2;
+	...
+}
+\end{verbatim}
+
+
+\subsection[IDENTIFIER]{Identifiers}
+Identifiers are names and must start with a letter and may be followed with
+more letters and digits:
+
+\begin{verbatim}
+fragment DIGIT	:	'0'..'9';
+fragment LETTER	:	('a'..'z' | 'A'..'Z');
+IDENTIFIER	:	LETTER (LETTER | DIGIT)*;
+\end{verbatim}
+
+\subsection{Numbers}
+Numbers can be specified either as numbers with an optional sign to indicate it
+is a negative number or hexadecimal numbers.
+
+\begin{verbatim}
+fragment DIGIT	:	'0'..'9';
+fragment NUM	:	'-'? DIGIT+;
+fragment HEX_LETTER:	('a'..'f'|'A'..'F');
+fragment HEX_NUM:	'0' 'x' (DIGIT | HEX_LETTER)+;
+NUMBER		:	(NUM | HEX_NUM);
+\end{verbatim}
+
+Example:
+\begin{verbatim}
+10	// Number
+-7	// Negative number
+0x15f	// Hexadecimal number
+\end{verbatim}
+
+\subsection{Comments}
+Comments are C-style:
+
+\begin{verbatim}
+COMMENT		:	'//' ~('\n'|'\r')* '\r'? '\n'
+		|	'/*' .* '*/'
+		;
+\end{verbatim}
+
+Example:
+\begin{verbatim}
+// Single line comment
+/*
+multi
+line
+comment
+*/
+\end{verbatim}
+
+\subsection{Opcodes}
+\begin{verbatim}
+OPCODE		:	'"' ('0' | '1' | LETTER | ' ')+ '"';
+\end{verbatim}
+
+Example:
+\begin{verbatim}
+"0000 0000 0000 0000" // Fixed opcode
+"00dd dd11 01rr ddrr" // 4-bit variable d and 4-bit variable r
+\end{verbatim}
+
+\section{Specifying a microcontroller}
+In order to specify a microcontroller, we have the basic block pattern with an
+identifier as a name and must contain four blocks:
+\begin{verbatim}
+microcontroller	:	IDENTIFIER '{'
+				parameters
+				registers
+				maps
+				instructions
+			'}'
+		;
+\end{verbatim}
+
+\subsection{Parameters}
+Parameters follow the basic block pattern with a parameter specification on
+each line.
+
+\begin{verbatim}
+parameters	:	'parameters' '{' (parameter ';')+ '}';
+
+parameter	:	'gprs' NUMBER ('+' NUMBER)?
+		|	'opcode-size' NUMBER
+		|	'clock' NUMBER
+		|	'endianness' ('big' | 'little')
+		;
+\end{verbatim}
+
+Example:
+\begin{verbatim}
+parameters {
+	gprs 32+5; // 32 general purpose registers at offset 5
+	opcode-size 16; // 16 bits opcodes
+	clock 1; // Standard 1 clock cycle
+	endianness little; // Little endian
+}
+\end{verbatim}

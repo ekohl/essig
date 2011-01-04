@@ -1,0 +1,58 @@
+\documentclass[a4paper]{report}
+%Uncomment this for better screen readable report 
+%\documentclass[a4paper]{scrreprt}
+\usepackage[english]{babel}
+\usepackage[pdftex]{graphicx}
+\usepackage{acronym}
+\usepackage[a4paper=true,pagebackref=true]{hyperref}
+\hypersetup{
+	colorlinks,%
+	citecolor=black,%
+	filecolor=black,%
+	linkcolor=black,%
+	urlcolor=black
+}
+\title{\acl{ESSIG}}
+\author{
+	Ewoud Kohl van Wijngaarden (s0113433)
+	\and
+	Wilfried van Asten (s0165883)
+	\and
+	Ruud Harmsen (s0165999)
+	\and
+	Mark Florisson (s0165972)
+	\\
+	\\
+	\small Ontwerpproject (192199109) \\
+	\small University of Twente \\
+	\small Faculty of Electrical Engineering, Mathematics and Computer Science
+}
+\date{}
+
+\begin{document}
+\maketitle
+
+\setcounter{tocdepth}{10}
+\renewcommand\contentsname{Table of Contents}
+\tableofcontents
+\clearpage\selectlanguage{english}
+
+\include{introduction}
+\include{related}
+\include{overview}
+\include{avr}
+\include{grammar}
+\include{simulator}
+\include{userguide}
+\include{limitations}
+
+\bibliographystyle{plain}
+\clearpage
+\addcontentsline{toc}{chapter}{Bibliography}
+\bibliography{Essig}
+
+\appendix
+\include{spec}
+\include{evaluation}
+\include{acronyms}
+\end{document}
