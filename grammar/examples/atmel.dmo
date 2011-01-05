@@ -136,6 +136,15 @@ atmel {
 			}
 		}
 
+        /* Branch if Plus */
+        brpl "1111 01kk kkkk k010" ~k {
+            if N == 0 {
+                PC = PC + $k + 1;
+            } else {
+                PC = PC + 1;
+            }
+        }
+
 		/* Branch if T Flag is Cleared */
 		brtc "1111 01kk kkkk k110" ~k {
 			if T == 0 {
