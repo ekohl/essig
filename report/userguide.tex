@@ -6,78 +6,78 @@ difference can be found in typing which we shall see later on. However, both
 separate lines by a semi-colon and it can also can be seen in blocks which have
 the following pattern:
 
-\begin{verbatim}
+\begin{lstlisting}
 IDENTIFIER {
 	line1;
 	line2;
 	...
 }
-\end{verbatim}
+\end{lstlisting}
 
 
 \subsection[IDENTIFIER]{Identifiers}
 Identifiers are names and must start with a letter and may be followed with
 more letters and digits:
 
-\begin{verbatim}
+\begin{lstlisting}
 fragment DIGIT	:	'0'..'9';
 fragment LETTER	:	('a'..'z' | 'A'..'Z');
 IDENTIFIER	:	LETTER (LETTER | DIGIT)*;
-\end{verbatim}
+\end{lstlisting}
 
 \subsection{Numbers}
 Numbers can be specified either as numbers with an optional sign to indicate it
 is a negative number or hexadecimal numbers.
 
-\begin{verbatim}
+\begin{lstlisting}
 fragment DIGIT	:	'0'..'9';
 fragment NUM	:	'-'? DIGIT+;
 fragment HEX_LETTER:	('a'..'f'|'A'..'F');
 fragment HEX_NUM:	'0' 'x' (DIGIT | HEX_LETTER)+;
 NUMBER		:	(NUM | HEX_NUM);
-\end{verbatim}
+\end{lstlisting}
 
 Example:
-\begin{verbatim}
+\begin{lstlisting}
 10	// Number
 -7	// Negative number
 0x15f	// Hexadecimal number
-\end{verbatim}
+\end{lstlisting}
 
 \subsection{Comments}
 Comments are C-style:
 
-\begin{verbatim}
+\begin{lstlisting}
 COMMENT		:	'//' ~('\n'|'\r')* '\r'? '\n'
 		|	'/*' .* '*/'
 		;
-\end{verbatim}
+\end{lstlisting}
 
 Example:
-\begin{verbatim}
+\begin{lstlisting}
 // Single line comment
 /*
 multi
 line
 comment
 */
-\end{verbatim}
+\end{lstlisting}
 
 \subsection{Opcodes}
-\begin{verbatim}
+\begin{lstlisting}
 OPCODE		:	'"' ('0' | '1' | LETTER | ' ')+ '"';
-\end{verbatim}
+\end{lstlisting}
 
 Example:
-\begin{verbatim}
+\begin{lstlisting}
 "0000 0000 0000 0000" // Fixed opcode
 "00dd dd11 01rr ddrr" // 4-bit variable d and 4-bit variable r
-\end{verbatim}
+\end{lstlisting}
 
 \section{Specifying a microcontroller}
 In order to specify a microcontroller, we have the basic block pattern with an
 identifier as a name and must contain four blocks:
-\begin{verbatim}
+\begin{lstlisting}
 microcontroller	:	IDENTIFIER '{'
 				parameters
 				registers
@@ -85,13 +85,13 @@ microcontroller	:	IDENTIFIER '{'
 				instructions
 			'}'
 		;
-\end{verbatim}
+\end{lstlisting}
 
 \subsection{Parameters}
 Parameters follow the basic block pattern with a parameter specification on
 each line.
 
-\begin{verbatim}
+\begin{lstlisting}
 parameters	:	'parameters' '{' (parameter ';')+ '}';
 
 parameter	:	'gprs' NUMBER ('+' NUMBER)?
@@ -99,14 +99,14 @@ parameter	:	'gprs' NUMBER ('+' NUMBER)?
 		|	'clock' NUMBER
 		|	'endianness' ('big' | 'little')
 		;
-\end{verbatim}
+\end{lstlisting}
 
 Example:
-\begin{verbatim}
+\begin{lstlisting}
 parameters {
 	gprs 32+5; // 32 general purpose registers at offset 5
 	opcode-size 16; // 16 bits opcodes
 	clock 1; // Standard 1 clock cycle
 	endianness little; // Little endian
 }
-\end{verbatim}
+\end{lstlisting}
