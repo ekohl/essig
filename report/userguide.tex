@@ -22,7 +22,7 @@ more letters and digits:
 \begin{lstlisting}
 fragment DIGIT	:	'0'..'9';
 fragment LETTER	:	('a'..'z' | 'A'..'Z');
-IDENTIFIER	:	LETTER (LETTER | DIGIT)*;
+IDENTIFIER		:	LETTER (LETTER | DIGIT)*;
 \end{lstlisting}
 
 \subsection{Numbers}
@@ -32,15 +32,14 @@ is a negative number or hexadecimal numbers.
 \begin{lstlisting}
 fragment DIGIT	:	'0'..'9';
 fragment NUM	:	'-'? DIGIT+;
-fragment HEX_LETTER:	('a'..'f'|'A'..'F');
-fragment HEX_NUM:	'0' 'x' (DIGIT | HEX_LETTER)+;
-NUMBER		:	(NUM | HEX_NUM);
+fragment HEX_NUM:	'0' 'x' (DIGIT | ('a'..'f'|'A'..'F'))+;
+NUMBER			:	(NUM | HEX_NUM);
 \end{lstlisting}
 
 Example:
 \begin{lstlisting}
-10	// Number
--7	// Negative number
+10		// Number
+-7		// Negative number
 0x15f	// Hexadecimal number
 \end{lstlisting}
 
@@ -49,8 +48,8 @@ Comments are C-style:
 
 \begin{lstlisting}
 COMMENT		:	'//' ~('\n'|'\r')* '\r'? '\n'
-		|	'/*' .* '*/'
-		;
+			|	'/*' .* '*/'
+			;
 \end{lstlisting}
 
 Example:
@@ -78,13 +77,13 @@ Example:
 In order to specify a microcontroller, we have the basic block pattern with an
 identifier as a name and must contain four blocks:
 \begin{lstlisting}
-microcontroller	:	IDENTIFIER '{'
-				parameters
-				registers
-				maps
-				instructions
-			'}'
-		;
+microcontroller:	IDENTIFIER '{'
+						parameters
+						registers
+						maps
+						instructions
+					'}'
+			;
 \end{lstlisting}
 
 \subsection{Parameters}
@@ -95,10 +94,10 @@ each line.
 parameters	:	'parameters' '{' (parameter ';')+ '}';
 
 parameter	:	'gprs' NUMBER ('+' NUMBER)?
-		|	'opcode-size' NUMBER
-		|	'clock' NUMBER
-		|	'endianness' ('big' | 'little')
-		;
+			|	'opcode-size' NUMBER
+			|	'clock' NUMBER
+			|	'endianness' ('big' | 'little')
+			;
 \end{lstlisting}
 
 Example:
@@ -138,7 +137,7 @@ MAP_TYPE	:	'chunk' | 'io' | 'ram' | 'rom' | 'register' | 'print';
 
 maps		:	'maps' '{' (map ';')+ '}';
 
-map		:	MAP_TYPE '(' NUMBER ';' NUMBER ')';
+map			:	MAP_TYPE '(' NUMBER ';' NUMBER ')';
 \end{lstlisting}
 
 Example:
@@ -146,9 +145,9 @@ Example:
 maps {
 	chunk		(0, 0xFFFFFFF);
 	register	(0, 0x20);
-	io		(0x20, 0x60);
-	ram		(0, 0x461);
-	rom		(0x464,0xFFFFFF);
+	io			(0x20, 0x60);
+	ram			(0, 0x461);
+	rom			(0x464,0xFFFFFF);
 	print		(0x3b, 0x3c);
 }
 \end{lstlisting}
@@ -162,11 +161,11 @@ OPCODE		:	'"' (DIGIT | LETTER | ' ')+ '"';
 
 params		:	OPCODE (',' OPCODE)* (',' 'clock' '=' NUMBER)?
 
-arguments:		argument (',' argument)*;
+arguments	:		argument (',' argument)*;
 
-argument:		'~'? identifier;
+argument	:		'~'? identifier;
 
-instructions	:	'instructions' '{' instruction+ '}';
+instructions:	'instructions' '{' instruction+ '}';
 
 instruction	:	IDENTIFIER params arguments? '{' expr+ '}';
 \end{lstlisting}
@@ -191,31 +190,31 @@ instructions {
 \subsection{Expressions}
 \begin{lstlisting}
 variable	:	'$'? IDENTIFIER
-		|	MAP_TYPE '{' operatorExpr '}'
-		|	( IDENTIFIER | MAP_TYPE ) '[' operatorExpr ':' operatorExpr ']'
-		;
+			|	MAP_TYPE '{' operatorExpr '}'
+			|	( IDENTIFIER | MAP_TYPE ) '[' operatorExpr ':' operatorExpr ']'
+			;
 
 word 		:	variable ('.' (NUMBER | constant))?
-		|	NUMBER
-		|	'!' word
-		;
+			|	NUMBER
+			|	'!' word
+			;
 
-operatorExpr	:	word (('&' | '|' | '^' | '+' | '-' | '*' | '<<' | '>>') operatorExpr)?;
+operatorExpr:	word (('&' | '|' | '^' | '+' | '-' | '*' | '<<' | '>>') operatorExpr)?;
 
 assignExpr	:	variable '=' operatorExpr;
 
 comparison	:	'==' | '<' | '=<' | '>' | '>=';
 
 condition	:	word comparison word
-		|	'(' operatorExpr ')' comparison word
-		;
+			|	'(' operatorExpr ')' comparison word
+			;
 
 ifExpr		:	'if' condition '{' expr+ '}' ('else' '{' expr+ '}')?;
 
 expr		:	assignExpr ';'
-		|	ifExpr
-		|	'HALT' ';'
-		;
+			|	ifExpr
+			|	'HALT' ';'
+			;
 \end{lstlisting}
 
 Example:
