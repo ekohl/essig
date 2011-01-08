@@ -60,7 +60,7 @@ COMMENT
 			|	'/*' ( options {greedy=false;} : . )* '*/' {skip();}
 			;
 
-OPCODE			:	QUOTE (DIGIT | LETTER | ' ')+ QUOTE;
+OPCODE			:	QUOTE ('0' | '1' | LETTER | ' ')+ QUOTE;
 
 fragment DIGIT		:	'0'..'9';
 

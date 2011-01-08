@@ -6,107 +6,232 @@ difference can be found in typing which we shall see later on. However, both
 separate lines by a semi-colon and it can also can be seen in blocks which have
 the following pattern:
 
-\begin{verbatim}
+\begin{lstlisting}
 IDENTIFIER {
 	line1;
 	line2;
 	...
 }
-\end{verbatim}
+\end{lstlisting}
 
 
 \subsection[IDENTIFIER]{Identifiers}
 Identifiers are names and must start with a letter and may be followed with
 more letters and digits:
 
-\begin{verbatim}
+\begin{lstlisting}
 fragment DIGIT	:	'0'..'9';
 fragment LETTER	:	('a'..'z' | 'A'..'Z');
-IDENTIFIER	:	LETTER (LETTER | DIGIT)*;
-\end{verbatim}
+IDENTIFIER		:	LETTER (LETTER | DIGIT)*;
+\end{lstlisting}
 
 \subsection{Numbers}
 Numbers can be specified either as numbers with an optional sign to indicate it
 is a negative number or hexadecimal numbers.
 
-\begin{verbatim}
+\begin{lstlisting}
 fragment DIGIT	:	'0'..'9';
 fragment NUM	:	'-'? DIGIT+;
-fragment HEX_LETTER:	('a'..'f'|'A'..'F');
-fragment HEX_NUM:	'0' 'x' (DIGIT | HEX_LETTER)+;
-NUMBER		:	(NUM | HEX_NUM);
-\end{verbatim}
+fragment HEX_NUM:	'0' 'x' (DIGIT | ('a'..'f'|'A'..'F'))+;
+NUMBER			:	(NUM | HEX_NUM);
+\end{lstlisting}
 
 Example:
-\begin{verbatim}
-10	// Number
--7	// Negative number
+\begin{lstlisting}
+10		// Number
+-7		// Negative number
 0x15f	// Hexadecimal number
-\end{verbatim}
+\end{lstlisting}
 
 \subsection{Comments}
 Comments are C-style:
 
-\begin{verbatim}
+\begin{lstlisting}
 COMMENT		:	'//' ~('\n'|'\r')* '\r'? '\n'
-		|	'/*' .* '*/'
-		;
-\end{verbatim}
+			|	'/*' .* '*/'
+			;
+\end{lstlisting}
 
 Example:
-\begin{verbatim}
+\begin{lstlisting}
 // Single line comment
 /*
 multi
 line
 comment
 */
-\end{verbatim}
+\end{lstlisting}
 
 \subsection{Opcodes}
-\begin{verbatim}
+\begin{lstlisting}
 OPCODE		:	'"' ('0' | '1' | LETTER | ' ')+ '"';
-\end{verbatim}
+\end{lstlisting}
 
 Example:
-\begin{verbatim}
+\begin{lstlisting}
 "0000 0000 0000 0000" // Fixed opcode
 "00dd dd11 01rr ddrr" // 4-bit variable d and 4-bit variable r
-\end{verbatim}
+\end{lstlisting}
 
 \section{Specifying a microcontroller}
 In order to specify a microcontroller, we have the basic block pattern with an
 identifier as a name and must contain four blocks:
-\begin{verbatim}
-microcontroller	:	IDENTIFIER '{'
-				parameters
-				registers
-				maps
-				instructions
-			'}'
-		;
-\end{verbatim}
+\begin{lstlisting}
+microcontroller:	IDENTIFIER '{'
+						parameters
+						registers
+						maps
+						instructions
+					'}'
+			;
+\end{lstlisting}
 
 \subsection{Parameters}
 Parameters follow the basic block pattern with a parameter specification on
 each line.
 
-\begin{verbatim}
+\begin{lstlisting}
 parameters	:	'parameters' '{' (parameter ';')+ '}';
 
 parameter	:	'gprs' NUMBER ('+' NUMBER)?
-		|	'opcode-size' NUMBER
-		|	'clock' NUMBER
-		|	'endianness' ('big' | 'little')
-		;
-\end{verbatim}
+			|	'opcode-size' NUMBER
+			|	'clock' NUMBER
+			|	'endianness' ('big' | 'little')
+			;
+\end{lstlisting}
 
 Example:
-\begin{verbatim}
+\begin{lstlisting}
 parameters {
 	gprs 32+5; // 32 general purpose registers at offset 5
 	opcode-size 16; // 16 bits opcodes
 	clock 1; // Standard 1 clock cycle
 	endianness little; // Little endian
 }
-\end{verbatim}
+\end{lstlisting}
+
+It should be noted that each parameter has specific behaviour.
+
+\subsection{Registers}
+Registers are specified as offsets. Remember that the gprs-parameter also
+specifies registers and you will be warned when they overlap.
+\begin{lstlisting}
+registers	:	'registers' '{' (register ';')+ '}'
+
+register	:	IDENTIFIER '=' NUMBER;
+\end{lstlisting}
+
+Example:
+\begin{lstlisting}
+registers {
+	pc = 10;
+	sreg = 11;
+}
+\end{lstlisting}
+
+\subsection{Maps}
+Maps are memory mappings. All values are absolute and can overlap thus mapping
+IO into memory space.
+\begin{lstlisting}
+MAP_TYPE	:	'chunk' | 'io' | 'ram' | 'rom' | 'register' | 'print';
+
+maps		:	'maps' '{' (map ';')+ '}';
+
+map			:	MAP_TYPE '(' NUMBER ';' NUMBER ')';
+\end{lstlisting}
+
+Example:
+\begin{lstlisting}
+maps {
+	chunk		(0, 0xFFFFFFF);
+	register	(0, 0x20);
+	io			(0x20, 0x60);
+	ram			(0, 0x461);
+	rom			(0x464,0xFFFFFF);
+	print		(0x3b, 0x3c);
+}
+\end{lstlisting}
+
+\subsection{Instructions}
+Instructions are the most complex block. First of all we'll start with the
+basics and handle expressions later.
+
+\begin{lstlisting}
+OPCODE		:	'"' (DIGIT | LETTER | ' ')+ '"';
+
+params		:	OPCODE (',' OPCODE)* (',' 'clock' '=' NUMBER)?
+
+arguments	:		argument (',' argument)*;
+
+argument	:		'~'? identifier;
+
+instructions:	'instructions' '{' instruction+ '}';
+
+instruction	:	IDENTIFIER params arguments? '{' expr+ '}';
+\end{lstlisting}
+
+Example:
+\begin{lstlisting}
+instructions {
+	noop "0000 0000 0000 0000" {
+		// Expressions here
+	}
+
+	adc "0001 11rd dddd rrrr" Rd, Rr {
+		// Expressions here
+	}
+
+	rjmp "1100 kkkk kkkk kkkk" ~k {
+		// Expressions here
+	}
+}
+\end{lstlisting}
+
+\subsection{Expressions}
+\begin{lstlisting}
+variable	:	'$'? IDENTIFIER
+			|	MAP_TYPE '{' operatorExpr '}'
+			|	( IDENTIFIER | MAP_TYPE ) '[' operatorExpr ':' operatorExpr ']'
+			;
+
+word 		:	variable ('.' (NUMBER | constant))?
+			|	NUMBER
+			|	'!' word
+			;
+
+operatorExpr:	word (('&' | '|' | '^' | '+' | '-' | '*' | '<<' | '>>') operatorExpr)?;
+
+assignExpr	:	variable '=' operatorExpr;
+
+comparison	:	'==' | '<' | '=<' | '>' | '>=';
+
+condition	:	word comparison word
+			|	'(' operatorExpr ')' comparison word
+			;
+
+ifExpr		:	'if' condition '{' expr+ '}' ('else' '{' expr+ '}')?;
+
+expr		:	assignExpr ';'
+			|	ifExpr
+			|	'HALT' ';'
+			;
+\end{lstlisting}
+
+Example:
+\begin{lstlisting}
+// ifExpr
+if $k == -1 {
+	HALT;
+} else {
+	// assignExpr
+	PC = PC + $k + 1;
+}
+
+// assignExpr: write to ram location ram[$SP+1..$SP] the value PC + 1
+ram(ram[$SP+1..$SP]) = PC + 1;
+
+// Decrease ram[$SP+1..$SP] by 2
+ram[$SP+1..$SP] = ram[$SP+1..$SP] - 2;
+
+// FIXME More examples
+\end{lstlisting}

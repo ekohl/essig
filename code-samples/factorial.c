@@ -5,7 +5,7 @@
 static int factorial_putchar(char c, FILE *stream);
 
 static FILE _destfile = FDEV_SETUP_STREAM(factorial_putchar, NULL,
-                                         _FDEV_SETUP_WRITE);
+                                          _FDEV_SETUP_WRITE);
 
 FILE *destfile = &_destfile;
 
@@ -17,26 +17,28 @@ factorial_putchar(char c, FILE *stream)
 }
 #endif /* WITH_PRINTF */
 
+void func(void) { PORTA = 2; }
+
 int main(int argc, char* argv[]) {
-	char i = 6, *resultp;
-	long result = 0;
+	char i = 12, *resultp;
+	long result = 1;
    
 
 	while (i > 1) {
 		result *= i;
 		i--;
 	}
-
+    
+    char buf[sizeof(result) + 2];
 #ifdef WITH_PRINTF
-    fprintf(destfile, "%l\n", result);
+    //sprintf(buf, "%l\n", result);
+    //fprintf(destfile, "%l\n", result);
+    fputs("foabcd", destfile);
 #else
     resultp = (char *) &result;
     for (i = 0; i < sizeof(result); i++) {
-        if (1 << i > result)
-            break;
-
         PORTA = resultp[sizeof(result) - i - 1];
     }
 #endif
-	return result;
+	return 0;
 }
