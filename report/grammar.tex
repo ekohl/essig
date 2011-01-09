@@ -1,8 +1,39 @@
 \chapter{Grammar}
 
-TODO by Ruud :)
+The grammar consists of 4 sections. These sections are:
+\begin{itemize}
+\item Parameters
+\item Registers
+\item Maps
+\item Instructions
+\end{itemize}
 
-Dit verslag beschrijft de bedachte programmeertaal Expr en beschrijft de
-ontwikkeling van de bijbehorende compiler.
+\subsection{Parameters}
+In this section al parameters of a \ac{UC} are specified. Parameters are: 
 
-Aan het eind van het verslag zijn enkele appendices opgenomen. 
+\begin{itemize}
+\item number of \ac{GPRS} 
+\item endianness
+\item standard clock cycles needed for 1 instruction (this can be overrided by an instruction if an instruction needs more than 1 cycle)
+\item opcode size (AVR uses 16 bit opcodes, PIC uses 14 bit opcodes).
+\end{itemize} 
+
+\subsection{Registers}
+In this section the offsets of register values are specified. Currently a little hack is used to address bits in the \ac{SREG}. (TODO suply example)
+
+\subsection{Maps}
+A \ac{UC} has several ranges of addresses. These can be specified below. These address ranges are:
+\begin{itemize}
+\item chunk = The whole block of memory used for the microcontroller (all other ranges need be addressed in this chunck).
+\item register = The location of the \ac{GPRS}.
+\item io = The input and output ports of the microcontroller.
+\item ram = The \ac{RAM} address range, this is memory that can be used by the userprogram.
+\item rom = The \ac{ROM} address range, the user code is stored in here. 
+\item print = This is a custom range used for outputting information in the command line information of the simulator. If in the simulator a value is written to an address in this range, the simulator wil print this value.
+\end{itemize}
+
+\subsection{Instructions}
+The biggest part of the grammar, the instructions. Each instruction needs an opcode. For usage of these instructions, check the userguide.
+
+\subsection{Missing functionality}
+TODO
