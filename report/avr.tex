@@ -1,2 +1,12 @@
 \chapter{AVR Microcontroller}
-For this project, the AVR \ac{UC} is chosen as a base for the \ac{ESSIG}. This is because the AVR instruction set has simple instructions. For every \ac{UC} available (e.g. AVR, PIC), there is a specification available. This is mostly a PDF file wich describes the \ac{UC}. The bad thing about this is, it is not easy to parse. It is written in a formal way. Because of this a new specification language had to be created. The idea about this grammar is to be able to describe all things in the \ac{UC}s PDF description in a formal way and it can be parsed easyly. With this specification, one could generate a simulator. Thus creating a simulator for a \ac{UC} should be as easy as implementing a specification for that kind of microcontroller. 
+For this project, the AVR \ac{UC} is chosen as a base for the \ac{ESSIG}. This
+is because the AVR instruction set has simple instructions. For every \ac{UC}
+available (e.g. AVR, PIC), there is a specification available. This is often a
+PDF file which describes the \ac{UC} in a semi-formal way, which makes it hard
+to parse.
+
+Because of this a new specification language had to be created. The goal of
+this new language, is to formally describe the entire \ac{UC}s specification
+and make it easy to parse. With this specification, one could generate a
+simulator. Thus creating a simulator for a \ac{UC} should be as easy as writing
+a specification for that microcontroller.

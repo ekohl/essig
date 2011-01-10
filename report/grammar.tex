@@ -14,17 +14,17 @@ In this section al parameters of a \ac{UC} are specified. Parameters are:
 \begin{itemize}
 \item number of \ac{GPRS} 
 \item endianness
-\item standard clock cycles needed for 1 instruction (this can be overrided by an instruction if an instruction needs more than 1 cycle)
+\item standard clock cycles needed for 1 instruction (can be overridden per instruction)
 \item opcode size (AVR uses 16 bit opcodes, PIC uses 14 bit opcodes).
 \end{itemize} 
 
 \subsection{Registers}
-In this section the offsets of register values are specified. Currently a little hack is used to address bits in the \ac{SREG}. (TODO suply example)
+In this section the offsets of register values are specified. Currently a little hack is used to address bits in the \ac{SREG}. (TODO supply example)
 
 \subsection{Maps}
 A \ac{UC} has several ranges of addresses. These can be specified below. These address ranges are:
 \begin{itemize}
-\item chunk = The whole block of memory used for the microcontroller (all other ranges need be addressed in this chunck).
+\item chunk = The whole block of memory used for the microcontroller (all other ranges need be addressed in this chunk).
 \item register = The location of the \ac{GPRS}.
 \item io = The input and output ports of the microcontroller.
 \item ram = The \ac{RAM} address range, this is memory that can be used by the userprogram.

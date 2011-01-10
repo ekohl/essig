@@ -32,7 +32,7 @@
 
 # $Id: Makefile,v 1.18 2006-06-19 10:58:11 mairas Exp $
 
-LATEX	= latex
+LATEX	= pdflatex
 BIBTEX	= bibtex
 MAKEINDEX = makeindex
 XDVI	= xdvi -gamma 4
@@ -77,11 +77,6 @@ define run-latex
 	$(RM) $(<:%.tex=%.toc.bak)
 	# Display relevant warnings
 	egrep -i "(Reference|Citation).*undefined" $(<:%.tex=%.log) ; true
-endef
-
-define run-pdflatex
-	LATEX=pdflatex
-	@$(run-latex)
 endef
 
 define get_dependencies
@@ -131,7 +126,7 @@ $(PSF)	: %.ps : %.dvi
 #	  @$(DVIPDF) -o $@ $<
 # To use pdflatex, comment the two lines above and uncomment the lines below
 $(PDF) : %.pdf : %.tex
-	@$(run-pdflatex)
+	@$(run-latex)
 
 
 show	: $(TRG)
