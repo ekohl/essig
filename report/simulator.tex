@@ -105,25 +105,19 @@ indicate the next instruction) or at the end of the handler.
 To illustrate this consider the following two pseudo code
 implementations of rcall:
 
-\begin{verbatim}
-// PC points to next instruction}
-
+\lstset{caption=PC points to next instruction}
+\begin{lstlisting}
 PC = PC + 1
-
 PUSH PC
-
 PC = PC + k
-\end{verbatim}
+\end{lstlisting}
 
-\begin{verbatim}
-// PC points to current instruction}
-
+\lstset{caption=PC points to current instruction}
+\begin{lstlisting}
 PUSH (PC + 1)
-
 PC = PC + k
-
 PC = PC + 1
-\end{verbatim}
+\end{lstlisting}
 
 It can be seen that in a micro controller in which the PC points to the
 next instruction the push operation is simpler.
@@ -132,25 +126,20 @@ In the above example the effects of the instruction was exactly the same
 but in micro controllers in which it is possible to push the PC (This
 is not so in atmel micro controllers) there can be a difference:
 
-\begin{verbatim}
-// PC points to next instruction}
-
+\lstset{caption=PC points to next instruction}
+\begin{lstlisting}
 PC = PC + 1
-
 STORE PC on stack
-\end{verbatim}
+\end{lstlisting}
 
-\begin{verbatim}
-// PC points to current instruction}
-
+\lstset{caption=PC points to current instruction}
+\begin{lstlisting}
 STORE PC on stack
-
 PC = PC + 1
-\end{verbatim}
+\end{lstlisting}
 
 Now in the first the top of the stack is the address of the next
 instruction but in the second the address of the current instruction.
 It also illustrates that our language can handle both situations
 because the incrementation of the PC is handled by the instruction
 handler
-
