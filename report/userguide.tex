@@ -6,6 +6,7 @@ difference can be found in typing which we shall see later on. However, both
 separate lines by a semi-colon and it can also can be seen in blocks which have
 the following pattern:
 
+\lstset{caption=Block specification pattern}
 \begin{lstlisting}
 IDENTIFIER {
 	line1;
@@ -19,6 +20,7 @@ IDENTIFIER {
 Identifiers are names and must start with a letter and may be followed with
 more letters and digits:
 
+\lstset{caption=Identifier specifation}
 \begin{lstlisting}
 fragment DIGIT	:	'0'..'9';
 fragment LETTER	:	('a'..'z' | 'A'..'Z');
@@ -29,6 +31,7 @@ IDENTIFIER		:	LETTER (LETTER | DIGIT)*;
 Numbers can be specified either as numbers with an optional sign to indicate it
 is a negative number or hexadecimal numbers.
 
+\lstset{caption=Number specifation}
 \begin{lstlisting}
 fragment DIGIT	:	'0'..'9';
 fragment NUM	:	'-'? DIGIT+;
@@ -36,7 +39,7 @@ fragment HEX_NUM:	'0' 'x' (DIGIT | ('a'..'f'|'A'..'F'))+;
 NUMBER			:	(NUM | HEX_NUM);
 \end{lstlisting}
 
-Example:
+\lstset{caption=Example numbers}
 \begin{lstlisting}
 10		// Number
 -7		// Negative number
@@ -46,13 +49,14 @@ Example:
 \subsection{Comments}
 Comments are C-style:
 
+\lstset{caption=Comment specifation}
 \begin{lstlisting}
 COMMENT		:	'//' ~('\n'|'\r')* '\r'? '\n'
 			|	'/*' .* '*/'
 			;
 \end{lstlisting}
 
-Example:
+\lstset{caption=Example comments}
 \begin{lstlisting}
 // Single line comment
 /*
@@ -63,11 +67,12 @@ comment
 \end{lstlisting}
 
 \subsection{Opcodes}
+\lstset{caption=Opcode specifation}
 \begin{lstlisting}
 OPCODE		:	'"' ('0' | '1' | LETTER | ' ')+ '"';
 \end{lstlisting}
 
-Example:
+\lstset{caption=Example Opcodes}
 \begin{lstlisting}
 "0000 0000 0000 0000" // Fixed opcode
 "00dd dd11 01rr ddrr" // 4-bit variable d and 4-bit variable r
@@ -76,6 +81,7 @@ Example:
 \section{Specifying a microcontroller}
 In order to specify a microcontroller, we have the basic block pattern with an
 identifier as a name and must contain four blocks:
+\lstset{caption=Microcontroller specification}
 \begin{lstlisting}
 microcontroller:	IDENTIFIER '{'
 						parameters
@@ -90,6 +96,7 @@ microcontroller:	IDENTIFIER '{'
 Parameters follow the basic block pattern with a parameter specification on
 each line.
 
+\lstset{caption=Parameter specification}
 \begin{lstlisting}
 parameters	:	'parameters' '{' (parameter ';')+ '}';
 
@@ -100,7 +107,7 @@ parameter	:	'gprs' NUMBER ('+' NUMBER)?
 			;
 \end{lstlisting}
 
-Example:
+\lstset{caption=Example parameters}
 \begin{lstlisting}
 parameters {
 	gprs 32+5; // 32 general purpose registers at offset 5
@@ -115,13 +122,14 @@ It should be noted that each parameter has specific behaviour.
 \subsection{Registers}
 Registers are specified as offsets. Remember that the gprs-parameter also
 specifies registers and you will be warned when they overlap.
+\lstset{caption=Register specification}
 \begin{lstlisting}
 registers	:	'registers' '{' (register ';')+ '}'
 
 register	:	IDENTIFIER '=' NUMBER;
 \end{lstlisting}
 
-Example:
+\lstset{caption=Example register specification}
 \begin{lstlisting}
 registers {
 	pc = 10;
@@ -132,6 +140,7 @@ registers {
 \subsection{Maps}
 Maps are memory mappings. All values are absolute and can overlap thus mapping
 IO into memory space.
+\lstset{caption=Memory mapping specification}
 \begin{lstlisting}
 MAP_TYPE	:	'chunk' | 'io' | 'ram' | 'rom' | 'register' | 'print';
 
@@ -140,7 +149,7 @@ maps		:	'maps' '{' (map ';')+ '}';
 map			:	MAP_TYPE '(' NUMBER ';' NUMBER ')';
 \end{lstlisting}
 
-Example:
+\lstset{caption=Example memory mapping}
 \begin{lstlisting}
 maps {
 	chunk		(0, 0xFFFFFFF);
@@ -155,22 +164,22 @@ maps {
 \subsection{Instructions}
 Instructions are the most complex block. First of all we'll start with the
 basics and handle expressions later.
-
+\lstset{caption=Instruction specification}
 \begin{lstlisting}
 OPCODE		:	'"' (DIGIT | LETTER | ' ')+ '"';
 
 params		:	OPCODE (',' OPCODE)* (',' 'clock' '=' NUMBER)?
 
-arguments	:		argument (',' argument)*;
+arguments	:	argument (',' argument)*;
 
-argument	:		'~'? identifier;
+argument	:	'~'? identifier;
 
 instructions:	'instructions' '{' instruction+ '}';
 
 instruction	:	IDENTIFIER params arguments? '{' expr+ '}';
 \end{lstlisting}
 
-Example:
+\lstset{caption=Example instructions}
 \begin{lstlisting}
 instructions {
 	noop "0000 0000 0000 0000" {
@@ -188,6 +197,7 @@ instructions {
 \end{lstlisting}
 
 \subsection{Expressions}
+\lstset{caption=Expression specification}
 \begin{lstlisting}
 variable	:	'$'? IDENTIFIER
 			|	MAP_TYPE '{' operatorExpr '}'
@@ -217,7 +227,7 @@ expr		:	assignExpr ';'
 			;
 \end{lstlisting}
 
-Example:
+\lstset{caption=Example expressions}
 \begin{lstlisting}
 // ifExpr
 if $k == -1 {
