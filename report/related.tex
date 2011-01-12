@@ -1,5 +1,27 @@
 \chapter{Related work}
-Dit verslag beschrijft de bedachte programmeertaal Expr en beschrijft de
-ontwikkeling van de bijbehorende compiler.
-
-Aan het eind van het verslag zijn enkele appendices opgenomen.
+There are countless simulators available for various embedded architectures.
+However, there do not appear to be many simulator generators around. The only
+other project that we have been able to find is CGEN, which stands for
+Cpu tools GENerator. It can generate simulators, assemblers and disassemblers. 
+The generator is implemented in Scheme, which is also the
+language used to write the specification of the Instruction Set Architecture,
+"inspired by GCC's RTL and by the Scheme programming language, theoretically
+taking the best of both" \cite{CGEN}.\\
+Currently the opcodes table and an ISA level simulator need to be specified, 
+but the goal is to have "an application independent description of the CPU".\\
+The documentation claims good speed by implemented a threaded interpreter with
+the use of computed gotos, where "about three host instructions per target
+instruction" are needed to jump to the next instruction handler. A typical
+instruction handler takes about ten host instructions.\\
+\\
+CGEN is used in some other projects, such as SID and GDB. SID is a "framework
+for building computer system simulations" \cite{SID}. GDB is the GNU DeBugger,
+which can be used to debug a variety of languages on a lot of target
+platforms \cite{GDB}. Currently several of
+simulators provided by GDB use CGEN. "These simulators use
+a combination of the CGEN-generated files, common files in the sim/common
+directory of GDB releases, and custom target-specific code". This
+functionality can be used by issuing 
+\texttt{target \textless sim\textgreater} from the GDB command
+line (if built with \texttt{--enable-sim}), after which programs can be loaded
+and run in the usual manner.
