@@ -31,8 +31,8 @@ int main(int argc, char* argv[]) {
     
     char buf[sizeof(result) + 2];
 #ifdef WITH_PRINTF
-    //sprintf(buf, "%l\n", result);
-    //fprintf(destfile, "%l\n", result);
+    sprintf(buf, "%l\n", result);
+    fprintf(destfile, "%l\n", result);
     fputs("foabcd", destfile);
 #else
     resultp = (char *) &result;
