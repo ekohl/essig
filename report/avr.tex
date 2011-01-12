@@ -5,8 +5,12 @@ available (e.g. AVR, PIC), there is a specification available. This is often a
 PDF file which describes the \ac{UC} in a semi-formal way, which makes it hard
 to parse.
 
-Because of this a new specification language had to be created. The goal of
-this new language, is to formally describe the entire \ac{UC}s specification
-and make it easy to parse. With this specification, one could generate a
-simulator. Thus creating a simulator for a \ac{UC} should be as easy as writing
-a specification for that microcontroller.
+Because of this a new specification language had to be created. We chose to
+define a new language instead of reusing an existing one because the
+description should be easy to write, readable, flexible but also powerful, 
+and we knew of no
+existing language for this specific purpose that met all those requirements. 
+The goal of this new language is to formally describe the entire \ac{UC}s 
+specification and make it easy to parse. With this specification a simulator 
+can be generated. Thus creating a simulator for a \ac{UC} should be as easy 
+as writing a specification for that microcontroller.
