@@ -1,0 +1,40 @@
+demo {
+	parameters {
+		gprs 2+5;
+		opcode-size 16;
+		clock 1;
+		endianness little;
+	}
+
+	registers {
+		SREG	= 0x5F;
+		PC	= 0x462;
+		SP	= 0x5D;
+	}
+
+	maps {
+		chunk		(0, 0xFFFFFFF);
+		register	(0, 0x20);
+		io		(0x20, 0x60);
+		ram		(0, 0x461);
+		rom		(0x464, 0xFFFFFF);
+		print		(0x3b, 0x3c);
+	}
+
+	instructions {
+		noop "0000 0000 0000 0000" {
+			PC = PC + 1;
+		}
+
+		/* Load an I/O Location to Register */
+		in "1011 0AAd dddd AAAA" Rd, A {
+			Rd = io($A);
+
+			PC = PC + 1;
+		}
+
+		jmp "1001 010k kkkk 110k", "kkkk kkkk kkkk kkkk" k {
+			PC = $k;
+		}
+	}
+}

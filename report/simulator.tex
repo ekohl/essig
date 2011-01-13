@@ -1,8 +1,8 @@
 \chapter{Simulator}
-The final simulator is composed of two components: A general VM
-containing things common to all microcontrollers and supplying debug
-capabilities. All communication to the Simulator is done with a state
-describing the current state of the simulator. The following
+The final simulator is composed of two components: A general VM and a
+simulator which is generated. The VM contains things common to all 
+microcontrollers and supplies debug functionality. The simulator is generated from a description file. Communication between the VM and the generated simulator is accomplished 
+by calling functions directly with the current state of the simulation. The following
 subsections describe each component in detail.
 
 \section{VM}
@@ -11,43 +11,62 @@ The VM is a library in which functions are gathered that most simulators
 have in common. These functions are defined in terms of a private API
 for which implementations can be generated using the generator and the
 definition language. Linked together they form a library that can run
-programs like they were running on the simulated micro controller. It
+programs like they were running on the simulated microcontroller. It
 is state driven in that most functions are parameterised with a state
 which is then manipulated to the desired state by the function. This
-design gives the client full freedom in manipulating and reading the
+design gives the client the freedom to manipulate and read the
 state, which when used properly gives interesting possibilities when
-debugging a program.
+debugging a program. The interpreter can keep a list of differences of the
+state so program execution can be reversed at any time to a desired point,
+after which the user may modify the state manually from the debugger after
+which execution can be resumed with a modified state.
 
 \section{Micro Controller state}
-To be able to let our VM execute any code for any microcontroller we
-defined a structure that could represent any micro controller state. It
-has all things that all micro controllers have in common. A RAM, a ROM,
-some registers and pins. Our specification has all information needed
-to generate this state and that is exactly what our VM does. Taking
-compiled micro controller code it creates an initial state for the
-micro controller specified in it generated component. This state is
-then passed into every function that needs it to function (either
-reading from it or manipulating it). This means that our VM can for
-example manage and run several programs at the same time. We also have
-a structure for diffs of this state. These diffs can be used to
-backtrack the program execution. This relatively loose structure gives
-a lot of interesting capabilities to the client (e.g. save a diffs
-structure and state to the disk and resume exectution later on (with
+To be able to let the VM execute any code for any microcontroller we
+defined a structure that could represent any microcontroller state. It
+has all things that all microcontrollers have in common, namely a RAM space, a
+ROM space, a register file and an I/O space.
+Our specification has all information needed
+to generate this state and that is exactly what the VM does. It uses the
+description compiled into the simulator part and creates an initial state for 
+a simulation. This state is
+then passed to every function that needs it to operate, which means that the 
+VM can for example manage and run several programs simultaneously (although
+the debugger fontend does not currently support multiple simultaneous
+simulations). \\
+In addition to a simulation state, the user may also decide to keep track of
+differences in the state, which is managed by a separate stack of diffs.
+These diffs can be used to backtrack the program execution. This relatively loose structure gives
+a lot of interesting capabilities to the client (e.g. save the diffs
+and state to the disk and resume exectution later on (with
 full backtracking)).
 
-\section{Generated code in the VM}
-The generated portion of the VM works over a private API that the
-generated code exports. This contains a lot of information (Like the
-micro controller architecture information for the state), but more
-importantly the opcode information. This is stored in small structures
-that contains an instruction handler, a name and a mask. The
-instruction handlers are private functions of the generated component,
-but they all have the same signature as defined by the VM. The VM
-passes execution on to this handlers when an instruction needs to be
-executed (in the step or cont methods for example)and they then
-manipulate the state through functions exported by the VM.
+\section{The Generated Simulator}
+The generated simulator exposes a private API which contains the
+implementations that simulate the instructions, the information 
+for the VM to allocate an appropriate simulation state and the information 
+to disassemble the target instruction set into a representation that allows 
+efficient lookup. The opcode specification is stored in small 
+structures, each of which contains a pointer to the associated instruction 
+handler, the name of the opcode, the bits that constitute the opcode and a 
+bitmask that can be applied to an instruction in order to obtain the 
+associated opcode. The
+instruction handlers are private functions of the generated simulator,
+but they all have the same signature as declared by the VM. During program
+execution (i.e., during simulation), the VM passes execution to these handlers
+whenever an instruction needs to be executed. These handlers then manipulate
+the state through functions exposed by the VM.
+
+\section{The Debugger}
+The debugger frontend provides the user with a debugger that can control and
+inspect the simulation. Breakpoints may be set for symbol names or addresses,
+programs may be simulated (multiple times) and whenever execution is halted
+(or even after the program has terminated) the simulation state may be inspected and
+altered and execution may be reversed. The frontend uses the readline library
+(indirectly) to provide command line editing and history.
 
 \section[Interrupt Handling]{Interrupt Handling}
+\begin{comment}
 Interrupts in \ac{ESSIG} can occur at two different levels:
 
 \begin{enumerate}
@@ -56,17 +75,41 @@ From outside of the VM through the vm\_interrupt method }
 \item {
 From a peripheral }
 \end{enumerate}
-In either case a policy can govern whether or not the interrupt will be
-passed on to the simulator
+\end{comment}
+Interrupts may be specified by callbacks that can be registered with the VM
+(with the \texttt{vm\_register\_interrupt\_callable} function). When the debugger
+is used, plugins may be written in Python and put into the \texttt{vm/plugins}
+directory.\\
+Each simulation may have a policy that can govern whether or not the interrupt will be
+passed on to the simulator. When interrupts should be handled, a user-supplied
+\texttt{set\_interrupt} method will be called every step with the state of the
+simulation and a (potentially NULL) diff pointer. The set\_interrupt function
+should then inspect \texttt{state->interrupts} and modify the state of the
+microcontroller appropriately. A subsequent \texttt{handle\_interrupt}
+function (with a signature equivalent to \texttt{set\_interrupt}) is 
+called every step to check the simulation state for an
+interrupt flag. Based on the intricacies of the microcontroller, this function
+should then modify
+the passed-in state accordingly. This may mean pushing the program counter on the stack, 
+changing
+the stack pointer and writing the address of the interrupt handler specified
+in the debuggee to the program counter.
 
-The simulator than enforces the actual rules for the microcontroller
-that is simulated through a call to the handle\_interrupt method
+After all this the VM resumes execution with the potentially modified state.
+It is up to the implementor of \texttt{set\_interrupt} and 
+\texttt{handle\_interrupt} to use the functions of the VM to modify the state.
+If those functions are used along with a diff stack, changes will be
+registered in the diffs. If the state is modified without using any VM
+function,
+changes will not registered in the diffs and hence reverse-stepping will be oblivious to
+any changes incurred by an interrupt handler. This means code could be executed
+once with an interrupt handler and once without, and changes in state or
+control flow may be observed.
 
-After that the vm resumes normal execution
 \section[Opcode parsing]{Opcode parsing}
 In any simulator at some point opcodes will have to be parsed in order
 to determine what code to execute. There are a lot of different
-solutions to this problem and we will discuss a few of the here and
+solutions to this problem and we will discuss a few of them here and
 after that explain the solution we chose.
 
 \subsection[Switch statement]{Switch statement}
@@ -75,7 +118,8 @@ is that you input the opcode or a part of the opcode into a switch
 statement and continue execution at the matched case. This method has
 one disadvantage: The case statement can't be generalized to any
 simulator since the opcodes are (or can be) very different accross
-different architectures.
+different architectures, unless the instructions are disassembled first and the
+switch is on the disassembled opcodes (or some other associated unique key) instead.
 
 \subsection{Some sort of function array}
 This isn't used that much at all but for smaller architectures it can be
@@ -83,21 +127,24 @@ done. The idea is that you have an array of functions that handle an
 opcode and that you index the array using the opcode. But as mentioned
 for architectures with a relatively large opcode this array would
 become far too large and since some instructions have some argument(s)
-embedded in the opcode a lot of functions appear twice in the array.
+embedded in the opcode a lot of functions appear multiple times in the array.
 
 \subsection{Our solution}
-We wanted to be able to find our instruction in an array, but not have
-an entry for every possible opcode. So we decided to make masks for
-opcodes (these masks are then specified in the specification) and
-before execution of the code match this to an instruction handler. This
-process (lets call it disassembling) gives the advantage of fast opcode
-resolution in exchange for a slightly longer load time. This idea is
-further illustrated in the following diagram:
+We wanted to be able to find our instruction in an array efficiently without
+having to keep entries for every possible opcode. So instead we list the
+opcode with variable parts masked to zero, and a bitmask that can be applied
+to an instruction to obtain the associated opcode. These opcodes and masks are
+specified in the microcontroller description file. Before execution starts,
+all the instructions are disassembled, which means that each instruction holds
+a key from which an instruction handler can be obtained in constant time. This gives the advantage of fast opcode resolution in exchange for a slightly longer load time. 
+
+
+% TODO: This idea is further illustrated in the following diagram:
 
 \section[PC incrementation]{PC incrementation}
-In different micro controllers the program counter either points to the
+In different microcontrollers the program counter either points to the
 current instruction or the next instruction. Because we delegate
-program counter incrementation to our instruction handlers both
+program counter incrementation to our instruction handlers, both
 situations can be emulated quite easily by either incrementing the
 program counter at the beginning of the instruction handler (to
 indicate the next instruction) or at the end of the handler.
@@ -105,52 +152,41 @@ indicate the next instruction) or at the end of the handler.
 To illustrate this consider the following two pseudo code
 implementations of rcall:
 
-\begin{verbatim}
-// PC points to next instruction}
-
+\lstset{caption=PC points to next instruction}
+\begin{lstlisting}
 PC = PC + 1
-
 PUSH PC
-
 PC = PC + k
-\end{verbatim}
+\end{lstlisting}
 
-\begin{verbatim}
-// PC points to current instruction}
-
+\lstset{caption=PC points to current instruction}
+\begin{lstlisting}
 PUSH (PC + 1)
-
 PC = PC + k
-
 PC = PC + 1
-\end{verbatim}
+\end{lstlisting}
 
-It can be seen that in a micro controller in which the PC points to the
+It can be seen that in a microcontroller in which the PC points to the
 next instruction the push operation is simpler.
 
 In the above example the effects of the instruction was exactly the same
-but in micro controllers in which it is possible to push the PC (This
-is not so in atmel micro controllers) there can be a difference:
+but in microcontrollers in which it is possible to push the PC (This
+is not so in atmel microcontrollers) there can be a difference:
 
-\begin{verbatim}
-// PC points to next instruction}
-
+\lstset{caption=PC points to next instruction}
+\begin{lstlisting}
 PC = PC + 1
-
 STORE PC on stack
-\end{verbatim}
+\end{lstlisting}
 
-\begin{verbatim}
-// PC points to current instruction}
-
+\lstset{caption=PC points to current instruction}
+\begin{lstlisting}
 STORE PC on stack
-
 PC = PC + 1
-\end{verbatim}
+\end{lstlisting}
 
 Now in the first the top of the stack is the address of the next
 instruction but in the second the address of the current instruction.
 It also illustrates that our language can handle both situations
 because the incrementation of the PC is handled by the instruction
-handler
-
+handler.
