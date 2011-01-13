@@ -1,8 +1,46 @@
-\chapter{Limitations and future work}
-TODO: write stuff
-Set the interrupt policy from the debugger.
-Symbolic debugging, backtraces, etc, unless...
-Generate simulators compatible with GDB
-Support floating point instructions.
-I/O ports
-Argument unpacking from instructions at disassemble time
+\chapter{Limitations and Future Work}
+
+\subsection{Microcontroller Semantics and Specification Language}
+Currently there is no support for floating point arithmetic. This could be
+added in future work.\\
+\\
+Currently it is not possible to specify semantics of I/O ports, which may be a
+welcome addition for users.\\
+\\
+For improved debugging support it may be necessary to specify the calling
+convention.
+
+\subsection{VM Improvements}
+The VM could be improved by including support for more types of executables, as
+it currently only supports loading ELF executables. It is however unclear if there are
+microcontroller architectures for which no compiler is available that can
+generate ELF executables.\\
+\\
+The ELF loader could be improved with support for executables with multiple 
+executable segments, although it is unclear if any compilers for microcontrollers
+generate such executables.
+
+\subsection{Debugger Frontend Improvements}
+Currently it is not possible to specify the interrupt policy from the
+debugger, nor is it possible to specify interrupts. This functionality can
+only be accessed through custom user code, although there is no good reason
+for this.\\
+\\
+Another welcome additions may include symbolic debugging (other than
+breakpoints). It's currently not possible to inspect local variables,
+arguments to functions, etc. It's also not possible to print a backtrace, or
+to execute arbitrary debuggee code from the debugger command line. 
+However, implementing all these
+features may be a tremendous amount of work and time may be better spent on
+generating a simulator that can be plugged into an existing debugger, such as
+GDB.
+
+\subsection{Optimizations}
+Opcode arguments are currently unpacked from the instruction in the opcode
+handler, which means extra runtime overhead that could be prevented by doing
+the unpacking in the disassembler instead. This could be implemented by e.g.
+listing additionaly all the masks that could parse out arguments of
+instructions in the generated simulator, and then subsequently parsing these
+out in the disassembler, storing them on the heap in a chunk the size of 
+OPCODE\_TYPE * the number of arguments, and passing the instruction handler a 
+pointer to the chunk.
