@@ -1,5 +1,6 @@
 \chapter{Grammar}
 
+\section{The Grammar}
 The grammar consists of 4 sections. These sections are:
 \begin{itemize}
 \item Parameters
@@ -9,7 +10,7 @@ The grammar consists of 4 sections. These sections are:
 \end{itemize}
 
 \subsection{Parameters}
-In this section al parameters of a \ac{UC} are specified. Parameters are: 
+In this section all parameters of a \ac{UC} are specified. Parameters are: 
 
 \begin{itemize}
 \item number of \ac{GPRS} 
@@ -19,7 +20,7 @@ In this section al parameters of a \ac{UC} are specified. Parameters are:
 \end{itemize} 
 
 \subsection{Registers}
-In this section the offsets of register values are specified. Currently a little hack is used to address bits in the \ac{SREG}. (TODO supply example)
+In this section the offsets of register values are specified. Currently a little hack is used to address bits in the \ac{SREG}.
 
 \subsection{Maps}
 A \ac{UC} has several ranges of addresses. These can be specified below. These address ranges are:
@@ -27,13 +28,31 @@ A \ac{UC} has several ranges of addresses. These can be specified below. These a
 \item chunk = The whole block of memory used for the microcontroller (all other ranges need be addressed in this chunk).
 \item register = The location of the \ac{GPRS}.
 \item io = The input and output ports of the microcontroller.
-\item ram = The \ac{RAM} address range, this is memory that can be used by the userprogram.
+\item ram = The \ac{RAM} address range, this is memory that can be used by the user program.
 \item rom = The \ac{ROM} address range, the user code is stored in here. 
-\item print = This is a custom range used for outputting information in the command line information of the simulator. If in the simulator a value is written to an address in this range, the simulator wil print this value.
+\item print = This is a custom range used for outputting information in the command line information of the simulator. If in the simulator a value is written to an address in this range, the simulator will print this value.
 \end{itemize}
 
 \subsection{Instructions}
-The biggest part of the grammar, the instructions. Each instruction needs an opcode. For usage of these instructions, check the userguide.
+The biggest part of the grammar, the instructions. Each instruction needs an opcode. For usage of these instructions, check the user guide.
 
-\subsection{Missing functionality}
-TODO
+\section{Design choices and problems}
+The biggest problem encountered was that we started to fast on the grammar. We just took the \ac{UC} and started away, but we should have read the whole specification beforehand. This would have saved a lot of time during the writing of the grammar.
+
+\subsection{Opcodes}
+We chose to parse the opcodes, not in the ANTLR language, but in inline Java code. 
+
+\section{Future of the grammar}
+Things that have to be done to complete the grammar are:
+\begin{itemize}
+\item Check compatibility of the grammar with other \ac{UC}s than the ATMEL AVR.
+\item Add support for floating point numbers.
+\item In the section 'parameters' the size of a register should be added, e.g. "register-size = 8;" wich are 8 bits.
+\item The section 'registers'
+\begin{itemize}
+\item This section should be renamed to like 'offsets'.
+\item Declaration of single BIT's should be possible. The bits in the \ac{SREG} are now set with a little java hack in the code, it checks wheter the IDENTIFIER is one of these "CZNVSHTI".  
+\item Size of a offset should be declareable.
+\end{itemize}
+\item Declaration of \ac{UC} peripherals like USART, SPI, I2C, ADC.
+\end{itemize}
