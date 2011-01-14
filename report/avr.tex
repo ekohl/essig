@@ -1,16 +1,85 @@
 \chapter{AVR Microcontroller}
 For this project, the AVR \ac{UC} is chosen as a base for the \ac{ESSIG}. This
 is because the AVR instruction set has simple instructions. For every \ac{UC}
-available (e.g. AVR, PIC), there is a specification available. This is often a
-PDF file which describes the \ac{UC} in a semi-formal way, which makes it hard
-to parse.
+available (e.g. AVR, PIC), there is a specification available.
+ 
+% Wilfried: Feels like this shouldn't be here but in earlier chapter
+%
+% Because of this a new specification language had to be created. The goal of
+% this new language, is to formally describe the entire \ac{UC}s specification
+% and make it easy to parse. With this specification, one could generate a
+% simulator. Thus creating a simulator for a \ac{UC} should be as easy as writing
+% a specification for that microcontroller.
 
-Because of this a new specification language had to be created. We chose to
-define a new language instead of reusing an existing one because the
-description should be easy to write, readable, flexible but also powerful, 
-and we knew of no
-existing language for this specific purpose that met all those requirements. 
-The goal of this new language is to formally describe the entire \ac{UC}s 
-specification and make it easy to parse. With this specification a simulator 
-can be generated. Thus creating a simulator for a \ac{UC} should be as easy 
-as writing a specification for that microcontroller.
+\section{AVR Instruction Set}
+
+The AVR instruction set as used by most Atmel AVR microcontrollers has 142 
+defined instructions most of which can be found on any AVR microcontroller 
+however this does not go for all instructions.
+
+It is a RISC architecture with 32 general purpose registers 
+
+\subsection{Stack}
+
+The AVR has a dynamic stack that is located in the RAM of the AVR.
+The \ac{SP} points past the top of the stack and gets lower if data is 
+stored in it.
+
+\section{ATMega16 - The Model of Choice}
+
+We chose the ATMega16 as the specific microcontroller to use. It is an 
+impressive little machine supporting 131 of the AVR instructions
+having 16kB of in-system programmable flash memory as well as 1kB of 
+internal SRAM. In can run up to 16 MIPS at 16Mhz.
+
+\subsection{Registers}
+
+The ATMega16 features 96 registers (32 general purpose and 64 special 
+purpose and I/O registers).
+
+The \ac{SREG} is stored in the I/O space and contains arithmetic flags
+and the global interrupt flag.
+
+The \ac{SP} is also stored in the I/O space.
+
+There are various other registers in the I/O space usually corresponding
+to some funtion of a peripheral that will be explained in the peripheral
+section
+
+\subsection{Peripherals}
+
+The ATMega16 is equipped with a lot of onchip peripherals and also some
+generic ports.
+
+A list of peripherals:
+\begin{itemize}
+\item{Two 8-bit Timer/Counters with Separate Prescalers and Compare Modes} 
+\item{One 16-bit Timer/Counter with Separate Prescaler, Compare Mode, and Capture Mode}
+\item{Real Time Counter with Separate Oscillator}
+\item{Four PWM Channels}
+\item{8-channel, 10-bit ADC}
+\item{Byte-oriented Two-wire Serial Interface}
+\item{Programmable Serial USART}
+\item{Master/Slave SPI Serial Interface}
+\item{Programmable Watchdog Timer with Separate On-chip Oscillator}
+\item{On-chip Analog Comparator}
+\end{itemize}
+
+\subsection{Interrupts}
+
+Though interrupt procedures differ widely amongst microcontrollers (and processors)
+it is important to understand the mechanics of it. 
+
+There are two types of interrupts. Simple interrupts that are caused by a set 
+interrupt flag and interrupts that are only work if a certain condition is met 
+(if this condition appears but disappears before the condition is checked nothing 
+will happen). These do not necessarily set an interrupt flag.
+
+When an interrupt occurs the global interrupt flag is cleared disabling all 
+interrupts. The current program counter is stored on the stack and the 
+program counter is set to the interrupt vector corresponding to the specific 
+interrupt. The lower the interrupt vector the higher the interrupt's priority is
+
+When the microcontroller exits from the interrupt it allways first returns to the
+main program to execute at least one instruction before checking on any other
+interrupts.
