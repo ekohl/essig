@@ -1,0 +1,152 @@
+% this style was created by Philippe Dreuw and Thomas Deselaers
+\ProvidesPackage{beamerthemeDreuw} 
+\usepackage{chngpage}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\RequirePackage{tangocolors}
+%\selectcolormodel{cmyk}
+\mode<presentation>
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\setbeamercolor{headline}{fg=white,bg=blue!30!black}
+\setbeamercolor{footline}{fg=white, bg=black}
+\setbeamerfont{footline}{size=\large,series=\tt}
+\setbeamercolor{separation line}{bg=blue!30!black}
+\setbeamercolor{title in headline}{fg=white, bg=black}
+\setbeamercolor{author in headline}{fg=white}
+\setbeamercolor{institute in headline}{fg=white}
+
+\setbeamercolor{framesubtitle}{fg=red, bg=gray}
+\setbeamercolor{logobox}{fg=black, bg=white!100!black}
+\setbeamercolor{author in head/foot}{fg=white, bg=black}
+\setbeamercolor{title in head/foot}{fg=black, bg=white}
+
+\setbeamercolor*{normal text}{fg=black, bg=white}
+\setbeamercolor*{block body}{bg=black!10,fg=black}
+\setbeamercolor*{block title}{fg=white,bg=blue!30!black}
+\setbeamerfont{block title}{size=\large,series=\bf}
+\setbeamercolor{upper separation line head}{fg=orange}
+
+\setbeamercolor*{example body}{fg=black!50,bg=black}
+\setbeamercolor*{example text}{fg=black!50,bg=black}
+\setbeamercolor*{example title}{bg=orange,fg=gray}
+
+\setbeamercolor{alerted text}{fg=blue!70!black}
+
+\setbeamercolor{structure}{fg=blue}
+
+\setbeamertemplate{itemize items}[ball]
+\setbeamertemplate{navigation symbols}{}  % no navigation on a poster
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setbeamertemplate{block begin}{
+  \vskip.75ex
+  \begin{beamercolorbox}[rounded=true,shadow=true,leftskip=1cm,colsep*=.75ex]{block title}%
+    \usebeamerfont*{block title}\insertblocktitle
+  \end{beamercolorbox}%
+  {\ifbeamercolorempty[bg]{block body}{}{\nointerlineskip\vskip-0.5pt}}%
+  \usebeamerfont{block body}%
+  \begin{beamercolorbox}[rounded=true,shadow=true,colsep*=.75ex,sep=.75ex,vmode]{block body}%
+    \ifbeamercolorempty[bg]{block body}{\vskip-.25ex}{\vskip-.75ex}\vbox{}%
+    \begin{adjustwidth}{0.8cm}{0.4cm}
+  }
+  \setbeamertemplate{block end}{
+  \end{adjustwidth}
+  \end{beamercolorbox}
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setbeamertemplate{headline}{  
+  \leavevmode
+
+  \begin{beamercolorbox}[wd=\paperwidth]{headline}
+    \begin{columns}[T]
+      \begin{column}{.1\paperwidth}
+      \end{column}
+      \begin{column}{.8\paperwidth}
+        \vskip8ex
+        \raggedleft
+	\begin{center}
+	         \usebeamercolor{title in headline}{\color{fg}\textbf{\Huge{\inserttitle}}\\[3ex]}
+	        \vskip20pt
+	\begin{adjustwidth}{-20cm}{-20cm}
+      \begin{center}
+       \usebeamercolor{author in headline}{\color{fg}\huge{\insertauthor} \\[0.5ex] }
+	\usebeamercolor{institute in headline}{\color{fg}\huge{\insertinstitute}\\[1ex]}     
+      \end{center}
+	\end{adjustwidth}
+	\end{center}
+
+      \end{column}
+      \begin{column}{.1\paperwidth}
+	\vskip28ex
+%        \begin{flushleft}
+ %         \includegraphics[scale=0.5]{figures/fmt-logo.pdf}
+%     	\vskip1cm
+% 	   \includegraphics[width=.35\linewidth]{figures/ctit}
+%        \end{flushleft}
+%         \vskip1.5cm
+      \end{column}
+      \begin{column}{.03\paperwidth}
+      \end{column}
+    \end{columns}\vspace{1cm}
+  \end{beamercolorbox}
+
+  \begin{beamercolorbox}[wd=\paperwidth]{lower separation line head}
+    \rule{0pt}{2pt}
+  \end{beamercolorbox}
+}
+
+%  \setbeamertemplate{headline}{  
+%    \leavevmode
+%    \begin{beamercolorbox}[sep=0.5cm,wd=.8\paperwidth]{headline}
+%      \usebeamercolor{title in headline}{\raggedleft\color{fg}\textbf{\LARGE{\inserttitle}}\\[1ex]}
+%      \usebeamercolor{author in headline}{\raggedleft\color{fg}\large{\insertauthor}\\[1ex]}
+%      \usebeamercolor{institute in headline}{\raggedleft\color{fg}\large{\insertinstitute}\\[1ex]}     
+%    \end{beamercolorbox}%
+%    \begin{beamercolorbox}[wd=.2\paperwidth]{logo in headline}
+%      \centering
+%      \LARGE{LOGO}
+%    \end{beamercolorbox}  
+
+
+%}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setbeamertemplate{footline}{
+  \begin{beamercolorbox}[wd=\paperwidth]{upper separation line foot}
+    \rule{0pt}{10pt}
+  \end{beamercolorbox}
+  
+  \leavevmode%
+  
+  \begin{beamercolorbox}[ht=7cm,leftskip=1cm,rightskip=1cm]{logobox}%
+    \raisebox{0.65cm}{ \includegraphics[scale=3.25]{figures/utblack.pdf}}\hspace{0.5cm}
+    \raisebox{0.0cm}{ \includegraphics[scale=0.625, clip, trim=0 10 0 70]{figures/fmt-logo.pdf}} \hspace{2.5cm}
+    \raisebox{0.25cm}{\includegraphics[scale=1.375]{figures/ctit_logo_new.pdf}} \hspace{2.5cm}
+     \raisebox{0.5cm}{\includegraphics[scale=3, clip, trim=30 0 0 0]{figures/nwo.pdf}}
+     \vskip0.5ex
+  \end{beamercolorbox}
+  \vskip0pt%
+  \begin{beamercolorbox}[wd=\paperwidth]{lower separation line foot}
+    \rule{0pt}{10pt}
+  \end{beamercolorbox}
+
+%  \begin{beamercolorbox}[ht=4ex,leftskip=1cm,rightskip=1cm]{author in head/foot}%
+%     Scientific ICT-Research Event Netherlands - November 2, 2009
+%    \hfill
+%     \texttt{http://fmt.cs.utwente.nl/$\sim$timmer}
+%    \vskip1ex
+%  \end{beamercolorbox}
+%  \vskip0pt%
+%  \begin{beamercolorbox}[wd=\paperwidth]{lower separation line foot}
+%    \rule{0pt}{2pt}
+%  \end{beamercolorbox}
+
+}
+
+
+\mode<all>
+

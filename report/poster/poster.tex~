@@ -1,0 +1,154 @@
+\documentclass[a4paper]{report}
+\mode<presentation>
+  {
+%   \usetheme{Berlin}
+  %\usetheme{Dreuw}
+  \usetheme{Dreuw}
+  }
+%  \usepackage{times}
+  \usepackage{subfigure}
+  \usepackage{relsize}
+  \usepackage{tikz}
+  \usepackage{amsmath,amsthm, amssymb, latexsym}
+ % \boldmath
+  \renewcommand*{\thesubfigure}{}
+%  \renewcommand{\figurename}{bvla}
+
+\makeatletter 
+\providecommand\dotsum{\mathpalette\@dotted\sum \vphantom{\sum}} 
+\def\@dotted#1#2{\ooalign{\hfil$#1 \bullet $\hfil\cr\hfil$#1#2$\hfil\cr}} 
+\makeatother 
+\DeclareMathOperator*{\psum}{\mathchoice{\sum\!\!\!\!\!\!\!\bullet\ \ }{\sum\hspace{-2.2ex}\raisebox{0.2ex}{\scalebox{0.75}{$\bullet$}}\,\,}{\sum\!\!\!\!\!\!\!\bullet}{\sum\!\!\!\!\!\!\!\bullet}}
+\DeclareMathOperator*{\psumm}{\mathchoice{\sum\!\!\!\!\!\!\!\bullet\ \ }{\sum\hspace{-2.6ex}\raisebox{0.15ex}{\scalebox{0.75}{$\bullet$}}\,\,}{\sum\!\!\!\!\!\!\!\bullet}{\sum\!\!\!\!\!\!\!\bullet}}
+
+\DeclareMathOperator*{\pplus}{\oplus}
+\newcommand{\dv}{\vec{t}}
+
+  \usetikzlibrary{backgrounds}
+\usetikzlibrary{automata}
+\usetikzlibrary{arrows}
+\usetikzlibrary{shapes}
+\usetikzlibrary{decorations.pathmorphing}
+\usetikzlibrary{fit}
+
+\let\picturesize\Large
+
+\def\clap#1{\hbox to 0pt{\hss#1\hss}}
+\def\mathclap{\mathpalette\mathclapinternal}
+\def\mathllap{\mathpalette\mathllapinternal}
+\def\mathrlap{\mathpalette\mathrlapinternal}
+\def\mathclapinternal#1#2{%
+            \clap{$\mathsurround=0pt#1{#2}$}}
+\def\mathllapinternal#1#2{%
+            \llap{$\mathsurround=0pt#1{#2}$}}
+\def\mathrlapinternal#1#2{%
+            \rlap{$\mathsurround=0pt#1{#2}$}}
+
+
+%%%%% TIKZ
+\tikzstyle{every picture}=[line width=4pt]
+\tikzstyle{ultra ultra thick}=[line width=2.5pt]
+\tikzstyle{nodeSmall} = [state, minimum size=6mm, inner sep=0mm, fill=black, node distance=1.25cm]
+\tikzstyle{state2}=[state, minimum size=7mm, inner sep=0.5mm]
+\tikzstyle{teststate}=[state, minimum size=4mm, inner sep=0.5mm]
+\tikzstyle{testleaf}=[minimum size=4mm, inner sep=0.5mm]
+\tikzstyle{every loop}=[->]
+\tikzstyle{onEdge}=[fill=white, pos=0.4]
+\tikzstyle{testschuin}=[node distance=\testschuin]
+\tikzstyle{test}=[node distance=\test, pos=0.4]
+\tikzstyle{loopupper}=[in=67, out=113, loop]
+\tikzstyle{lagerLabel}=[pos=0.68]
+\tikzstyle{every scope}=[>=latex, node distance=\recht]
+\tikzstyle{smallstate}=[state, minimum size=3mm, inner sep=0.5mm, fill=white, ultra ultra thick]
+\tikzstyle{smallstate3}=[state, minimum size=3mm, inner sep=2mm, fill=white]
+\tikzstyle{smallrectangle}=[state, rectangle, minimum size=3mm, inner sep=0.5cm, fill=white]
+\tikzstyle{smallstate2}=[state, minimum size=5mm, inner sep=0.5mm, fill=white]
+\tikzstyle{background rectangle}= [rounded corners, fill=yellow!20, draw=black, rounded corners=1ex]
+\tikzstyle{oval} = [state, ellipse, minimum size=4mm, inner sep=0.5mm, node distance=1.5cm]
+\tikzstyle{prob}=[->, decorate, decoration={snake,segment length=2mm, amplitude=.4mm,post length=1mm}]
+
+
+
+
+\tikzstyle{loopleft}=[in=-176, out=-184, loop, swap]
+\definecolor{greenish}{rgb}{0,0.5,0}
+\tikzstyle{loopright}=[in=-10, out=10, loop, swap]
+\tikzstyle{loopleft2}=[in=-171, out=-189, loop, swap]
+
+\newlength{\testschuin}
+\newlength{\test}
+\newlength{\recht}
+\setlength{\testschuin}{2.1213203435596425732025330863145cm}
+\setlength{\test}{1.5cm}
+\setlength{\recht}{1.7677669529663688110021109052621cm}
+\newcommand{\back}{\picturesize \color{yellow!20}.}
+\newcommand{\fail}{\bf \vphantom{p}fail\vphantom{f}}
+\newcommand{\pass}{\bf \vphantom{p}pass\vphantom{f}}
+%%%%%%%% TIKZ
+
+
+  \usepackage[english]{babel}
+  \usepackage[latin1]{inputenc}
+%   \usepackage[textpos}
+  \usepackage[absolute,overlay]{textpos}
+  \usepackage[orientation=portrait,size=a0,scale=1.35,debug]{beamerposter}
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+  \graphicspath{{figures/}}
+	
+  \title[]{\Huge Probabilistic specifications with data types}
+  \author[]{\LARGE \textbf{Joost-Pieter Katoen, Jaco van de Pol, Mari\"elle Stoelinga, Mark Timmer}}
+
+  \institute{\Large \vfill {Formal Methods and Tools -- Department of Computer Science -- University of Twente} }
+  \date{November 5, 2009}
+
+  \begin{document}
+  \begin{frame}{} 
+
+\vspace{-1cm}
+% Eerste rij
+\begin{columns}[t]
+\begin{column}{.02\linewidth}\end{column}
+\begin{column}{.97\linewidth}\input{introduction2.tex}\end{column}
+\begin{column}{.02\linewidth}\end{column}
+\end{columns}
+
+\vskip0.01\linewidth
+%\vfill
+  
+% Tweede rij
+\begin{columns}[t]
+\begin{column}{.02\linewidth}\end{column}
+\begin{column}{.475\linewidth}\input{introduction.tex}\end{column}
+\begin{column}{.01\linewidth}\end{column}
+\begin{column}{.475\linewidth}\input{overview.tex}\end{column}
+\begin{column}{.02\linewidth}\end{column}
+\end{columns}
+
+%\vfill  
+\vskip0.01\linewidth
+
+\begin{columns}[t]
+\begin{column}{.02\linewidth}\end{column}
+\begin{column}{.475\linewidth}\input{prcrl.tex}\end{column}
+\begin{column}{.01\linewidth}\end{column}
+\begin{column}{0.475\linewidth}\input{lppe.tex}\end{column}			
+\begin{column}{.02\linewidth}\end{column}
+\end{columns}
+
+\vskip0.01\linewidth
+%\vfill
+
+% Derde rij
+\begin{columns}[t]
+\begin{column}{.02\linewidth}\end{column}
+\begin{column}{.475\linewidth}\input{example.tex}\end{column}
+\begin{column}{.01\linewidth}\end{column}
+\begin{column}{0.475\linewidth}\input{conclusions.tex}\end{column}			
+\begin{column}{.02\linewidth}\end{column}
+\end{columns}
+
+%\vfill
+
+\end{frame}
+\end{document}

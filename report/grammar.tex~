@@ -52,7 +52,7 @@ Things that have to be done to complete the grammar are:
 \begin{itemize}
 \item This section should be renamed to like 'offsets'.
 \item Declaration of single BIT's should be possible. The bits in the \ac{SREG} are now set with a little java hack in the code, it checks wheter the IDENTIFIER is one of these "CZNVSHTI".  
-\item Size of an offset should be declareable.
+\item Size of a offset should be declareable.
 \end{itemize}
 \item Declaration of \ac{UC} peripherals like USART, SPI, I2C, ADC.
 \end{itemize}

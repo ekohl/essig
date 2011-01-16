@@ -1,0 +1,108 @@
+\setbeamertemplate{block begin}{
+  \vskip.75ex
+  \begin{beamercolorbox}[rounded=true,shadow=true,leftskip=1cm,colsep*=.75ex]{block title}%
+    \usebeamerfont*{block title}\insertblocktitle
+  \end{beamercolorbox}%
+  {\ifbeamercolorempty[bg]{block body}{}{\nointerlineskip\vskip-0.5pt}}%
+  \usebeamerfont{block body}%
+  \begin{beamercolorbox}[ht=27.17cm, rounded=true,shadow=true,colsep*=.75ex,sep=.75ex, vmode]{block body}%
+    \ifbeamercolorempty[bg]{block body}{\vskip-.25ex}{\vskip-.75ex}\vbox{}%
+    \begin{adjustwidth}{0.8cm}{0.4cm}
+  }
+  \setbeamertemplate{block end}{
+  \end{adjustwidth}
+  \end{beamercolorbox}
+}
+
+\begin{block}{\large \smash{6. Linearisation}\vphantom{Introduction}}
+Given the following specification in prCRL:
+
+\[\ \ \ \ \ \ X = \tau \!\!\psum_{i : \{1,2\}} \frac{i}{3} \colon \Big(\text{send}(i) \cdot X + \sum_{j:\mathbb{N}} j < 10 \Rightarrow \text{send}(j^i)\cdot X \Big)\]
+
+\begin{columns}
+\begin{column}{0.02\linewidth}\end{column}
+\begin{column}{.55\linewidth}
+
+\noindent \!\!\!\!The corresponding linear form is:
+\begin{align*}
+&X({\color{blue!70!black}\text{pc} : \{1,2,3\}, i:\{1,2\}}) = \\
+& \quad \phantom{{}+{}} \hphantom{{}\sum_{j : \mathbb{N}}{}}{\color{blue!70!black}\text{pc} = 1} \Rightarrow \textstyle \tau \psum_{i:\{1,2\}} \frac{i}{3} \colon X({\color{blue!70!black}2, i})\\
+& \quad {}+{} \hphantom{{}\sum_{j : \mathbb{N}}{}}{\color{blue!70!black}\text{pc} = 2} \Rightarrow \text{send}(i) \cdot X({\color{blue!70!black}1}, i)\\
+& \quad {}+{} \sum_{j : \mathbb{N}} {\color{blue!70!black}\text{pc} = 2} \wedge j < 10 \Rightarrow \text{send}(j^i) \cdot X({\color{blue!70!black}1}, i)
+\end{align*}
+
+\end{column}
+
+
+\begin{column}{.35\linewidth}
+\begin{figure}
+\subfigure[A graphical representation of $X$]{
+
+\begin{tikzpicture}[scale=1.25, transform shape, show background rectangle, descr/.style={fill=white,inner sep=2.5pt}]
+	\node[smallstate3] (s_0) {\footnotesize $1$};
+	\node[smallstate3] (s_1) [right of=s_0, node distance=7cm] {\footnotesize $2$};
+	\draw[->] (s_0) edge [bend left=30, auto] node {\footnotesize$\tau \psum_{1:\{1,2\}}\frac{i}{3}$} (s_1);
+	\draw[->] (s_1) edge [bend left=0] node [fill=yellow!20] {\phantom{......}} node {\footnotesize$\text{send}(i)$} (s_0);
+	\draw[->] (s_1) edge [bend left=30, auto] node {\footnotesize$\sum_{j:\mathbb{N}} j < 10 \Rightarrow \text{send}(j^i)$} (s_0);
+	
+\end{tikzpicture}
+}
+\end{figure}
+\end{column}
+\begin{column}{0.02\linewidth}\end{column}
+\end{columns}
+
+\vskip36pt 
+
+For more complicated systems the ideas behind linearisation remain the same:
+\begin{adjustwidth}{0.5cm}{0.5cm}
+\begin{itemize}
+\item \ Introduce a \alert{program counter} to remember the location in the formula
+\item \ Introduce \alert{global parameters} to remember bound variables
+\end{itemize}
+\end{adjustwidth}
+\vskip10pt
+We developed an \alert{algorithm} to transform any prCRL specification to an LPPE, \alert{proved it correct}, and \alert{implemented} it.
+
+
+
+%Given the following specification in prCRL:
+
+%\begin{columns}
+%\begin{column}{.5\linewidth}
+%\[\ \ \ \ \ \ X = \sum_{d : D} send(d) \cdot \tau \cdot store(d) \cdot X\]
+%\end{column}
+%\begin{column}{.5\linewidth}
+%\begin{figure}
+%\subfigure[A graphical representation of the specification $X$]{
+%\begin{tikzpicture}[scale=1.25, transform shape, show background rectangle, descr/.style={fill=white,inner sep=2.5pt}, auto]
+%	\node[smallstate3] (s_0) {\footnotesize $1$};
+%	\node[smallstate3] (s_1) [right of=s_0, node distance=5cm] {\footnotesize $2$};
+%	\node[smallstate3] (s_2) [right of=s_1, node distance=5cm] {\footnotesize $3$};
+%	\draw[->] (s_0) edge [bend left=15] node {\footnotesize$\sum_{d:D}\text{send}(d)$} (s_1);
+%	\draw[->] (s_1) edge [bend left=15] node {\footnotesize$\tau$} (s_2);
+%	\draw[->] (s_2) edge [bend left=15] node {\footnotesize$\text{store}(d)$} (s_0);
+%	
+%\end{tikzpicture}
+%}
+%\end{figure}
+%\end{column}
+%\end{columns}
+
+%The corresponding linear form is:
+%\begin{align*}
+%&X({\color{blue}\text{pc} : \{1,2,3\}}, d:D) = \\
+%& \quad \phantom{{}+{}} {\color{blue}\text{pc} = 1} \Rightarrow \textstyle\sum_{d:D} send(d) \cdot X({\color{blue}2, d})\\
+%& \quad {}+{} {\color{blue}\text{pc} = 2} \Rightarrow \tau \cdot X({\color{blue}3}, d)\\
+%& \quad {}+{} {\color{blue}\text{pc} = 3} \Rightarrow store(d) \cdot X({\color{blue}1}, d)
+%\end{align*}
+%For more complicated systems the ideas behind linearisation remain the same:
+%\begin{adjustwidth}{0.5cm}{0.5cm}
+%\begin{itemize}
+%\item \ Introduce a \alert{program counter} to remember the location in the formula
+%\item \ Introduce \alert{global parameters} to remember bound variables
+%\end{itemize}
+%\end{adjustwidth}
+%\vskip10pt
+%An \alert{algorithm} transforming any prCRL specification to an LPPE has been developed, \alert{proven correct}, and \alert{implemented}.
+\end{block}
