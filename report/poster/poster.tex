@@ -1,4 +1,4 @@
-\documentclass[a4paper]{report}
+\documentclass{beamer}
 \mode<presentation>
   {
 %   \usetheme{Berlin}
@@ -14,10 +14,10 @@
   \renewcommand*{\thesubfigure}{}
 %  \renewcommand{\figurename}{bvla}
 
-\makeatletter 
-\providecommand\dotsum{\mathpalette\@dotted\sum \vphantom{\sum}} 
-\def\@dotted#1#2{\ooalign{\hfil$#1 \bullet $\hfil\cr\hfil$#1#2$\hfil\cr}} 
-\makeatother 
+\makeatletter
+\providecommand\dotsum{\mathpalette\@dotted\sum \vphantom{\sum}}
+\def\@dotted#1#2{\ooalign{\hfil$#1 \bullet $\hfil\cr\hfil$#1#2$\hfil\cr}}
+\makeatother
 \DeclareMathOperator*{\psum}{\mathchoice{\sum\!\!\!\!\!\!\!\bullet\ \ }{\sum\hspace{-2.2ex}\raisebox{0.2ex}{\scalebox{0.75}{$\bullet$}}\,\,}{\sum\!\!\!\!\!\!\!\bullet}{\sum\!\!\!\!\!\!\!\bullet}}
 \DeclareMathOperator*{\psumm}{\mathchoice{\sum\!\!\!\!\!\!\!\bullet\ \ }{\sum\hspace{-2.6ex}\raisebox{0.15ex}{\scalebox{0.75}{$\bullet$}}\,\,}{\sum\!\!\!\!\!\!\!\bullet}{\sum\!\!\!\!\!\!\!\bullet}}
 
@@ -95,7 +95,7 @@
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
   \graphicspath{{figures/}}
-	
+
   \title[]{\Huge Probabilistic specifications with data types}
   \author[]{\LARGE \textbf{Joost-Pieter Katoen, Jaco van de Pol, Mari\"elle Stoelinga, Mark Timmer}}
 
@@ -103,36 +103,36 @@
   \date{November 5, 2009}
 
   \begin{document}
-  \begin{frame}{} 
+  \begin{frame}{}
 
 \vspace{-1cm}
 % Eerste rij
 \begin{columns}[t]
 \begin{column}{.02\linewidth}\end{column}
-\begin{column}{.97\linewidth}\input{introduction2.tex}\end{column}
+\begin{column}{.97\linewidth}\input{introduction2}\end{column}
 \begin{column}{.02\linewidth}\end{column}
 \end{columns}
 
 \vskip0.01\linewidth
 %\vfill
-  
+
 % Tweede rij
 \begin{columns}[t]
 \begin{column}{.02\linewidth}\end{column}
-\begin{column}{.475\linewidth}\input{introduction.tex}\end{column}
+\begin{column}{.475\linewidth}\input{introduction}\end{column}
 \begin{column}{.01\linewidth}\end{column}
-\begin{column}{.475\linewidth}\input{overview.tex}\end{column}
+\begin{column}{.475\linewidth}\input{overview}\end{column}
 \begin{column}{.02\linewidth}\end{column}
 \end{columns}
 
-%\vfill  
+%\vfill
 \vskip0.01\linewidth
 
 \begin{columns}[t]
 \begin{column}{.02\linewidth}\end{column}
-\begin{column}{.475\linewidth}\input{prcrl.tex}\end{column}
+\begin{column}{.475\linewidth}\input{prcrl}\end{column}
 \begin{column}{.01\linewidth}\end{column}
-\begin{column}{0.475\linewidth}\input{lppe.tex}\end{column}			
+\begin{column}{0.475\linewidth}\input{lppe}\end{column}
 \begin{column}{.02\linewidth}\end{column}
 \end{columns}
 
@@ -142,9 +142,9 @@
 % Derde rij
 \begin{columns}[t]
 \begin{column}{.02\linewidth}\end{column}
-\begin{column}{.475\linewidth}\input{example.tex}\end{column}
+\begin{column}{.475\linewidth}\input{example}\end{column}
 \begin{column}{.01\linewidth}\end{column}
-\begin{column}{0.475\linewidth}\input{conclusions.tex}\end{column}			
+\begin{column}{0.475\linewidth}\input{conclusions}\end{column}
 \begin{column}{.02\linewidth}\end{column}
 \end{columns}
 
