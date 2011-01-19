@@ -19,25 +19,37 @@
 \tiny {  
 \lstset{
 numbers=left,                   % where to put the line-numbers
-numberstyle=\footnotesize,      % the size of the fonts that are used for the line-numbers
+numberstyle=\tiny,      % the size of the fonts that are used for the line-numbers
 stepnumber=1,
 xleftmargin=25pt
 }
+
+'demo' is the type of uC. Could be anything like atmega16. \\
+uC = Microcontroller
 \begin{lstlisting}
 demo {
+	...Rest of code below..
+}
+\end{lstlisting}
+Parameters specific for the uC.
+\begin{lstlisting}
 	parameters {
 		gprs 2+5;
 		opcode-size 16;
 		clock 1;
 		endianness little;
 	}
-
+\end{lstlisting}
+Setup offsets of registers in the uC.
+\begin{lstlisting}
 	registers {
 		SREG	= 0x5F;
 		PC	= 0x462;
 		SP	= 0x5D;
 	}
-
+\end{lstlisting}
+The memory mappings of the uC.
+\begin{lstlisting}
 	maps {
 		chunk		(0, 0xFFFFFFF);
 		register	(0, 0x20);
@@ -47,6 +59,9 @@ demo {
 		print		(0x3b, 0x3c);
 	}
 
+\end{lstlisting}
+All the instructions of the uC. (this is an example so only 3 are shown).
+\begin{lstlisting}
 	instructions {
 		noop "0000 0000 0000 0000" {
 			PC = PC + 1;
@@ -63,7 +78,6 @@ demo {
 			PC = $k;
 		}
 	}
-}
   
 \end{lstlisting}
 
