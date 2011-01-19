@@ -1,3 +1,4 @@
+\begin{comment}
 \setbeamertemplate{block begin}{
   \vskip.75ex
   \begin{beamercolorbox}[rounded=true,shadow=true,leftskip=1cm,colsep*=.75ex]{block title}%
@@ -13,34 +14,56 @@
   \end{adjustwidth}
   \end{beamercolorbox}
 }
-
+\end{comment}
 
 \begin{block}{\large \smash{Simulator Debugger}\vphantom{Simulator Debugger}}
 
-\tiny {  
-\begin{lstlisting}
+\newcommand{\userInput}[1]{
+	\textcolor{red}{#1}  
+}
+
+\tiny {
+
+\lstset{
+backgroundcolor=\color{black},
+basicstyle=\color{white}
+}
+
+Run of a simple factorial program: (red text = user input)
+\begin{lstlisting}[escapechar=!]
 Welcome to the simulator's debugging interface. Type help for help. 
-(sim) run
+(sim) !\userInput{run}!
 Value 0x1c written to 0x3b.
 Value 0x8c written to 0x3b.
 Value 0xfc written to 0x3b.
 Value 0x0 written to 0x3b.
 The program has stopped running.
-(sim) rstep
+\end{lstlisting}
+
+Reverse stepping(undoing previous step).
+\begin{lstlisting}[escapechar=!]
+(sim) !\userInput{rstep}!
        rjmp 0xcfff pc: 0xd2 address: 0x1a4
-(sim) rstep
+(sim) !\userInput{rstep}!
        cli 0x94f8 pc: 0xd1 address: 0x1a2
-(sim) rstep
+(sim) !\userInput{rstep}!
        jmp 0x940c pc: 0x45 address: 0x8a
-(sim) step
+\end{lstlisting}
+Forward stepping, get clock-cycles and get the value of the ProgramCounter register.
+\begin{lstlisting}[escapechar=!]
+(sim) !\userInput{step}!
        cli 0x94f8 pc: 0xd1 address: 0x1a2
-(sim) step
+(sim) !\userInput{step}!
        rjmp 0xcfff pc: 0xd2 address: 0x1a4
-(sim) info cycles
+(sim) !\userInput{info cycles}!
 931 cycles have passed.
-(sim) info register PC
+(sim) !\userInput{info register PC}!
 PC              0xd2 address: 0x1a4
-(sim) disassemble
+\end{lstlisting}
+
+Show disassembled code.
+\begin{lstlisting}[escapechar=!]
+(sim) !\userInput{disassemble}!
 Address        PC    Opcode          Instruction    
      0          0     jmp             0x940c
      2          1     noop            0x002a
@@ -64,9 +87,8 @@ Address        PC    Opcode          Instruction
    176         bb     adc             0x1df1
    178         bc     mul             0x9f92
    17a         bd     add             0x0df0
-(sim) exit
-Bye  
 \end{lstlisting}
+
 }
 
 
