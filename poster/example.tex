@@ -5,7 +5,7 @@
   \end{beamercolorbox}%
   {\ifbeamercolorempty[bg]{block body}{}{\nointerlineskip\vskip-0.5pt}}%
   \usebeamerfont{block body}%
-  \begin{beamercolorbox}[ht=27.17cm, rounded=true,shadow=true,colsep*=.75ex,sep=.75ex, vmode]{block body}%
+  \begin{beamercolorbox}[ht=33cm, rounded=true,shadow=true,colsep*=.75ex,sep=.75ex, vmode]{block body}%
     \ifbeamercolorempty[bg]{block body}{\vskip-.25ex}{\vskip-.75ex}\vbox{}%
     \begin{adjustwidth}{0.8cm}{0.4cm}
   }
@@ -14,5 +14,59 @@
   \end{beamercolorbox}
 }
 
-\begin{block}{\large \smash{Example}\vphantom{Example}}
+\begin{block}{\large \smash{Example Specficication}\vphantom{Example Code}}
+
+\tiny {  
+\lstset{
+numbers=left,                   % where to put the line-numbers
+numberstyle=\footnotesize,      % the size of the fonts that are used for the line-numbers
+stepnumber=1,
+xleftmargin=25pt
+}
+\begin{lstlisting}
+demo {
+	parameters {
+		gprs 2+5;
+		opcode-size 16;
+		clock 1;
+		endianness little;
+	}
+
+	registers {
+		SREG	= 0x5F;
+		PC	= 0x462;
+		SP	= 0x5D;
+	}
+
+	maps {
+		chunk		(0, 0xFFFFFFF);
+		register	(0, 0x20);
+		io		(0x20, 0x60);
+		ram		(0, 0x461);
+		rom		(0x464, 0xFFFFFF);
+		print		(0x3b, 0x3c);
+	}
+
+	instructions {
+		noop "0000 0000 0000 0000" {
+			PC = PC + 1;
+		}
+
+		/* Load an I/O Location to Register */
+		in "1011 0AAd dddd AAAA" Rd, A {
+			Rd = io($A);
+
+			PC = PC + 1;
+		}
+
+		jmp "1001 010k kkkk 110k", "kkkk kkkk kkkk kkkk" k {
+			PC = $k;
+		}
+	}
+}
+  
+\end{lstlisting}
+
+}
+
 \end{block}

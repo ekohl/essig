@@ -1,3 +1,74 @@
-\begin{block}{\large \smash{Goals}\vphantom{Example}}
+\setbeamertemplate{block begin}{
+  \vskip.75ex
+  \begin{beamercolorbox}[rounded=true,shadow=true,leftskip=1cm,colsep*=.75ex]{block title}%
+    \usebeamerfont*{block title}\insertblocktitle
+  \end{beamercolorbox}%
+  {\ifbeamercolorempty[bg]{block body}{}{\nointerlineskip\vskip-0.5pt}}%
+  \usebeamerfont{block body}%
+  \begin{beamercolorbox}[ht=33cm, rounded=true,shadow=true,colsep*=.75ex,sep=.75ex, vmode]{block body}%
+    \ifbeamercolorempty[bg]{block body}{\vskip-.25ex}{\vskip-.75ex}\vbox{}%
+    \begin{adjustwidth}{0.8cm}{0.4cm}
+  }
+  \setbeamertemplate{block end}{
+  \end{adjustwidth}
+  \end{beamercolorbox}
+}
+
+
+\begin{block}{\large \smash{Simulator Debugger}\vphantom{Simulator Debugger}}
+
+\tiny {  
+\begin{lstlisting}
+Welcome to the simulator's debugging interface. Type help for help. 
+(sim) run
+Value 0x1c written to 0x3b.
+Value 0x8c written to 0x3b.
+Value 0xfc written to 0x3b.
+Value 0x0 written to 0x3b.
+The program has stopped running.
+(sim) rstep
+       rjmp 0xcfff pc: 0xd2 address: 0x1a4
+(sim) rstep
+       cli 0x94f8 pc: 0xd1 address: 0x1a2
+(sim) rstep
+       jmp 0x940c pc: 0x45 address: 0x8a
+(sim) step
+       cli 0x94f8 pc: 0xd1 address: 0x1a2
+(sim) step
+       rjmp 0xcfff pc: 0xd2 address: 0x1a4
+(sim) info cycles
+931 cycles have passed.
+(sim) info register PC
+PC              0xd2 address: 0x1a4
+(sim) disassemble
+Address        PC    Opcode          Instruction    
+     0          0     jmp             0x940c
+     2          1     noop            0x002a
+   154         aa     in              0xb60f
+   156         ab     cli             0x94f8
+   158         ac     out             0xbfde
+   15a         ad     out             0xbe0f
+   15c         ae     out             0xbfcd
+   15e         af     pop             0x91cf
+   160         b0     pop             0x91df
+   162         b1     ret             0x9508
+   164         b2     mul             0x9f62
+   166         b3     movw            0x01d0
+   168         b4     mul             0x9f73
+   16a         b5     movw            0x01f0
+   16c         b6     mul             0x9f82
+   16e         b7     add             0x0de0
+   170         b8     adc             0x1df1
+   172         b9     mul             0x9f64
+   174         ba     add             0x0de0
+   176         bb     adc             0x1df1
+   178         bc     mul             0x9f92
+   17a         bd     add             0x0df0
+(sim) exit
+Bye  
+\end{lstlisting}
+}
+
+
 \end{block}
 
