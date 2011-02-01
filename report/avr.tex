@@ -13,26 +13,27 @@ available (e.g. AVR, PIC), there is a specification available.
 
 \section{AVR Instruction Set}
 
-The AVR instruction set as used by most Atmel AVR microcontrollers has 142 
-defined instructions most of which can be found on any AVR microcontroller 
-however this does not go for all instructions.
+The AVR instruction set\cite{atmelISA} as used by most Atmel AVR microcontrollers has 142 
+defined instructions most of which can be found on any AVR microcontroller.
+Some instructions only exist on newer microcontrollers or only on 
+microcontrollers that have the necessary hardware.
 
 It is a RISC architecture with 32 general purpose registers. 
 
 \subsection{Stack}
 
 The AVR has a dynamic stack that is located in the RAM of the AVR.
-The \ac{SP} points past the top of the stack and gets lower if data is 
+The \ac{SP} points past the top of the stack and is decremented if data is 
 stored in it.
 
 \subsection{Status Register}
 
-The AVR has a special register in which various results of arithmetic
-operations are stored. This \ac{SREG} is composed of siz arithmetic
+The AVR has a special register\cite[p.1]{atmelISA} in which various results of arithmetic
+operations are stored. This \ac{SREG} is composed of six arithmetic
 flags and the global interrupt enable flag and BST and BLD flag are 
 stored here as well.
 
-The flags in the \ac{SREG} are:
+The flags in the \ac{SREG}\cite[p.1]{atmelISA}\cite[p.9-10]{ATMegaDS}are:
 
 \begin{description}
 \item[I] \hfill \\
@@ -44,28 +45,30 @@ The half carry flag. It is used to detect unsigned overflow in the
 lower nibble of a register.
 \item[S] \hfill \\ 
 The signed flag. Indicates if the register is considered signed under 
-certain circumstances usually corresponds to N xor V
+certain circumstances and usually corresponds to N xor V
 \item[V] \hfill \\
 The signed overflow flag. Set if the preceding arithmetic operation
 resulted in an overflow of the signed value of the register.
 \item[N] \hfill \\ 
-Negative flag. Set if the result is negative
+Negative flag. Set if the value of the result of the preceding arithmetic or logic operation was negative.
 \item[Z] \hfill \\ 
-Zero flag. Set if the result was zero
+Zero flag. Set if the the value of the result of the preceding arithmetic or logic operation was zero.
 \item[C] \hfill \\ 
-The carry flag. Set if unsigned overflow occured during the arithmetic 
+The carry flag. Set if unsigned overflow occured during the preceding arithmetic or logic
 operation
 \end{description}
 
 It should be noted that not all arithmetic operations affect the flags in the same
-way, but the meaning of the flags is generally the same.
+way, but the meaning of the flags is generally the same. The result referred to in the
+text is the result as registered by the \ac{ALU}\cite[p.9]{ATMegaDS} and is not allways written back into
+a register.
 
 \section{ATMega16 - The Model of Choice}
 
-We chose the ATMega16 as the specific microcontroller to use. It is an 
+We chose the ATMega16 \cite{ATMegaDS} as the specific microcontroller to use for prototyping. It is an 
 impressive little machine supporting 131 of the AVR instructions
 having 16kB of in-system programmable flash memory as well as 1kB of 
-internal SRAM. In can run up to 16 MIPS at 16Mhz.
+internal SRAM. In can run up to 16 MIPS at 16Mhz. \cite[p.1]{ATMegaDS}
 
 \subsection{Registers}
 
@@ -79,14 +82,14 @@ The \ac{SP} is also stored in the I/O space.
 
 There are various other registers in the I/O space usually corresponding
 to some funtion of a peripheral that will be explained in the peripheral
-section
+section. \cite[p.331]{ATMegaDS}
 
 \subsection{Peripherals}
 
 The ATMega16 is equipped with a lot of onchip peripherals and also some
 generic ports.
 
-A list of peripherals:
+A list of peripherals\cite[p.1]{ATMegaDS}:
 \begin{description}
 \item{Two 8-bit Timer/Counters with Separate Prescalers and Compare Modes} 
 \item{One 16-bit Timer/Counter with Separate Prescaler, Compare Mode, and Capture Mode}
@@ -117,4 +120,4 @@ interrupt. The lower the interrupt vector the higher the interrupt's priority is
 
 When the microcontroller exits from the interrupt it allways first returns to the
 main program to execute at least one instruction before checking on any other
-interrupts.
+interrupts.\cite[p.13-14]{ATMegaDS}
