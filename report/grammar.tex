@@ -2,15 +2,16 @@
 
 \section{The Grammar}
 The grammar consists of 4 sections. These sections are:
-\begin{itemize}
+\begin{enumerate}
 \item Parameters
 \item Registers
 \item Maps
 \item Instructions
-\end{itemize}
+\end{enumerate}
 
 \subsection{Parameters}
-In this section all parameters of a \ac{UC} are specified. Parameters are: 
+In this section all parameters of a \UC are specified. Parameters are: 
+
 
 \begin{itemize}
 \item number of \ac{GPRS} 
@@ -45,13 +46,13 @@ We chose to parse the opcodes, not in the ANTLR language, but in inline Java cod
 \section{Future of the grammar}
 Things that have to be done to complete the grammar are:
 \begin{itemize}
-\item Check compatibility of the grammar with other \ac{UC}s than the ATMEL AVR.
+\item Check compatibility of the grammar with other {\UC}'s than the ATMEL AVR.
 \item Add support for floating point numbers.
-\item In the section 'parameters' the size of a register should be added, e.g. "register-size = 8;" wich are 8 bits.
+\item In the section 'parameters' the size of a register should be added, e.g. "register-size = 8;" which are 8 bits.
 \item The section 'registers'
 \begin{itemize}
-\item This section should be renamed to like 'offsets'.
-\item Declaration of single BIT's should be possible. The bits in the \ac{SREG} are now set with a little java hack in the code, it checks wheter the IDENTIFIER is one of these "CZNVSHTI".  
+\item This section should be renamed to a better suitable name such as 'offsets'.
+\item Declaration of single BIT's should be possible. The bits in the \ac{SREG} are now set with a little java hack in the code, it checks if the IDENTIFIER is one of these "CZNVSHTI".  
 \item Size of an offset should be declareable.
 \end{itemize}
 \item Declaration of \ac{UC} peripherals like USART, SPI, I2C, ADC.
