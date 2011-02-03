@@ -38,7 +38,7 @@ A \ac{UC} has several ranges of addresses. These can be specified below. These a
 The biggest part of the grammar, the instructions. Each instruction needs an opcode. For usage of these instructions, check the user guide.
 
 \section{Design choices and problems}
-The biggest problem encountered was that we started to fast on the grammar. We just took the \ac{UC} and started away, but we should have read the whole specification beforehand. This would have saved a lot of time during the writing of the grammar.
+The biggest problem encountered was that we didn't have a good look at the overall \UC specification. We just started to work on some instructions and adjusted the grammer accordingly, if we would have overviewed all (or a large subset of) the instructions, we would have saved some time during the development of the grammar. We would have foreseen problems like endianess / signed and unsigned / bits and multiword registers.
 
 \subsection{Opcodes}
 We chose to parse the opcodes, not in the ANTLR language, but in inline Java code. This is done because we found it much easier to do in Java.
