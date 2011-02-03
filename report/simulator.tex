@@ -108,12 +108,30 @@ control flow may be observed.
 
 \section[Opcode parsing]{Opcode parsing}
 In any simulator at some point opcodes will have to be parsed in order
-to determine what code to execute. There are a lot of different
-solutions to this problem and we will discuss a few of them here and
-after that explain the solution we chose.
+to determine what code to execute. This means that from the opcodes in 
+the program information needs to be extracted to determine what instruction 
+needs to be executed. This information depends on the instruction set of 
+the microcontroller. 
+
+For example consider the following bit pattern as if it were an opcode for an AVR
+microcontroller:
+
+\lstset{caption=An example opcde}
+\begin{lstlisting}
+0000 1101 0000 0001
+\end{lstlisting}
+
+In this case we can identify the instruction based on the first six bits. These
+tell us that this opcode represents an add instruction \cite[p.17]{atmelISA}.
+The remaining bits tell us that the add works on register 16 and 1. They can take any
+value but it would still be an add instruction.
+
+So we are looking for a method that can programmatically determine the instruction
+from the opcode. There are a lot of different solutions to this problem 
+and we will discuss a few of them here and after that explain the solution we chose.
 
 \subsection[Switch statement]{Switch statement}
-To a lot of simulators out there this is the preferred method. The idea
+A lot of simulators out there use a switch statement to parse opcodes. The idea
 is that you input the opcode or a part of the opcode into a switch
 statement and continue execution at the matched case. This method has
 one disadvantage: The case statement can't be generalized to any
@@ -121,13 +139,41 @@ simulator since the opcodes are (or can be) very different accross
 different architectures, unless the instructions are disassembled first and the
 switch is on the disassembled opcodes (or some other associated unique key) instead.
 
+\lstset{caption=Example of a switch statement for opcode parsing}
+\begin{lstlisting}
+opcode = readNextOpcode()
+
+switch (opcode & mask)
+	case someinstructionpattern:
+		dispatchsomeinstruction()
+		break;
+	case someotherinstructionpattern:
+		dispatchsomeotherinstruction()
+		break;
+	case somegrouppattern:
+		switch (opcode & groupmask)
+			//More case statements
+	...
+	default:
+		//unrecognized instruction
+\end{lstlisting}
+
 \subsection{Some sort of function array}
-This isn't used that much at all but for smaller architectures it can be
-done. The idea is that you have an array of functions that handle an
+It isn't used that much at all but for smaller architectures it can be beneficial 
+to have a direct mapping of ordered opcodes to functions. The idea is that 
+you have an array of functions that handle an
 opcode and that you index the array using the opcode. But as mentioned
 for architectures with a relatively large opcode this array would
 become far too large and since some instructions have some argument(s)
 embedded in the opcode a lot of functions appear multiple times in the array.
+
+\lstset{caption=Example opcode parsing using a function array}
+\begin{lstlisting}
+instructionhandlers = {Long array of functions}
+
+instructionhandlers[readNextOpcode()]()
+
+\end{lstlisting}
 
 \subsection{Our solution}
 We wanted to be able to find our instruction in an array efficiently without
@@ -138,6 +184,11 @@ specified in the microcontroller description file. Before execution starts,
 all the instructions are disassembled, which means that each instruction holds
 a key from which an instruction handler can be obtained in constant time. This gives the advantage of fast opcode resolution in exchange for a slightly longer load time. 
 
+\lstset{caption=An example of our opcode parsing solution}
+\begin{lstlisting}
+
+
+\end{lstlisting}
 
 % TODO: This idea is further illustrated in the following diagram:
 
