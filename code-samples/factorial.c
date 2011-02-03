@@ -1,7 +1,7 @@
 #include <stdio.h>
+#include <avr/io.h>
 
 #ifdef WITH_PRINTF
-#include <avr/io.h>
 static int factorial_putchar(char c, FILE *stream);
 
 static FILE _destfile = FDEV_SETUP_STREAM(factorial_putchar, NULL,
