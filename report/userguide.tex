@@ -3,14 +3,8 @@
 
 \section{Installation}
 The code can be retrieved from \texttt{https://github.com/fmt-essig/essig}, or
-checked out directly: \texttt{git clone git://github.com/fmt-essig/essig.git}.\\
-
-%\begin{lstlisting}
-
-%\end{lstlisting}
-
-That page contains building instructions, which can also be
-found in the README.rst file in the project's root directory.
+checked out directly: \texttt{git clone git://github.com/fmt-essig/essig.git}.
+Then see README.rst in the project's root directory for instructions.
 
 \section{Basics}
 \subsection{Style}
@@ -77,18 +71,6 @@ multi
 line
 comment
 */
-\end{lstlisting}
-
-\subsection{Opcodes}
-\lstset{caption=Opcode specifation}
-\begin{lstlisting}
-OPCODE		:	'"' ('0' | '1' | LETTER | ' ')+ '"';
-\end{lstlisting}
-
-\lstset{caption=Example Opcodes}
-\begin{lstlisting}
-"0000 0000 0000 0000" // Fixed opcode
-"00dd dd11 01rr ddrr" // 4-bit variable d and 4-bit variable r
 \end{lstlisting}
 
 \section{Specifying a microcontroller}
@@ -179,7 +161,7 @@ Instructions are the most complex block. First of all we'll start with the
 basics and handle expressions later.
 \lstset{caption=Instruction specification}
 \begin{lstlisting}
-OPCODE		:	'"' (DIGIT | LETTER | ' ')+ '"';
+OPCODE		:	'"' ('0' | '1' | LETTER | ' ')+ '"';
 
 params		:	OPCODE (',' OPCODE)* (',' 'clock' '=' NUMBER)?
 
@@ -203,21 +185,75 @@ instructions {
 		// Expressions here
 	}
 
-	rjmp "1100 kkkk kkkk kkkk" ~k {
+	rjmp "1100 kkkk kkkk kkkk", clock=2 ~k {
 		// Expressions here
 	}
 }
 \end{lstlisting}
 
-\subsection{Expressions}
-\lstset{caption=Expression specification}
+As can be seen in the example, each instruction starts with a (unique) name. It
+is then followed by one or more opcodes, which will be explained later on.
+Optionally the amount of clock cycles can be overridden, otherwise the default
+(as defined in the parameters) is used. This is followed by zero or more
+arguments (the local variables) seperated by commas. The instruction body
+contains one or more expressions.
+
+\subsection{Opcodes}
+Opcodes can be specified as a binary number with optional variables mixed in.
+These variables are matches against the actual opcode and read left-to-right. 
+The simulator will create a bitmask with all the static numbers and match each
+opcode against this bitmask.
+
+A known limitation is that there is no detection of overlapping bitmasks, so be
+careful with defining them. In order to please the compiler, one should also
+define variables as instruction arguments.
+
+\lstset{caption=Opcode specifation}
 \begin{lstlisting}
-variable	:	'$'? IDENTIFIER
-			|	MAP_TYPE '{' operatorExpr '}'
-			|	( IDENTIFIER | MAP_TYPE ) '[' operatorExpr ':' operatorExpr ']'
+OPCODE		:	'"' ('0' | '1' | LETTER | ' ')+ '"';
+\end{lstlisting}
+
+\lstset{caption=Example opcodes}
+\begin{lstlisting}
+"0000 0000 0000 0000" // Fixed opcode
+"00dd dd11 01rr ddrr" // 6-bit variable d and 4-bit variable r
+\end{lstlisting}
+
+Given the above example opcode with variables the binary number 0010 0111 0101
+1001 would result in d equal to (binary) 100110 and r equal to 0101.
+
+\subsection{Arguments}
+Instruction arguments are the local variables and by default unsigned. The
+optional tilde ('\~') indicates it is signed. Instruction arguments pointing to
+a register should be prepended the letter 'R'. Their value is taken as the
+register offset.
+
+\lstset{caption=Argument specifation}
+\begin{lstlisting}
+arguments	:	argument (',' argument)*;
+
+argument	:	'~'? identifier;
+\end{lstlisting}
+
+\lstset{caption=Example arguments}
+\begin{lstlisting}
+k		// Single argument
+~k		// Single signed argument
+Rd		// Single argument pointing to a register
+Rd, Rr	// Multiple arguments pointing to registers
+\end{lstlisting}
+
+\subsection{Expressions}
+Expressions are the most complex part of the language because it is the heart
+of each specification.
+\lstset{caption=Expressions}
+\begin{lstlisting}[name=expressions]
+variable	:	'$'? IDENTIFIER // Variable
+			|	MAP_TYPE '{' operatorExpr '}' // Typed variable
+			|	( IDENTIFIER | MAP_TYPE ) '[' operatorExpr ':' operatorExpr ']' // Multi-register variable
 			;
 
-word 		:	variable ('.' (NUMBER | constant))?
+word 		:	variable ('.' (NUMBER | '$'? IDENTIFIER))?
 			|	NUMBER
 			|	'!' word
 			;
@@ -240,21 +276,78 @@ expr		:	assignExpr ';'
 			;
 \end{lstlisting}
 
-\lstset{caption=Example expressions}
-\begin{lstlisting}
-// ifExpr
-if $k == -1 {
-	HALT;
-} else {
-	// assignExpr
-	PC = PC + $k + 1;
-}
+As can be seen, there are four types of expressions. The halt statement is a
+special statement and indicates that the simulator can halt execution. This can
+be used instead of infinite jumping or interrupt handling.
 
+\subsubsection{Assignments}
+\lstset{caption=Assignments}
+\begin{lstlisting}
 // assignExpr: write to ram location ram[$SP+1..$SP] the value PC + 1
 ram(ram[$SP+1..$SP]) = PC + 1;
 
 // Decrease ram[$SP+1..$SP] by 2
 ram[$SP+1..$SP] = ram[$SP+1..$SP] - 2;
+\end{lstlisting}
 
-// FIXME More examples
+\subsubsection{If statement}
+\lstset{caption=If statement}
+\begin{lstlisting}
+if $k == -1 {
+	HALT; // Jump to itself is an infinite loop, so halt
+} else {
+	// assignExpr
+	PC = PC + $k + 1;
+}
+
+if (N ^ V) == 0 {
+		PC = PC + $k + 1;
+} else {
+		PC = PC + 1;
+}
+\end{lstlisting}
+
+\subsubsection{Operator executions}
+\lstset{caption=Operator expressions}
+\begin{lstlisting}
+// Bit 7 from register 31 bitwise and bit 5 register 30
+R31.7 & R30.5
+
+// Not bit 7 of register d where variable d is resolved at runtime
+!Rd.7
+\end{lstlisting}
+
+\subsection{Common tricks}
+\subsubsection{Few bit registers in opcodes}
+It is very common in some specifications to use a few bits in the opcode to
+choose a fixed few registers. For example, the adiw-instruction from the
+ATMEL-specification uses two bits to choose one of four registers. This can
+easily be fixed as follows. Note that \$d in the refers to the value of d while
+Rd refers to the register with an offset of d (thus \$d).
+
+\lstset{caption=Two-bit register variable in opcodes}
+\begin{lstlisting}
+adiw "1001 0110 KKdd KKKK", clock=2 Rd, K {
+	// d = {24,26,28,30}
+	$d = 24 + $d * 2;
+	// ...
+	V = !Rd.7 & $R.15;
+	// ...
+}
+\end{lstlisting}
+
+\subsubsection{Special variable \$R}
+The variable \$R by default holds the value of the first expression in an
+instruction, but can be overwritten. Again the adiw-instruction from the
+ATMEL-specification. In this case we first need to use the few bit register
+trick which sets \$R to the wrong value.
+
+\lstset{caption=Special variable \$R}
+\begin{lstlisting}
+adiw "1001 0110 KKdd KKKK", clock=2 Rd, K {
+	// d = {24,26,28,30}
+	$d = 24 + $d * 2;
+	$R = R[$d+1..$d] + $K;
+	// ...
+}
 \end{lstlisting}
