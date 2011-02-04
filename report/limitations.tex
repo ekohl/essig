@@ -1,14 +1,34 @@
 \chapter{Limitations and Future Work}
 
 \section{Microcontroller Semantics and Specification Language}
-Currently there is no support for floating point arithmetic. This could be
+Improvement of the status registers should be high on the priority list.
+Currently these registers are hardcoded in the code generator which is bad. It
+does bring a big performance benefit, but this should be changeable in the
+specification. One can think of a complex register specification which allows
+mapping multiple status bits into a single register and is only read once and
+written once per instruction.\\
+\\
+Since microcontrollers often have no support for floating point operations,
+there is currently no support for floating point arithmetic. This could be
 added in future work.\\
 \\
-Currently it is not possible to specify semantics of I/O ports, which may be a
-welcome addition for users.\\
+Another limitation is the limited support of I/O ports. While it is possible to
+map a block of memory and read this, it is not possible to specify the
+semantics of I/O ports, which may be a welcome addition for users.\\
 \\
 For improved debugging support it may be necessary to specify the calling
-convention.
+convention.\\
+\\
+A possible improvement for opcodes is rewriting the Java-based parsing with
+ANTLR. It could also be extended with some syntax to choose the byte order for
+variables.\\
+\\
+Furthermore, the typing could be improved. For registers, the R is part of the
+variable name and stripped in the actual use while there is also the special
+variable R which contains the result. Then there's MAP\_TYPE(...) for ram, rom,
+etc. Since registers are internally no different than all other memory
+mappings, it would be cleaner and more consistent if the stripping would be
+removed and R31 would be changed into R(31).
 
 \section{VM Improvements}
 The VM could be improved by including support for more types of executables, as
