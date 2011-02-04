@@ -53,6 +53,14 @@ For further instructions and a general overview of the project, see the
 This should make a report.pdf in the current directory. For this you will
 need Latex and TexLive.
 
+Writing a new specification
+---------------------------
+Currently, a few things are hardcoded to use the atmel spec. So one should
+either modify grammar/examples/atmel.dmo or modify the build system:
+
+* Change the vm/generated_simulator.[ch] symlinks
+* Make sure Makefile points to the correct specification
+
 References
 ----------
 .. [#] http://fmt.cs.utwente.nl/redmine/projects/essig.
