@@ -10,7 +10,7 @@ The grammar consists of 4 sections. These sections are:
 \end{enumerate}
 
 \subsection{Parameters}
-In this section all parameters of a \UC are specified. Parameters are: 
+In this section all parameters of a \ac{UC} are specified. Parameters are: 
 
 
 \begin{itemize}
@@ -38,7 +38,7 @@ A \ac{UC} has several ranges of addresses. These can be specified below. These a
 The biggest part of the grammar, the instructions. Each instruction needs an opcode. For usage of these instructions, check the user guide.
 
 \section{Design choices and problems}
-The biggest problem encountered was that we didn't have a good look at the overall \UC specification. We just started to work on some instructions and adjusted the grammer accordingly, if we would have overviewed all (or a large subset of) the instructions, we would have saved some time during the development of the grammar. We would have foreseen problems like endianess / signed and unsigned / bits and multiword registers.
+The biggest problem encountered was that we didn't have a good look at the overall \ac{UC} specification. We just started to work on some instructions and adjusted the grammer accordingly, if we would have overviewed all (or a large subset of) the instructions, we would have saved some time during the development of the grammar. We would have foreseen problems like endianess / signed and unsigned / bits and multiword registers.
 
 \subsection{Opcodes}
 We chose to parse the opcodes, not in the ANTLR language, but in inline Java code. This is done because we found it much easier to do in Java.
@@ -46,7 +46,7 @@ We chose to parse the opcodes, not in the ANTLR language, but in inline Java cod
 \section{Future of the grammar}
 Things that have to be done to complete the grammar are:
 \begin{itemize}
-\item Check compatibility of the grammar with other {\UC}'s than the ATMEL AVR.
+\item Check compatibility of the grammar with other \ac{UC}'s than the ATMEL AVR.
 \item Add support for floating point numbers.
 \item In the section 'parameters' the size of a register should be added, e.g. "register-size = 8;" which are 8 bits.
 \item The section 'registers'

@@ -3,7 +3,6 @@
 %\documentclass[a4paper]{scrreprt}
 \usepackage[english]{babel}
 \usepackage[pdftex]{graphicx}
-\usepackage{acronym}
 \usepackage{verbatim}
 
 \usepackage{color}
@@ -36,6 +35,8 @@ escapeinside={\%}{)}            % if you want to add a comment within your code
 	linkcolor=black,%
 	urlcolor=black
 }
+\usepackage{url}
+\usepackage[withpage]{acronym}
 \title{ESSIG - \acl{ESSIG}}
 \author{
 	Ewoud Kohl van Wijngaarden (ewoud@kohlvanwijngaarden.nl) \\
@@ -75,12 +76,12 @@ escapeinside={\%}{)}            % if you want to add a comment within your code
 \include{limitations}
 \clearpage
 
-\bibliographystyle{plain}
+\bibliographystyle{acm}
 \bibliography{Essig}
 \addcontentsline{toc}{chapter}{Bibliography}
 
 \appendix
-\include{spec}
-\include{evaluation}
+%\include{spec}
+%\include{evaluation}
 \include{acronyms}
 \end{document}
