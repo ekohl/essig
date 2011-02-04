@@ -28,7 +28,12 @@ variable name and stripped in the actual use while there is also the special
 variable R which contains the result. Then there's MAP\_TYPE(...) for ram, rom,
 etc. Since registers are internally no different than all other memory
 mappings, it would be cleaner and more consistent if the stripping would be
-removed and R31 would be changed into R(31).
+removed and R31 would be changed into R(31).\\
+\\
+The current state of the checker is another big improvement that would greatly
+enhance the user experience. Presently it's very limited and it could warn the
+user much earlier on. As noted in the user guide, one could check for
+overlapping opcode bitmasks.
 
 \section{VM Improvements}
 The VM could be improved by including support for more types of executables, as
@@ -64,3 +69,11 @@ instructions in the generated simulator, and then subsequently parsing these
 out in the disassembler, storing them on the heap in a chunk the size of 
 OPCODE\_TYPE * the number of arguments, and passing the instruction handler a 
 pointer to the chunk.
+
+\section{Build system}
+The build system is, as documented in the README, somewhat hardcoded towards
+using atmel specification file. It also fails to correctly clean generated
+simulator code and requires git to do so.
+
+Besides that, it's not very user-friendly. This could be improved by adding
+checks if all libraries are all present.
