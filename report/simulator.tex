@@ -32,13 +32,13 @@ description compiled into the simulator part and creates an initial state for
 a simulation. This state is
 then passed to every function that needs it to operate, which means that the 
 VM can for example manage and run several programs simultaneously (although
-the debugger fontend does not currently support multiple simultaneous
+the debugger frontend does not currently support multiple simultaneous
 simulations). \\
 In addition to a simulation state, the user may also decide to keep track of
 differences in the state, which is managed by a separate stack of diffs.
 These diffs can be used to backtrack the program execution. This relatively loose structure gives
 a lot of interesting capabilities to the client (e.g. save the diffs
-and state to the disk and resume exectution later on (with
+and state to the disk and resume execution later on (with
 full backtracking)).
 
 \section{The Generated Simulator}
@@ -82,15 +82,15 @@ is used, plugins may be written in Python and put into the \texttt{vm/plugins}
 directory.\\
 Each simulation may have a policy that can govern whether or not the interrupt will be
 passed on to the simulator. When interrupts should be handled, a user-supplied
-\texttt{set\_interrupt} method will be called every step with the state of the
+\texttt{set\_interrupt} method will be called at every step with the state of the
 simulation and a (potentially NULL) diff pointer. The set\_interrupt function
 should then inspect \texttt{state->interrupts} and modify the state of the
 microcontroller appropriately. A subsequent \texttt{handle\_interrupt}
 function (with a signature equivalent to \texttt{set\_interrupt}) is 
-called every step to check the simulation state for an
+called at every step to check the simulation state for an
 interrupt flag. Based on the intricacies of the microcontroller, this function
 should then modify
-the passed-in state accordingly. This may mean pushing the program counter on the stack, 
+the passed-in state accordingly. This may mean pushing the program counter on the stack,
 changing
 the stack pointer and writing the address of the interrupt handler specified
 in the debuggee to the program counter.
@@ -98,7 +98,7 @@ in the debuggee to the program counter.
 After all this the VM resumes execution with the potentially modified state.
 It is up to the implementor of \texttt{set\_interrupt} and 
 \texttt{handle\_interrupt} to use the functions of the VM to modify the state.
-If those functions are used along with a diff stack, changes will be
+If those functions are used along with a diff list (a linked list of diffs), changes will be
 registered in the diffs. If the state is modified without using any VM
 function,
 changes will not registered in the diffs and hence reverse-stepping will be oblivious to

@@ -64,11 +64,15 @@ GDB.
 Opcode arguments are currently unpacked from the instruction in the opcode
 handler, which means extra runtime overhead that could be prevented by doing
 the unpacking in the disassembler instead. This could be implemented by e.g.
-listing additionaly all the masks that could parse out arguments of
+listing additionally all the masks that could parse out arguments of
 instructions in the generated simulator, and then subsequently parsing these
-out in the disassembler, storing them on the heap in a chunk the size of 
-OPCODE\_TYPE * the number of arguments, and passing the instruction handler a 
+out in the disassembler, storing them on the heap in a chunk the size of
+OPCODE\_TYPE * the number of arguments, and passing the instruction handler a
 pointer to the chunk.
+
+Another optimization would be the addition of a JIT compiler, that would
+JIT-compile hot blocks of code which are often executed and translate the
+target instructions to host instructions directly \cite{JIT}.
 
 \section{Build system}
 The build system is, as documented in the README, somewhat hardcoded towards
