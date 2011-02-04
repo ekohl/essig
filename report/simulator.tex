@@ -182,13 +182,27 @@ opcode with variable parts masked to zero, and a bitmask that can be applied
 to an instruction to obtain the associated opcode. These opcodes and masks are
 specified in the microcontroller description file. Before execution starts,
 all the instructions are disassembled, which means that each instruction holds
-a key from which an instruction handler can be obtained in constant time. This gives the advantage of fast opcode resolution in exchange for a slightly longer load time. 
-
+a key from which an instruction handler can be obtained in constant time. This gives the advantage of fast opcode resolution in exchange for a slightly longer load time.
 \lstset{caption=An example of our opcode parsing solution}
 \begin{lstlisting}
+instruction_handlers = {
+    {handler_name, opcode, instruction_mask, handler},
+    ...
+}
 
+main_loop(disassembled_code) {
+    while true
+        fetch pc
+        sanity check pc
+        Instruction instr = disassembled_code[pc]
+        instr.handler(simulation_state, instr.instruction)
+}
 
 \end{lstlisting}
+
+It is then up to the individual instruction handlers to parse out any
+arguments coded into the instruction.
+
 
 % TODO: This idea is further illustrated in the following diagram:
 
