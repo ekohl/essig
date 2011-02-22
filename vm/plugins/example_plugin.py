@@ -10,8 +10,8 @@ import sys
 import cli
 
 def cycle_progress_bar():
-    import time; time.sleep(0.01)
-    sys.stdout.write('\r%s' % simulator.cycles)
+    import time; time.sleep(0.005)
+    sys.stdout.write('%s\r' % simulator.cycles)
     sys.stdout.flush()
 
 def specify_interrupt():

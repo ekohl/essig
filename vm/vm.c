@@ -688,8 +688,8 @@ vm_write_nbytes(VMState *state, VMStateDiff *diff, VMInfoType type,
 
     if (location >= state->chunk + PRINT_OFFSET && 
         location < state->chunk + PRINT_END)
-        printf("Value 0x%x written to 0x%x.\n", (unsigned int) value, 
-                                                (unsigned int) destaddr);
+        printf("Value 0x%02x written to 0x%02x.\n", (unsigned int) value,
+                                                    (unsigned int) destaddr);
 
     /* finally, write the value */
     vm_convert_endianness((char *) &value, nbytes);
