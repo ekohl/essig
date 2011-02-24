@@ -21,9 +21,11 @@
 #   define RELEASE_STATE(state) do { \
         pthread_mutex_unlock(&state->lock); \
     } while (0)
+#   define __THREAD __thread
 #else
 #   define ACQUIRE_STATE(state) do {} while (0)
 #   define RELEASE_STATE(state) do {} while (0)
+#   define __THREAD
 #endif
 
 #define STRINGIFY(msg) #msg
@@ -69,7 +71,7 @@ The generated simulator exposes microcontroller information by storing it in
 predeclared global variables (see \ref VMPrivateAPI "The Private API").
 */
 
-extern __thread int _vm_errno;
+extern __THREAD int _vm_errno;
 
 /*! \defgroup VMDataStructures Data Structures */
 /* @{ */

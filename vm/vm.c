@@ -33,7 +33,7 @@ static char *_vm_error_messages[] = {
 #   undef __vm_errno__
 };
 
-__thread int _vm_errno = 0;
+__THREAD int _vm_errno = 0;
 
 /* error functions */
 int 
